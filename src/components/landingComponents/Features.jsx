@@ -1,41 +1,61 @@
+import ShareIcon from '@mui/icons-material/Share';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import NavigationIcon from '@mui/icons-material/Navigation';
 
 const data = [
     {
-        "icon" : <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160Zm40 200q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>,
+        "icon": <AddCircleOutlineIcon/>,
         "title": "Create Group",
-        "description" : "Instantly generate a secure, temporary session. No registration required."
+        "description": "Instantly generate a secure, temporary session. No registration required."
     },
     {
-        "icon" : <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M680-80q-50 0-85-35t-35-85q0-6 3-28L282-392q-16 15-37 23.5t-45 8.5q-50 0-85-35t-35-85q0-50 35-85t85-35q24 0 45 8.5t37 23.5l281-164q-2-7-2.5-13.5T560-760q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-24 0-45-8.5T598-672L317-508q2 7 2.5 13.5t.5 14.5q0 8-.5 14.5T317-452l281 164q16-15 37-23.5t45-8.5q50 0 85 35t35 85q0 50-35 85t-85 35Zm0-80q17 0 28.5-11.5T720-200q0-17-11.5-28.5T680-240q-17 0-28.5 11.5T640-200q0 17 11.5 28.5T680-160ZM200-440q17 0 28.5-11.5T240-480q0-17-11.5-28.5T200-520q-17 0-28.5 11.5T160-480q0 17 11.5 28.5T200-440Zm480-280q17 0 28.5-11.5T720-760q0-17-11.5-28.5T680-800q-17 0-28.5 11.5T640-760q0 17 11.5 28.5T680-720Zm0 520ZM200-480Zm480-280Z"/></svg>,
+        "icon": <ShareIcon/>,
         "title": "Share Link",
-        "description" : "Send a private invite via text or WhatsApp. Friends join with one click."
+        "description": "Send a private invite via text or WhatsApp. Friends join with one click."
     },
     {
-        "icon" : <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="m200-120-40-40 320-720 320 720-40 40-280-120-280 120Zm84-124 196-84 196 84-196-440-196 440Zm196-84Z"/></svg>,
+        "icon":<NavigationIcon/>,
         "title": "Track Live",
-        "description" : "See everyone move in real-time on a beautiful, shared map with live ETAs."
+        "description": "See everyone move in real-time on a beautiful, shared map with live ETAs."
     }
 ]
 export default function Features() {
     return (
         <>
-            <div className="h-fit flex items-center flex-col bg-primary text-foreground py-15">
-                <div className="flex items-center flex-col w-3/5">
-                    <p className="text-foreground font-black text-4xl">Simple & Seamless</p>
-                    <p className="mt-5 w-1/2 text-center space-x-2">Coordinate your group in three simple steps. Designed for real-world movement.</p>
+            <div className="w-full bg-primary text-foreground py-20 px-4">
+                <div className="mx-auto max-w-4xl flex flex-col items-center text-center">
+                    <p className="font-black text-2xl sm:text-3xl md:text-4xl">
+                        Simple & Seamless
+                    </p>
+
+                    <p className="mt-4 max-w-2xl text-base sm:text-lg text-muted-foreground">
+                        Coordinate your group in three simple steps. Designed for real-world movement.
+                    </p>
                 </div>
-                <div className="flex mt-15 w-4/5 flex-col md:flex-row items-center justify-evenly">
-                    {data.map((value, key) => {
-                        return(
-                            <div key={key} className="w-3/12 rounded-2xl flex flex-col  items-center gap-2 bg-card px-10  py-10" >
-                                <div className="rounded-xl p-4 bg-primary-foreground">{value.icon}</div>
-                                <div><p className="text-foreground font-bold text-xl">{value.title}</p></div>
-                                <div className="text-center pt-1">{value.description}</div>
+
+                <div className="mx-auto mt-12 max-w-6xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-2">
+                    {data.map((value, key) => (
+                        <div
+                            key={key}
+                            className="rounded-3xl flex flex-col items-center gap-4 bg-card px-8 py-12 text-center shadow-sm"
+                        >
+                            <div className="rounded-xl p-4 bg-primary-foreground">
+                                {value.icon}
                             </div>
-                        )  
-                    })}
+
+                            <p className="font-medium pt-2 text-lg sm:text-xl">
+                                {value.title}
+                            </p>
+
+                            <p className="text-sm sm:text-base text-muted-foreground">
+                                {value.description}
+                            </p>
+                        </div>
+                    ))}
                 </div>
+
             </div>
         </>
+
     )
 }
