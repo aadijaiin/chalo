@@ -1,61 +1,53 @@
-import ShareIcon from '@mui/icons-material/Share';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import NavigationIcon from '@mui/icons-material/Navigation';
+import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import NavigationOutlinedIcon from "@mui/icons-material/NavigationOutlined";
 
-const data = [
-    {
-        "icon": <AddCircleOutlineIcon/>,
-        "title": "Create Group",
-        "description": "Instantly generate a secure, temporary session. No registration required."
-    },
-    {
-        "icon": <ShareIcon/>,
-        "title": "Share Link",
-        "description": "Send a private invite via text or WhatsApp. Friends join with one click."
-    },
-    {
-        "icon":<NavigationIcon/>,
-        "title": "Track Live",
-        "description": "See everyone move in real-time on a beautiful, shared map with live ETAs."
-    }
-]
 export default function Features() {
-    return (
-        <>
-            <div className="w-full bg-primary text-foreground py-20 px-4">
-                <div className="mx-auto max-w-4xl flex flex-col items-center text-center">
-                    <p className="font-black text-2xl sm:text-3xl md:text-4xl">
-                        Simple & Seamless
-                    </p>
-
-                    <p className="mt-4 max-w-2xl text-base sm:text-lg text-muted-foreground">
-                        Coordinate your group in three simple steps. Designed for real-world movement.
-                    </p>
-                </div>
-
-                <div className="mx-auto mt-12 max-w-6xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-2">
-                    {data.map((value, key) => (
-                        <div
-                            key={key}
-                            className="rounded-3xl flex flex-col items-center gap-4 bg-card px-8 py-12 text-center shadow-sm"
-                        >
-                            <div className="rounded-xl p-4 bg-primary-foreground">
-                                {value.icon}
-                            </div>
-
-                            <p className="font-medium pt-2 text-lg sm:text-xl">
-                                {value.title}
-                            </p>
-
-                            <p className="text-sm sm:text-base text-muted-foreground">
-                                {value.description}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-
+  return (
+    <section className="px-6 lg:px-40 py-24 bg-white" id="how-it-works">
+      <div className="max-w-300 mx-auto">
+        <div className="flex flex-col gap-6 text-center mb-16">
+          <h2 className="text-4xl font-extrabold tracking-tight text-earth">
+            Simple &amp; Seamless
+          </h2>
+          <p className="text-earth/70 max-w-150 mx-auto text-lg">
+            Coordinate your group in three simple steps. Designed for real-world
+            movement.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-cream border border-sage/10 hover:border-primary-foreground/30 transition-all group">
+            <div className="w-16 h-16 rounded-2xl bg-sage/10 text-sage flex items-center justify-center group-hover:bg-sage group-hover:text-white transition-all">
+              <AddCircleOutlineIcon />
             </div>
-        </>
-
-    )
+            <h3 className="text-xl font-bold text-earth">Create Group</h3>
+            <p className="text-earth/60 text-center leading-relaxed">
+              Instantly generate a secure, temporary session. No registration
+              required.
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-cream border border-sage/10 hover:border-primary-foreground/30 transition-all group">
+            <div className="w-16 h-16 rounded-2xl bg-primary-foreground/10 text-primary-foreground flex items-center justify-center group-hover:bg-primary-foreground group-hover:text-white transition-all">
+              <ShareOutlinedIcon />
+            </div>
+            <h3 className="text-xl font-bold text-earth">Share Link</h3>
+            <p className="text-earth/60 text-center leading-relaxed">
+              Send a private invite via text or WhatsApp. Friends join with one
+              click.
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-cream border border-sage/10 hover:border-primary-foreground/30 transition-all group">
+            <div className="w-16 h-16 rounded-2xl bg-sage/10 text-sage flex items-center justify-center group-hover:bg-sage group-hover:text-white transition-all">
+              <NavigationOutlinedIcon />
+            </div>
+            <h3 className="text-xl font-bold text-earth">Track Live</h3>
+            <p className="text-earth/60 text-center leading-relaxed">
+              See everyone move in real-time on a beautiful, shared map with
+              live ETAs.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

@@ -1,4 +1,7 @@
 import React from "react";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
+import ShareIcon from "@mui/icons-material/Share";
+import ExploreIcon from "@mui/icons-material/Explore";
 
 const Footer = () => {
   return (
@@ -6,13 +9,9 @@ const Footer = () => {
       <div className="max-w-300 mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
         <div className="flex flex-col gap-6 col-span-1 md:col-span-1">
           <div className="flex items-center gap-3">
-            <div className="text-terracotta">
-              <span className="material-symbols-outlined text-3xl font-bold">
-                explore
-              </span>
-            </div>
+            <ExploreIcon />
             <h2 className="text-xl font-extrabold tracking-tight text-earth">
-              Wayfind
+              Chalo
             </h2>
           </div>
           <p className="text-earth/60 text-sm leading-relaxed">
@@ -64,22 +63,30 @@ const Footer = () => {
           <h4 className="font-bold mb-6 text-earth">Community</h4>
           <div className="flex gap-4">
             <a
-              className="w-10 h-10 rounded-full bg-white border border-sage/10 flex items-center justify-center text-sage hover:bg-terracotta hover:text-white hover:border-terracotta transition-all"
               href="#"
+              className="w-10 h-10 rounded-full bg-white border border-sage/10 
+               flex items-center justify-center 
+               text-earth/70 
+               hover:bg-terracotta hover:text-white hover:border-terracotta 
+               transition-all"
             >
-              <span className="material-symbols-outlined text-xl">share</span>
+              <ShareIcon className="text-xl" />
             </a>
+
             <a
-              className="w-10 h-10 rounded-full bg-white border border-sage/10 flex items-center justify-center text-sage hover:bg-terracotta hover:text-white hover:border-terracotta transition-all"
               href="#"
+              className="w-10 h-10 rounded-full bg-white border border-sage/10 
+               flex items-center justify-center 
+               text-earth/70 
+               hover:bg-terracotta hover:text-white hover:border-terracotta 
+               transition-all"
             >
-              <span className="material-symbols-outlined text-xl">
-                alternate_email
-              </span>
+              <AlternateEmailIcon className="text-xl" />
             </a>
           </div>
+
           <p className="mt-6 text-xs text-earth/50">
-            © 2024 Wayfind. Designed for the wanderers.
+            © 2024 Chalo. Designed for the wanderers.
           </p>
         </div>
       </div>
