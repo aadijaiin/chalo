@@ -1,12 +1,13 @@
-import { Plus_Jakarta_Sans } from "next/font/google";
-import { ThemeProvider } from "@/components/ui/themeProvider"
+import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/ui/themeProvider";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
   display: "swap",
   variable: "--font-plus_jakarta_sans",
-})
+});
 
 export const metadata = {
   title: "Create Next App",
@@ -30,5 +31,5 @@ export default function RootLayout({ children }) {
         </body>
       </html>
     </>
-  )
+  );
 }
