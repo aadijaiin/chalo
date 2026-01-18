@@ -1,8 +1,8 @@
 import React from "react";
-
+import { Button } from "../ui/button";
 const Navbar = () => {
   return (
-    <header className="sticky top-0 z-50 bg-background-light/80 backdrop-blur-md border-b border-sage/10 px-6 lg:px-40 py-4">
+    <header className="sticky top-0 z-50 bg-primary backdrop-blur-md border-b border-sage/10 px-6 lg:px-40 py-4">
       <div className="flex items-center justify-between max-w-300 mx-auto">
         <div className="flex items-center gap-3">
           {/* <div className="text-terracotta">
@@ -35,9 +35,9 @@ const Navbar = () => {
           </a>
         </nav>
         <div className="flex items-center gap-4">
-          <button className="hidden sm:flex min-w-30 items-center justify-center rounded-xl h-11 px-6 bg-terracotta text-white text-sm font-bold shadow-lg shadow-terracotta/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+          <Button variant="outline" size="lg">
             Start Sharing
-          </button>
+          </Button>
           <button className="md:hidden p-2 text-earth">
             <span className="material-symbols-outlined">menu</span>
           </button>
