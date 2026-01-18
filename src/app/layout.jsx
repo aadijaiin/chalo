@@ -1,6 +1,7 @@
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/ui/themeProvider";
 import "./globals.css";
+import Navbar from "@/components/common/Navbar";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
       <html lang="en" suppressHydrationWarning className={jakarta.className}>
         <head />
         <body>
+          <Navbar/>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
