@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import ShareIcon from "@mui/icons-material/Share";
@@ -9,7 +10,7 @@ const Footer = () => {
       <div className="max-w-300 mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
         <div className="flex flex-col gap-6 col-span-1 md:col-span-1">
           <div className="flex items-center gap-3">
-            <ExploreIcon />
+            <ExploreIcon htmlColor="#e2725b" />
             <h2 className="text-xl font-extrabold tracking-tight text-earth">
               Chalo
             </h2>
@@ -23,17 +24,26 @@ const Footer = () => {
           <h4 className="font-bold mb-6 text-earth">Product</h4>
           <ul className="space-y-4 text-sm text-earth/60">
             <li>
-              <a className="hover:text-terracotta transition-colors" href="#">
+              <a
+                className="hover:text-primary-foreground transition-colors"
+                href="#"
+              >
                 Features
               </a>
             </li>
             <li>
-              <a className="hover:text-terracotta transition-colors" href="#">
+              <a
+                className="hover:text-primary-foreground transition-colors"
+                href="#"
+              >
                 Adventure Stories
               </a>
             </li>
             <li>
-              <a className="hover:text-terracotta transition-colors" href="#">
+              <a
+                className="hover:text-primary-foreground transition-colors"
+                href="#"
+              >
                 Safety Guide
               </a>
             </li>
@@ -43,17 +53,26 @@ const Footer = () => {
           <h4 className="font-bold mb-6 text-earth">Trust</h4>
           <ul className="space-y-4 text-sm text-earth/60">
             <li>
-              <a className="hover:text-terracotta transition-colors" href="#">
+              <a
+                className="hover:text-primary-foreground transition-colors"
+                href="#"
+              >
                 Privacy Policy
               </a>
             </li>
             <li>
-              <a className="hover:text-terracotta transition-colors" href="#">
+              <a
+                className="hover:text-primary-foreground transition-colors"
+                href="#"
+              >
                 Terms of Use
               </a>
             </li>
             <li>
-              <a className="hover:text-terracotta transition-colors" href="#">
+              <a
+                className="hover:text-primary-foreground transition-colors"
+                href="#"
+              >
                 Security FAQ
               </a>
             </li>
@@ -67,7 +86,7 @@ const Footer = () => {
               className="w-10 h-10 rounded-full bg-white border border-sage/10 
                flex items-center justify-center 
                text-earth/70 
-               hover:bg-terracotta hover:text-white hover:border-terracotta 
+               hover:bg-primary-foreground hover:text-white hover:border-primary-foreground 
                transition-all"
             >
               <ShareIcon className="text-xl" />
@@ -78,7 +97,7 @@ const Footer = () => {
               className="w-10 h-10 rounded-full bg-white border border-sage/10 
                flex items-center justify-center 
                text-earth/70 
-               hover:bg-terracotta hover:text-white hover:border-terracotta 
+               hover:bg-primary-foreground hover:text-white hover:border-primary-foreground 
                transition-all"
             >
               <AlternateEmailIcon className="text-xl" />

@@ -17,7 +17,7 @@ export default function Features() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-cream border border-sage/10 hover:border-primary-foreground/30 transition-all group">
-            <div className="w-16 h-16 rounded-2xl bg-sage/10 text-sage flex items-center justify-center group-hover:bg-sage group-hover:text-white transition-all">
+            <div className="w-16 h-16 rounded-2xl bg-sage/10 text-sage flex items-center justify-center group-hover:bg-sage group-hover:text-white group-active:bg-sage group-active:text-white transition-all">
               <AddCircleOutlineIcon />
             </div>
             <h3 className="text-xl font-bold text-earth">Create Group</h3>
@@ -27,7 +27,7 @@ export default function Features() {
             </p>
           </div>
           <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-cream border border-sage/10 hover:border-primary-foreground/30 transition-all group">
-            <div className="w-16 h-16 rounded-2xl bg-primary-foreground/10 text-primary-foreground flex items-center justify-center group-hover:bg-primary-foreground group-hover:text-white transition-all">
+            <div className="w-16 h-16 rounded-2xl bg-primary-foreground/10 text-primary-foreground flex items-center justify-center group-hover:bg-primary-foreground group-hover:text-white group-active:bg-primary-foreground group-active:text-white transition-all">
               <ShareOutlinedIcon />
             </div>
             <h3 className="text-xl font-bold text-earth">Share Link</h3>
@@ -37,7 +37,11 @@ export default function Features() {
             </p>
           </div>
           <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-cream border border-sage/10 hover:border-primary-foreground/30 transition-all group">
-            <div className="w-16 h-16 rounded-2xl bg-sage/10 text-sage flex items-center justify-center group-hover:bg-sage group-hover:text-white transition-all">
+            <div
+              className="w-16 h-16 rounded-2xl bg-sage/10 text-sage flex items-center justify-center group-hover:bg-sage group-hover:text-white
+group-active:bg-sage group-active:text-white
+ transition-all"
+            >
               <NavigationOutlinedIcon />
             </div>
             <h3 className="text-xl font-bold text-earth">Track Live</h3>

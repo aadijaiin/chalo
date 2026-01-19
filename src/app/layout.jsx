@@ -1,9 +1,7 @@
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/ui/themeProvider";
 import "./globals.css";
-import Navbar from "@/components/common/Navbar";
-import Footer from "@/components/common/Footer";
-
+import ClientToaster from "@/lib/ClientToaster";
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
@@ -19,9 +17,7 @@ export default function RootLayout({ children }) {
   return (
     <>
       <html lang="en" suppressHydrationWarning className={jakarta.className}>
-        <head />
         <body>
-          <Navbar/>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -29,8 +25,8 @@ export default function RootLayout({ children }) {
             disableTransitionOnChange
           >
             {children}
+            <ClientToaster richColors position="top-right" />
           </ThemeProvider>
-          <Footer/>
         </body>
       </html>
     </>

@@ -2,8 +2,8 @@
 import { useRouter } from "next/navigation";
 import Features from "@/components/landingComponents/Features";
 
-import { useEffect } from "react";
-import ModeToggle from "@/components/themeButton";
+// import { useEffect } from "react";
+// import ModeToggle from "@/components/themeButton";
 import ForWho from "@/components/landingComponents/ForWho";
 import Hero from "@/components/landingComponents/Hero";
 import Privacy from "@/components/landingComponents/Privacy";
@@ -14,7 +14,7 @@ export default function Home() {
 
   return (
     <>
-      <ModeToggle />
+      {/* <ModeToggle /> */}
       <Hero />
       <Features />
       <BuiltFor />

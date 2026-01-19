@@ -8,12 +8,28 @@ const Hero = () => {
       <div className="max-w-300 mx-auto">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           <div className="flex flex-col gap-8 flex-1 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-foreground/15 text-sage text-xs font-bold uppercase tracking-widest w-fit">
+            <div
+              className="
+    inline-flex items-center gap-2 px-3 py-1 rounded-full
+    bg-primary-foreground/15 text-sage
+    text-xs font-bold uppercase tracking-widest w-fit
+
+    transition-all
+    hover:bg-primary-foreground/25
+
+    active:bg-primary-foreground/30
+    active:scale-[0.97]
+
+    focus-visible:ring-2
+    focus-visible:ring-primary-foreground/30
+  "
+            >
               <ShareLocationTwoToneIcon />
               Live Now
             </div>
+
             <h1 className="text-5xl lg:text-7xl font-extrabold leading-[1.1] tracking-tight text-earth">
-              Find your way, <br />
+              Find your <br /> way, <br />
               <span className="text-primary-foreground">together.</span>
             </h1>
             <p className="text-lg lg:text-xl text-earth/70 leading-relaxed max-w-135">
@@ -21,10 +37,48 @@ const Hero = () => {
               spontaneous adventures. No accounts required.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="flex min-w-50 items-center justify-center rounded-xl h-14 px-8 bg-primary-foreground hover:bg-primary-foreground text-white text-base font-bold shadow-xl shadow-primary-foreground/30 hover:brightness-110 transition-all">
+              <Button
+                className="
+    flex min-w-50 items-center justify-center
+    rounded-xl h-14 px-8
+    bg-primary-foreground text-white
+    text-base font-bold
+
+    shadow-xl shadow-primary-foreground/30
+    transition-all
+
+    hover:brightness-110
+    hover:scale-[1.02]
+    hover:bg-primary-foreground
+    active:scale-[0.96]
+    active:brightness-95
+
+    focus-visible:ring-2
+    focus-visible:ring-primary-foreground/40
+  "
+              >
                 Create Live Session
               </Button>
-              <Button className="flex min-w-50 items-center justify-center rounded-xl h-14 px-8 bg-white border border-sage/20 text-earth text-base font-bold hover:bg-white/70 transition-all shadow-sm">
+
+              <Button
+                className="
+    flex min-w-50 items-center justify-center
+    rounded-xl h-14 px-8
+    bg-white border border-sage/20
+    text-earth text-base font-bold
+
+    shadow-sm transition-all
+
+    hover:bg-white/70
+    hover:scale-[1.02]
+
+    active:scale-[0.97]
+    active:bg-white/60
+
+    focus-visible:ring-2
+    focus-visible:ring-sage/30
+  "
+              >
                 Join a Group
               </Button>
             </div>
