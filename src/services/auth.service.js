@@ -9,3 +9,18 @@ export const signin = async (payload) => {
   const { data } = await api.post("/auth/login/", payload);
   return data;
 };
+
+export const forgotPasswordValidateEmail = async (payload) => {
+  const { data } = await api.post("", payload);
+  return data;
+};
+
+export const ForgotPasswordValidateOTP = async (payload) => {
+  const { data } = await api.post("", payload);
+  return data;
+};
+
+export const resetPassword = async (payload) => {
+  const { data } = await api.post("", payload);
+  return data;
+};

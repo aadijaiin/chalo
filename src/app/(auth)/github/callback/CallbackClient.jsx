@@ -12,16 +12,16 @@ export default function CallbackClient() {
 
   useEffect(() => {
     if (!code) {
-      router.replace("/login");
+      router.replace("/signIn");
       return;
     }
 
     const exchange = async () => {
       try {
-        await api.post("/auth/github/callback", { code });
+        await api.post("/accounts/social/login/github/", { code });
         router.replace("/");
       } catch (err) {
-        router.replace("/login");
+        router.replace("/signIn");
       }
     };
 
