@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 const GoogleAuthButton = () => {
   const authWithGoogle = () => {
     const clientID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/google/callback`;
+    const redirectUri = process.env.NEXT_PUBLIC_APP_URL;
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientID}&scope=openid%20email&redirect_uri=${redirectUri}`;
   };
   return (
