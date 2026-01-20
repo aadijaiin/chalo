@@ -19,7 +19,7 @@ export default function CallbackClient() {
 
     const exchange = async () => {
       try {
-        await api.post("/dj-rest-auth/social/login/github/", { code });
+        await api.post("/auth/github/callback/", { code });
         router.replace("/");
       } catch {
         router.replace("/signIn");
