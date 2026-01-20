@@ -3,8 +3,8 @@ import { Button } from "../ui/button";
 const GoogleAuthButton = () => {
   const authWithGoogle = () => {
     const clientID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectURI = `https://chalo-ten.vercel.app/google/callback`;
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientID}.apps.googleusercontent.com&scope=openid%20email&redirect_uri=${redirectURI}`;
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/google/callback`;
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientID}&scope=openid%20email&redirect_uri=${redirectUri}`;
   };
   return (
     <Button

@@ -3,8 +3,8 @@ import { Button } from "../ui/button";
 const GithubAuthButton = () => {
   const authWithGithub = () => {
     const clientID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-    const redirectURI = `https://chalo-ten.vercel.app/github/callback`;
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=user:email`;
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/github/callback`;
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectUri}&scope=user:email`;
   };
   return (
     <Button
