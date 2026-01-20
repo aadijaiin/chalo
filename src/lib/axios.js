@@ -12,14 +12,6 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // Example: attach token if you use one
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     return config;
   },
   (error) => {

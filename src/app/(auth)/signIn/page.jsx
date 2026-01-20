@@ -1,9 +1,27 @@
+"use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { signinSchema } from "@/lib/validators/signin.schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signin } from "@/services/auth.service";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
-const page = () => {
+const Page = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(signinSchema),
+  });
+  const onSubmit = async (data) => {
+    try {
+      await signin(data);
+      toast.success("Account created successfully!");
+    } catch {}
+  };
   return (
     <main className="flex-1 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-lg">
@@ -16,21 +34,27 @@ const page = () => {
               Log in to your account to continue exploring.
             </p>
           </div>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-4">
               <div>
                 <label
                   className="block text-sm font-semibold text-earth/80 mb-2"
                   htmlFor="login-identity"
                 >
-                  Email or Username
+                  Username
                 </label>
                 <input
+                  {...register("username")}
                   className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                   id="login-identity"
-                  placeholder="alex@example.com"
+                  placeholder="Ex. johndoe"
                   type="text"
                 />
+                {errors.username && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.username.message}
+                  </p>
+                )}
               </div>
               <div>
                 <label
@@ -40,16 +64,22 @@ const page = () => {
                   Password
                 </label>
                 <input
+                  {...register("password")}
                   className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                   id="password"
                   placeholder="••••••••"
                   type="password"
                 />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
             </div>
             <div className="pt-2">
               <Button className="w-full h-14 bg-primary-foreground hover:bg-primary-foreground text-white font-bold rounded-xl shadow-lg shadow-primary-foreground/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                Log In
+                {isSubmitting ? "Logging in..." : "Log in"}
               </Button>
             </div>
             <div className="relative py-2 flex items-center">
@@ -136,4 +166,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

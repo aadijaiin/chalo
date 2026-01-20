@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const signupSchema = z
   .object({
-    firstName: z.string().min(2, "First name is too short."),
-    lastName: z
+    first_name: z.string().min(2, "First name is too short."),
+    last_name: z
       .string()
       .min(2, "Last name is too short.")
       .optional()
@@ -11,9 +11,9 @@ export const signupSchema = z
     email: z.email({ message: "Invalid email address." }),
     username: z.string().min(3, "Username must be at least 3 characters"),
     password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
+    confirm_password: z.string(),
   })
-  .refine((data) => data.password === data.confirmPassword, {
+  .refine((data) => data.password === data.confirm_password, {
     message: "Passwords do not match",
-    path: ["confirmPassword"],
+    path: ["confirm_password"],
   });

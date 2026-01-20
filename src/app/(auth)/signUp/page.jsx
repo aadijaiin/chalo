@@ -18,7 +18,7 @@ const Page = () => {
     resolver: zodResolver(signupSchema),
   });
   const onSubmit = async (data) => {
-    const { confirmPassword, ...payload } = data;
+    const { confirm_password, ...payload } = data;
 
     try {
       await signup(data);
@@ -47,15 +47,15 @@ const Page = () => {
                   First Name
                 </label>
                 <input
-                  {...register("firstName")}
+                  {...register("first_name")}
                   className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                   id="first-name"
                   placeholder="Alex"
                   type="text"
                 />
-                {errors.firstName && (
+                {errors.first_name && (
                   <p className="text-red-500 text-sm mt-1">
-                    {errors.firstName.message}
+                    {errors.first_name.message}
                   </p>
                 )}
               </div>
@@ -67,15 +67,15 @@ const Page = () => {
                   Last Name
                 </label>
                 <input
-                  {...register("lastName")}
+                  {...register("last_name")}
                   className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                   id="last-name"
                   placeholder="Rivera"
                   type="text"
                 />
-                {errors.lastName && (
+                {errors.last_name && (
                   <p className="text-red-500 text-sm mt-1">
-                    {errors.lastName.message}
+                    {errors.last_name.message}
                   </p>
                 )}
               </div>
@@ -154,15 +154,15 @@ const Page = () => {
                   Confirm Password
                 </label>
                 <input
-                  {...register("confirmPassword")}
+                  {...register("confirm_password")}
                   className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                   id="confirm-password"
                   placeholder="••••••••"
                   type="password"
                 />
-                {errors.confirmPassword && (
+                {errors.confirm_password && (
                   <p className="text-red-500 text-sm mt-1">
-                    {errors.confirmPassword.message}
+                    {errors.confirm_password.message}
                   </p>
                 )}
               </div>
