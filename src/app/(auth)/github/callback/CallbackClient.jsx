@@ -18,7 +18,7 @@ export default function CallbackClient() {
 
     const exchange = async () => {
       try {
-        await api.post("/accounts/social/login/github/", { code });
+        await api.post("/dj-rest-auth/social/login/github/", { code });
         router.replace("/");
       } catch (err) {
         router.replace("/signIn");
