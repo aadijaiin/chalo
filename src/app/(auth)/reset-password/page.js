@@ -16,7 +16,7 @@ const Page = () => {
   return (
     <main className="flex-1 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-xl shadow-earth/5 border border-sage/10 p-8 md:p-12">
+        <div className="dark:bg-card bg-white rounded-3xl shadow-xl shadow-earth/5 border border-sage/10 p-8 md:p-12">
           <div className="text-center mb-10">
             <div className="w-16 h-16 bg-primary-foreground/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <LockOpenOutlinedIcon sx={{ fontSize: 28 }} htmlColor="#e2725b" />
@@ -44,7 +44,7 @@ const Page = () => {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-10 rounded-xl border border-sage/40 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                  className="w-full px-4 py-3 pr-10 rounded-xl border border-sage/40 text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                 />
 
                 <button
@@ -86,7 +86,7 @@ const Page = () => {
                   id="confirm_password"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-10 rounded-xl border border-sage/40 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                  className="w-full px-4 py-3 pr-10 rounded-xl border border-sage/40 text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                 />
 
                 <button

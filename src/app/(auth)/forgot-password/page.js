@@ -10,7 +10,7 @@ const ForgotPasswordEmail = () => {
   return (
     <main className="flex-1 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-xl shadow-earth/5 border border-sage/10 p-8 md:p-12">
+        <div className="dark:bg-card bg-white rounded-3xl shadow-xl shadow-earth/5 border border-sage/10 p-8 md:p-12">
           <div className="text-center mb-10">
             <div className="w-16 h-16 bg-sage/10 rounded-2xl text-3xl flex items-center justify-center mx-auto mb-6">
               <LockResetOutlinedIcon htmlColor="#8DA399" fontSize="large" />
@@ -32,7 +32,7 @@ const ForgotPasswordEmail = () => {
                 Email Address
               </label>
               <input
-                className="w-full px-4 py-3 rounded-xl border border-sage/40 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-sage/40 text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                 id="email"
                 placeholder="alex@example.com"
                 required=""
@@ -52,32 +52,32 @@ const ForgotPasswordEmail = () => {
                   </label>
                   <div className="grid grid-cols-6 gap-2">
                     <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 bg-white text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                       maxLength="1"
                       type="text"
                     />
                     <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 bg-white text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                       maxLength="1"
                       type="text"
                     />
                     <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 bg-white text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                       maxLength="1"
                       type="text"
                     />
                     <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 bg-white text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                       maxLength="1"
                       type="text"
                     />
                     <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 bg-white text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                       maxLength="1"
                       type="text"
                     />
                     <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 bg-white text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                       maxLength="1"
                       type="text"
                     />
@@ -93,7 +93,7 @@ const ForgotPasswordEmail = () => {
                   <p className="text-sm text-earth/60">
                     Didn&apos;t receive a code?
                     <Button
-                      className="text-sage font-bold hover:text-earth transition-colors ml-1"
+                      className="text-sage font-bold hover:text-earth transition-colors ml-1 bg-card hover:bg-card"
                       type="button"
                     >
                       Resend OTP{" "}
