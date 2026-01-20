@@ -21,13 +21,12 @@ export default function RootLayout({ children }) {
         <body>
           <ThemeProvider
             attribute="class"
-            defaultTheme='system'
+            defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-            >
-            <div className="absolute top-10 right-10">
-
-            <ModeToggle/>
+          >
+            <div className="absolute top-6 right-6">
+              <ModeToggle />
             </div>
             {children}
             <ClientToaster richColors position="top-right" />

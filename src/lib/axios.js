@@ -27,7 +27,6 @@ api.interceptors.response.use(
     const message =
       error.response?.data?.message || error.message || "Something went wrong";
 
-    // 🔥 Central toast handling
     if (status) {
       switch (status) {
         case 400:
@@ -36,7 +35,6 @@ api.interceptors.response.use(
 
         case 401:
           toast.error("Unauthorized. Please log in again.");
-          // optional: logout / redirect
           break;
 
         case 403:
