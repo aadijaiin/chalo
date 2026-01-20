@@ -4,7 +4,7 @@ const GoogleAuthButton = () => {
   const authWithGoogle = () => {
     const clientID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     const redirectURI = `https://chalo-ten.vercel.app/google/callback`;
-    window.location.href = `https://google.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=user:email`;
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientID}.apps.googleusercontent.com&scope=openid%20email&redirect_uri=${redirectURI}`;
   };
   return (
     <Button
