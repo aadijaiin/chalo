@@ -9,7 +9,7 @@ const GithubAuthButton = () => {
   return (
     <Button
       onClick={authWithGithub}
-      className="w-full h-12 flex items-center justify-center gap-3 px-4 rounded-full border border-earth/10 bg-white text-earth/80 font-semibold hover:bg-earth/5 transition-all active:scale-[0.98]"
+      className="w-full h-12 flex items-center justify-center gap-3 px-4 rounded-full border border-earth/10 bg-transparent text-earth/80 font-semibold hover:bg-earth/5 transition-all active:scale-[0.98]"
       type="Button"
     >
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

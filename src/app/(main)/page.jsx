@@ -17,8 +17,8 @@ export default function Home() {
       {/* <ModeToggle /> */}
       <Hero />
       <Features />
-      <BuiltFor />
       <ForWho />
+      <BuiltFor />
       <Privacy />
     </>
   );

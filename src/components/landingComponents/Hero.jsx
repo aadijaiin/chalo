@@ -41,7 +41,7 @@ const Hero = () => {
                 className="
     flex min-w-50 items-center justify-center
     rounded-xl h-14 px-8
-    bg-primary-foreground text-white
+    bg-primary-foreground text-white 
     text-base font-bold
 
     shadow-xl shadow-primary-foreground/30
@@ -64,12 +64,12 @@ const Hero = () => {
                 className="
     flex min-w-50 items-center justify-center
     rounded-xl h-14 px-8
-    bg-white border border-sage/20
+    bg-card border border-sage/20
     text-earth text-base font-bold
 
     shadow-sm transition-all
 
-    hover:bg-white/70
+    hover:bg-card/70
     hover:scale-[1.02]
 
     active:scale-[0.97]
@@ -84,7 +84,7 @@ const Hero = () => {
             </div>
           </div>
           <div className="w-full lg:w-1/2 flex justify-center">
-            <div className="relative w-full max-w-125 aspect-4/5 bg-white rounded-3xl p-4 shadow-2xl border border-sage/10 overflow-hidden">
+            <div className="relative w-full max-w-125 aspect-4/5 bg-card rounded-3xl p-4 shadow-2xl border border-sage/10 overflow-hidden">
               <div
                 className="w-full h-full rounded-2xl bg-cover bg-center relative"
                 style={{

@@ -88,9 +88,12 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --sage: #8DA399;
+  --earth: #ffffff;
+  --cream: #FCF9F2;
+  --background: #1A1D1A;
+  --foreground: oklch(100% 0.00011 271.152);
+  --card: #242824;
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);

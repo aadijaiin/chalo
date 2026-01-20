@@ -4,9 +4,9 @@ import NavigationOutlinedIcon from "@mui/icons-material/NavigationOutlined";
 
 export default function Features() {
   return (
-    <section className="px-6 lg:px-40 py-24 bg-white" id="how-it-works">
-      <div className="max-w-300 mx-auto">
-        <div className="flex flex-col gap-6 text-center mb-16">
+    <section id="features" className="px-6 lg:px-40 py-24 text-foreground bg-background" >
+      <div className="max-w-300  mx-auto">
+        <div className="flex flex-col  gap-6 text-center mb-16">
           <h2 className="text-4xl font-extrabold tracking-tight text-earth">
             Simple &amp; Seamless
           </h2>
@@ -16,7 +16,7 @@ export default function Features() {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-cream border border-sage/10 hover:border-primary-foreground/30 transition-all group">
+          <div className="flex flex-col bg-card items-center gap-6 p-10 rounded-3xl  border border-sage/10 hover:border-primary-foreground/30 transition-all group">
             <div className="w-16 h-16 rounded-2xl bg-sage/10 text-sage flex items-center justify-center group-hover:bg-sage group-hover:text-white group-active:bg-sage group-active:text-white transition-all">
               <AddCircleOutlineIcon />
             </div>
@@ -26,7 +26,7 @@ export default function Features() {
               required.
             </p>
           </div>
-          <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-cream border border-sage/10 hover:border-primary-foreground/30 transition-all group">
+          <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-card border border-sage/10 hover:border-primary-foreground/30 transition-all group">
             <div className="w-16 h-16 rounded-2xl bg-primary-foreground/10 text-primary-foreground flex items-center justify-center group-hover:bg-primary-foreground group-hover:text-white group-active:bg-primary-foreground group-active:text-white transition-all">
               <ShareOutlinedIcon />
             </div>
@@ -36,7 +36,7 @@ export default function Features() {
               click.
             </p>
           </div>
-          <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-cream border border-sage/10 hover:border-primary-foreground/30 transition-all group">
+          <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-card border border-sage/10 hover:border-primary-foreground/30 transition-all group">
             <div
               className="w-16 h-16 rounded-2xl bg-sage/10 text-sage flex items-center justify-center group-hover:bg-sage group-hover:text-white
 group-active:bg-sage group-active:text-white

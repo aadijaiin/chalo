@@ -30,7 +30,7 @@ const Page = () => {
   return (
     <main className="flex-1 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-2xl">
-        <div className="bg-white rounded-3xl shadow-xl shadow-earth/5 border border-sage/10 p-8 md:p-12">
+        <div className="bg-white dark:bg-card rounded-3xl shadow-xl shadow-earth/5 border border-sage/10 p-8 md:p-12">
           <div className="text-center mb-10">
             <h1 className="text-3xl font-extrabold text-earth mb-3">
               Create your account
@@ -50,7 +50,7 @@ const Page = () => {
                 </label>
                 <input
                   {...register("first_name")}
-                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-transparent text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                   id="first-name"
                   placeholder="Alex"
                   type="text"
@@ -70,7 +70,7 @@ const Page = () => {
                 </label>
                 <input
                   {...register("last_name")}
-                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-transparent text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                   id="last-name"
                   placeholder="Rivera"
                   type="text"
@@ -91,7 +91,7 @@ const Page = () => {
               </label>
               <input
                 {...register("email")}
-                className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-transparent text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                 id="email"
                 placeholder="alex@example.com"
                 type="email"
@@ -115,7 +115,7 @@ const Page = () => {
                 </span>
                 <input
                   {...register("username")}
-                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all pl-9"
+                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-transparent text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all pl-9"
                   id="username"
                   placeholder="alex_finds_way"
                   type="text"
@@ -137,7 +137,7 @@ const Page = () => {
                 </label>
                 <input
                   {...register("password")}
-                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-transparent text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                   id="password"
                   placeholder="••••••••"
                   type="password"
@@ -157,7 +157,7 @@ const Page = () => {
                 </label>
                 <input
                   {...register("confirm_password")}
-                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-white text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-sage/20 bg-transparent text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                   id="confirm-password"
                   placeholder="••••••••"
                   type="password"

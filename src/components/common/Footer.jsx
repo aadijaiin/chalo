@@ -6,7 +6,7 @@ import ExploreIcon from "@mui/icons-material/Explore";
 
 const Footer = () => {
   return (
-    <footer className="bg-cream border-t border-sage/10 px-6 lg:px-40 py-20">
+    <footer className="bg-card border-t border-sage/10 px-6 lg:px-40 py-20">
       <div className="max-w-300 mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
         <div className="flex flex-col gap-6 col-span-1 md:col-span-1">
           <div className="flex items-center gap-3">
@@ -83,7 +83,7 @@ const Footer = () => {
           <div className="flex gap-4">
             <a
               href="#"
-              className="w-10 h-10 rounded-full bg-white border border-sage/10 
+              className="w-10 h-10 rounded-full bg-white dark:bg-background border border-sage/10 
                flex items-center justify-center 
                text-earth/70 
                hover:bg-primary-foreground hover:text-white hover:border-primary-foreground 
@@ -94,7 +94,7 @@ const Footer = () => {
 
             <a
               href="#"
-              className="w-10 h-10 rounded-full bg-white border border-sage/10 
+              className="w-10 h-10 rounded-full bg-white border dark:bg-background border-sage/10 
                flex items-center justify-center 
                text-earth/70 
                hover:bg-primary-foreground hover:text-white hover:border-primary-foreground 

@@ -5,7 +5,7 @@ import ExploreIcon from "@mui/icons-material/Explore";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 const Navbar = () => {
   return (
-    <header className="sticky top-0 z-50 bg-primary/50 backdrop-blur-md border-b border-primary-foreground/10 px-6 lg:px-40 py-4">
+    <header className="sticky top-0 z-50 bg-card/70 backdrop-blur-md border-b border-primary-foreground/10 px-6 lg:px-40 py-4">
       <div className="flex items-center justify-between max-w-300 mx-auto">
         <div className="flex items-center gap-2 text-terracotta">
           <ExploreIcon htmlColor="#e2725b" />
@@ -34,7 +34,7 @@ const Navbar = () => {
             Privacy
           </a>
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex bg-primary-foreground rounded-full items-center gap-4">
           <Button
             className="
                 hidden sm:flex min-w-30 items-center justify-center

@@ -2,6 +2,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/ui/themeProvider";
 import "./globals.css";
 import ClientToaster from "@/lib/ClientToaster";
+import ModeToggle from "@/components/themeButton";
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
@@ -20,10 +21,14 @@ export default function RootLayout({ children }) {
         <body>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme='system'
             enableSystem
             disableTransitionOnChange
-          >
+            >
+            <div className="absolute top-10 right-10">
+
+            <ModeToggle/>
+            </div>
             {children}
             <ClientToaster richColors position="top-right" />
           </ThemeProvider>
