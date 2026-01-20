@@ -1,8 +1,8 @@
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/ui/themeProvider";
 import "./globals.css";
-import ClientToaster from "@/lib/ClientToaster";
 import ModeToggle from "@/components/themeButton";
+import AppToaster from "@/lib/AppToaster";
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
               <ModeToggle />
             </div>
             {children}
-            <ClientToaster richColors position="top-right" />
+            <AppToaster />
           </ThemeProvider>
         </body>
       </html>

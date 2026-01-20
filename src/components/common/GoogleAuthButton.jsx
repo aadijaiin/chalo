@@ -1,10 +1,16 @@
 import React from "react";
 import { Button } from "../ui/button";
 const GoogleAuthButton = () => {
+  const authWithGoogle = () => {
+    const clientID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const redirectURI = `https://chalo-ten.vercel.app/google/callback`;
+    window.location.href = `https://google.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=user:email`;
+  };
   return (
     <Button
       className="w-full h-12 flex items-center justify-center gap-3 px-4 rounded-full border border-earth/10 bg-transparent text-earth/80 font-semibold hover:bg-earth/5 transition-all active:scale-[0.98]"
       type="Button"
+      onClick={authWithGoogle}
     >
       <svg className="w-5 h-5" viewBox="0 0 24 24">
         <path
