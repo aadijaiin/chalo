@@ -16,22 +16,62 @@ import { useRouter } from "next/navigation";
 const ForgotPasswordEmail = () => {
   const [showOtpForm, setShowOtpForm] = useState(false);
   const [otp, setOtp] = useState(Array(6).fill(""));
-  const [forgotEmail, setForgotEmail] = useState("");
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [resetId, setResetId] = useState("");
+  const [resending, setResending] = useState(false);
+  const RESEND_TIME = 120;
+
+  const [resendTimer, setResendTimer] = useState(RESEND_TIME);
+
   const router = useRouter();
+
+  const handleResendOtp = async () => {
+    if (!canResend || resending) return;
+
+    try {
+      setResending(true);
+
+      await forgotPasswordValidateEmail({
+        email: getValues("email"),
+      });
+
+      setOtp(Array(6).fill(""));
+      setResendTimer(RESEND_TIME);
+      toast.success("OTP resent successfully");
+    } catch {
+      toast.error("Failed to resend OTP");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const canResend = resendTimer === 0;
+
+  useEffect(() => {
+    if (!showOtpForm) return;
+    if (resendTimer === 0) return;
+
+    const interval = setInterval(() => {
+      setResendTimer((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [showOtpForm, resendTimer]);
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(forgotPasswordSchema),
   });
   const onSubmit = async (data) => {
     try {
-      await forgotPasswordValidateEmail(data);
-      setForgotEmail(data.email);
+      const res = await forgotPasswordValidateEmail(data);
+      setResetId(res.reset_id[0]);
       setShowOtpForm(true);
+      setResendTimer(RESEND_TIME);
       toast.success("OTP sent successfully!");
     } catch {}
   };
@@ -75,10 +115,10 @@ const ForgotPasswordEmail = () => {
       setVerifyingOtp(true);
       await ForgotPasswordValidateOTP({
         otp: finalOtp,
-        email: forgotEmail,
+        id: resetId,
       });
       setVerifyingOtp(false);
-      router.push("reset-password");
+      router.push(`reset-password?id=${resetId}`);
 
       toast.success("OTP verified successfully");
     } catch {
@@ -183,16 +223,28 @@ const ForgotPasswordEmail = () => {
                 )}
               </Button>
               <div className="text-center">
-                <p className="text-sm text-earth/60">
-                  Didn&apos;t receive a code?
+                {resending ? (
+                  <div className="inline-flex items-center gap-2 text-sage font-bold">
+                    <ButtonLoader />
+                    <span>Resending...</span>
+                  </div>
+                ) : (
                   <Button
-                    className="text-sage font-bold hover:text-earth transition-colors ml-1 bg-card hover:bg-card"
                     type="button"
+                    onClick={handleResendOtp}
+                    disabled={!canResend}
+                    className={`text-sage font-bold transition-colors ml-1 bg-card hover:bg-card
+        ${!canResend ? "opacity-50 cursor-not-allowed" : "hover:text-earth"}`}
                   >
                     Resend OTP{" "}
-                    <span className="text-earth/40 font-normal">(0:59)</span>
+                    {!canResend && (
+                      <span className="text-earth/40 font-normal">
+                        ({Math.floor(resendTimer / 60)}:
+                        {String(resendTimer % 60).padStart(2, "0")})
+                      </span>
+                    )}
                   </Button>
-                </p>
+                )}
               </div>
             </form>
           )}
