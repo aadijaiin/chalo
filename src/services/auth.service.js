@@ -11,16 +11,19 @@ export const signin = async (payload) => {
 };
 
 export const forgotPasswordValidateEmail = async (payload) => {
-  const { data } = await api.post("", payload);
+  const { data } = await api.post("auth/password-reset/request/", payload);
   return data;
 };
 
 export const ForgotPasswordValidateOTP = async (payload) => {
-  const { data } = await api.post("", payload);
+  const { data } = await api.post("auth/password-reset/verify-otp/", payload);
   return data;
 };
 
 export const resetPassword = async (payload) => {
-  const { data } = await api.post("", payload);
+  const { data } = await api.post(
+    "auth/password-reset/change-password/",
+    payload,
+  );
   return data;
 };

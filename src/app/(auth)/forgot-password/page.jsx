@@ -1,12 +1,91 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { forgotPasswordSchema } from "@/lib/validators/forgotPassword.schema";
+import { forgotPasswordValidateEmail } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import LockResetOutlinedIcon from "@mui/icons-material/LockResetOutlined";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import ShieldIcon from "@mui/icons-material/Shield";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import ButtonLoader from "@/components/ui/buttonLoader";
+import { ForgotPasswordValidateOTP } from "@/services/auth.service";
+import { useRouter } from "next/navigation";
 const ForgotPasswordEmail = () => {
   const [showOtpForm, setShowOtpForm] = useState(false);
+  const [otp, setOtp] = useState(Array(6).fill(""));
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(forgotPasswordSchema),
+  });
+  const onSubmit = async (data) => {
+    try {
+      await forgotPasswordValidateEmail(data);
+      setForgotEmail(data.email);
+      setShowOtpForm(true);
+      toast.success("OTP sent successfully!");
+    } catch {}
+  };
+  const handleOtpChange = (value, index) => {
+    if (!/^\d?$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      document.getElementById(`otp-${index + 1}`)?.focus();
+    }
+  };
+
+  useEffect(() => {
+    if (showOtpForm) {
+      setTimeout(() => {
+        document.getElementById("otp-0")?.focus();
+      }, 100);
+    }
+  }, [showOtpForm]);
+
+  const handleOtpKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-${index - 1}`)?.focus();
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const finalOtp = otp.join("");
+
+    if (finalOtp.length !== 6) {
+      toast.error("Please enter complete OTP");
+      return;
+    }
+
+    console.log("OTP:", finalOtp);
+    try {
+      setVerifyingOtp(true);
+      await ForgotPasswordValidateOTP({
+        otp: finalOtp,
+        email: forgotEmail,
+      });
+      setVerifyingOtp(false);
+      router.push("reset-password");
+
+      toast.success("OTP verified successfully");
+    } catch {
+      setVerifyingOtp(false);
+    }
+  };
+
   return (
     <main className="flex-1 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
@@ -23,7 +102,7 @@ const ForgotPasswordEmail = () => {
               password.
             </p>
           </div>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label
                 className="block text-sm font-semibold text-earth/80 mb-2"
@@ -32,87 +111,100 @@ const ForgotPasswordEmail = () => {
                 Email Address
               </label>
               <input
+                disabled={showOtpForm}
+                {...register("email")}
                 className="w-full px-4 py-3 rounded-xl border border-sage/40 text-earth placeholder:text-earth/40 focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                 id="email"
                 placeholder="alex@example.com"
                 required=""
                 type="email"
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
             <div className="pt-2">
-              <Button className="w-full h-14 bg-primary-foreground hover:bg-primary-foreground text-white font-bold rounded-xl shadow-lg shadow-primary-foreground/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                Send OTP
+              <Button
+                disabled={isSubmitting || showOtpForm}
+                type="submit"
+                className={`w-full h-14 bg-primary-foreground hover:bg-primary-foreground text-white font-bold rounded-xl shadow-lg shadow-primary-foreground/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${showOtpForm && "hidden"}`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <ButtonLoader />
+                    <span>Sending OTP...</span>{" "}
+                  </>
+                ) : (
+                  "Send OTP"
+                )}
               </Button>
             </div>
-            {showOtpForm && (
-              <div className="space-y-6 pt-6 border-t border-sage/10">
-                <div>
-                  <label className="block text-sm font-semibold text-earth/80 text-center mb-5">
-                    Enter 6-digit Verification Code
-                  </label>
-                  <div className="grid grid-cols-6 gap-2">
+          </form>
+          {showOtpForm && (
+            <form
+              className="space-y-6 pt-6 border-t border-sage/10"
+              onSubmit={handleVerifyOtp}
+            >
+              <div>
+                <label className="block text-sm font-semibold text-earth/80 text-center mb-5">
+                  Enter 6-digit Verification Code
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {otp.map((digit, index) => (
                     <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
-                      maxLength="1"
+                      disabled={verifyingOtp}
+                      key={index}
+                      id={`otp-${index}`}
                       type="text"
-                    />
-                    <input
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(e.target.value, index)}
+                      onKeyDown={(e) => handleOtpKeyDown(e, index)}
                       className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
-                      maxLength="1"
-                      type="text"
                     />
-                    <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
-                      maxLength="1"
-                      type="text"
-                    />
-                    <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
-                      maxLength="1"
-                      type="text"
-                    />
-                    <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
-                      maxLength="1"
-                      type="text"
-                    />
-                    <input
-                      className="w-full h-14 text-center text-xl font-bold rounded-xl border border-sage/40 text-earth focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
-                      maxLength="1"
-                      type="text"
-                    />
-                  </div>
-                </div>
-                <Button
-                  className="w-full h-14 bg-primary-foreground hover:bg-primary-foreground text-white font-bold rounded-xl shadow-lg shadow-primary-foreground/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  type="submit"
-                >
-                  Verify OTP
-                </Button>
-                <div className="text-center">
-                  <p className="text-sm text-earth/60">
-                    Didn&apos;t receive a code?
-                    <Button
-                      className="text-sage font-bold hover:text-earth transition-colors ml-1 bg-card hover:bg-card"
-                      type="button"
-                    >
-                      Resend OTP{" "}
-                      <span className="text-earth/40 font-normal">(0:59)</span>
-                    </Button>
-                  </p>
+                  ))}
                 </div>
               </div>
-            )}
-            <div className="text-center pt-4">
-              <a
-                className="inline-flex items-center gap-2 text-sage font-bold hover:text-earth transition-colors text-sm"
-                href="#"
+              <Button
+                className="w-full h-14 bg-primary-foreground hover:bg-primary-foreground text-white font-bold rounded-xl shadow-lg shadow-primary-foreground/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                type="submit"
+                disabled={verifyingOtp}
               >
-                <ArrowBackOutlinedIcon />
-                Back to Login
-              </a>
-            </div>
-          </form>
+                {verifyingOtp ? (
+                  <>
+                    <ButtonLoader />
+                    <span>Verifying OTP...</span>
+                  </>
+                ) : (
+                  "Verify OTP"
+                )}
+              </Button>
+              <div className="text-center">
+                <p className="text-sm text-earth/60">
+                  Didn&apos;t receive a code?
+                  <Button
+                    className="text-sage font-bold hover:text-earth transition-colors ml-1 bg-card hover:bg-card"
+                    type="button"
+                  >
+                    Resend OTP{" "}
+                    <span className="text-earth/40 font-normal">(0:59)</span>
+                  </Button>
+                </p>
+              </div>
+            </form>
+          )}
+          <div className="text-center pt-4">
+            <a
+              className="inline-flex items-center gap-2 text-sage font-bold hover:text-earth transition-colors text-sm"
+              href="#"
+            >
+              <ArrowBackOutlinedIcon />
+              Back to Login
+            </a>
+          </div>
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-8 text-xs text-earth/40 uppercase tracking-widest font-bold">
           <div className="flex items-center gap-2">
