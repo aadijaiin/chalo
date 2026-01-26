@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import axios from "axios";
 
 export default function CallbackClient() {
   const searchParams = useSearchParams();
@@ -19,6 +20,7 @@ export default function CallbackClient() {
 
     const exchange = async () => {
       try {
+        await axios.post();
         await api.post("/auth/github/callback/", { code });
         router.replace("/");
       } catch {
