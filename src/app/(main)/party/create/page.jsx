@@ -26,7 +26,7 @@ const Page = () => {
     resolver: zodResolver(createPartySchema),
     defaultValues: {
       partyName: "",
-      duration: "2h",
+      duration: "120",
     },
   });
   const { control, register, handleSubmit, formState } = form;
@@ -127,7 +127,7 @@ const Page = () => {
                     control={control}
                     render={({ field }) => (
                       <Select
-                        value={field.value}
+                        value={field.value ? String(field.value) : ""}
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
@@ -146,7 +146,7 @@ const Page = () => {
                             className={
                               "cursor-pointer rounded-md focus:bg-primary-foreground/10"
                             }
-                            value="1h"
+                            value={"60"}
                           >
                             1 Hour
                           </SelectItem>
@@ -154,7 +154,7 @@ const Page = () => {
                             className={
                               "cursor-pointer rounded-md focus:bg-primary-foreground/10"
                             }
-                            value="2h"
+                            value={"120"}
                           >
                             2 Hours
                           </SelectItem>
@@ -162,7 +162,7 @@ const Page = () => {
                             className={
                               "cursor-pointer rounded-md focus:bg-primary-foreground/10"
                             }
-                            value="4h"
+                            value={"240"}
                           >
                             4 Hours
                           </SelectItem>
@@ -170,7 +170,7 @@ const Page = () => {
                             className={
                               "cursor-pointer rounded-md focus:bg-primary-foreground/10"
                             }
-                            value="8h"
+                            value={"480"}
                           >
                             8 Hours
                           </SelectItem>
@@ -178,7 +178,7 @@ const Page = () => {
                             className={
                               "cursor-pointer rounded-md focus:bg-primary-foreground/10"
                             }
-                            value="1d"
+                            value={"1440"}
                           >
                             1 Day
                           </SelectItem>
@@ -186,7 +186,7 @@ const Page = () => {
                             className={
                               "cursor-pointer rounded-md focus:bg-primary-foreground/10"
                             }
-                            value="3d"
+                            value={"4320"}
                           >
                             3 Days
                           </SelectItem>
