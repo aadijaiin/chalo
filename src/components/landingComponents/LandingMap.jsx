@@ -8,7 +8,7 @@ const LandingMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
 
-  const styleUrl = `https://api.maptiler.com/maps/streets-v2-dark/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_KEY}`;
+  const styleUrl = "/streets-v2-dark.json";
 
   useEffect(() => {
     if (map.current) return;
@@ -18,7 +18,7 @@ const LandingMap = () => {
       container: mapContainer.current,
       style: styleUrl,
       center: [0, 0],
-      zoom: 12,
+      zoom: 2,
     });
 
     map.current.addControl(new maplibregl.NavigationControl(), "top-right");
