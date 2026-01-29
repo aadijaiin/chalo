@@ -2,8 +2,10 @@ import React from "react";
 import Image from "next/image";
 import LandingMap from "./LandingMap";
 import { Button } from "../ui/button";
+import { useRouter } from "next/navigation";
 import ShareLocationTwoToneIcon from "@mui/icons-material/ShareLocationTwoTone";
 const Hero = () => {
+  const router = useRouter();
   return (
     <section className="px-6 lg:px-40 py-16 lg:py-24 dreamwave-bg">
       <div className="max-w-300 mx-auto">
@@ -35,10 +37,13 @@ const Hero = () => {
             </h1>
             <p className="text-lg lg:text-xl text-earth/70 leading-relaxed max-w-135">
               Real-time group location sharing designed for privacy, ease, and
-              spontaneous adventures. No accounts required.
+              spontaneous adventures.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
+                onClick={() => {
+                  router.push("/party/create");
+                }}
                 className="
     flex min-w-50 items-center justify-center
     rounded-xl h-14 px-8
@@ -58,10 +63,13 @@ const Hero = () => {
     focus-visible:ring-primary-foreground/40
   "
               >
-                Create Live Session
+                Create a Party
               </Button>
 
               <Button
+                onClick={() => {
+                  router.push("/party/join");
+                }}
                 className="
     flex min-w-50 items-center justify-center
     rounded-xl h-14 px-8
@@ -80,7 +88,7 @@ const Hero = () => {
     focus-visible:ring-sage/30
   "
               >
-                Join a Group
+                Join a Party
               </Button>
             </div>
           </div>

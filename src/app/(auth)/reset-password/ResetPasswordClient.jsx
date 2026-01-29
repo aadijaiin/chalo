@@ -14,7 +14,8 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import ButtonLoader from "@/components/ui/buttonLoader";
 import { resetPassword } from "@/services/auth.service";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 const Page = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -149,13 +150,14 @@ const Page = () => {
             </div>
 
             <div className="text-center pt-4">
-              <a
-                href="/signIn"
+              <Link
+                href="/signin"
+                replace
                 className="inline-flex items-center gap-2 text-sage font-bold hover:text-earth transition-colors text-sm"
               >
                 <ArrowBackOutlinedIcon sx={{ fontSize: 18 }} />
                 Back to Login
-              </a>
+              </Link>
             </div>
           </form>
         </div>

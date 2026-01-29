@@ -7,9 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signin } from "@/services/auth.service";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
-import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import GithubAuthButton from "@/components/common/GithubAuthButton";
 import GoogleAuthButton from "@/components/common/GoogleAuthButton";
+import Link from "next/link";
 const Page = () => {
   const {
     register,
@@ -91,25 +91,25 @@ const Page = () => {
               </span>
               <div className="grow border-t border-earth/10"></div>
             </div>
-              <div className="grid grid-cols-1 mt-5 sm:grid-cols-2 gap-4">
-                <GoogleAuthButton />
-                <GithubAuthButton />
-              </div>
+            <div className="grid grid-cols-1 mt-5 sm:grid-cols-2 gap-4">
+              <GoogleAuthButton />
+              <GithubAuthButton />
+            </div>
             <div className="flex flex-col items-center gap-3 pt-6 border-t border-earth/5 mt-6">
-              <a
+              <Link
                 className="text-xs font-bold text-primary-foreground hover:underline"
-                href="#"
+                href="/forgot-password"
               >
                 Forgot Password?
-              </a>
+              </Link>
               <p className="text-earth/60 text-sm font-medium">
                 Don&apos;t have an account yet?
-                <a
+                <Link
                   className="text-primary-foreground font-bold hover:underline ml-1"
-                  href="#"
+                  href="/signup"
                 >
                   Sign up
-                </a>
+                </Link>
               </p>
             </div>
           </form>

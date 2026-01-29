@@ -13,6 +13,7 @@ import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import ButtonLoader from "@/components/ui/buttonLoader";
 import { ForgotPasswordValidateOTP } from "@/services/auth.service";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 const ForgotPasswordEmail = () => {
   const [showOtpForm, setShowOtpForm] = useState(false);
   const [otp, setOtp] = useState(Array(6).fill(""));
@@ -249,13 +250,14 @@ const ForgotPasswordEmail = () => {
             </form>
           )}
           <div className="text-center pt-4">
-            <a
+            <Link
               className="inline-flex items-center gap-2 text-sage font-bold hover:text-earth transition-colors text-sm"
-              href="#"
+              href="/signin"
+              replace
             >
               <ArrowBackOutlinedIcon />
               Back to Login
-            </a>
+            </Link>
           </div>
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-8 text-xs text-earth/40 uppercase tracking-widest font-bold">

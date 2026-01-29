@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createPartySchema } from "@/lib/validators/createParty.schema";
 import { createParty } from "@/services/party.service";
 import { toast } from "sonner";
+import Link from "next/link";
 
 const Page = () => {
   const form = useForm({
@@ -42,13 +43,14 @@ const Page = () => {
     <main className="flex-1 flex items-center justify-center px-6 py-12 lg:py-20">
       <div className="max-w-xl w-full">
         <div className="mb-8">
-          <a
+          <Link
             className="inline-flex items-center gap-2 text-sage font-semibold text-sm hover:text-earth transition-colors"
-            href="#"
+            href="/dashboard"
+            replace
           >
             <ArrowBackIcon />
-            Back to home
-          </a>
+            Dashboard
+          </Link>
         </div>
         <div className="bg-card rounded-[2.5rem] p-8 lg:p-12 shadow-2xl shadow-earth/5 border border-sage/5 relative overflow-hidden">
           <div className="absolute -top-12 -right-12 text-sage/5 pointer-events-none">

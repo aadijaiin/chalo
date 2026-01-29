@@ -3,6 +3,7 @@ import React from "react";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import ShareIcon from "@mui/icons-material/Share";
 import ExploreIcon from "@mui/icons-material/Explore";
+import GitHubIcon from "@mui/icons-material/GitHub";
 
 const Footer = () => {
   return (
@@ -89,7 +90,7 @@ const Footer = () => {
                hover:bg-primary-foreground hover:text-white hover:border-primary-foreground 
                transition-all"
             >
-              <ShareIcon className="text-xl" />
+              <GitHubIcon className="text-xl" />
             </a>
 
             <a

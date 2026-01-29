@@ -11,6 +11,7 @@ import { signup } from "@/services/auth.service";
 import { toast } from "sonner";
 import GithubAuthButton from "@/components/common/GithubAuthButton";
 import GoogleAuthButton from "@/components/common/GoogleAuthButton";
+import Link from "next/link";
 const Page = () => {
   const {
     register,
@@ -188,12 +189,12 @@ const Page = () => {
               </div>
               <p className="text-earth/60 text-sm mt-5">
                 Already have an account?
-                <a
+                <Link
                   className="text-primary-foreground font-bold hover:underline ml-1"
-                  href="#"
+                  href="/signin"
                 >
-                  Log in
-                </a>
+                  Sign in
+                </Link>
               </p>
             </div>
           </form>

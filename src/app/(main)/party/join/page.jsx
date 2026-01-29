@@ -8,6 +8,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { joinPartySchema } from "@/lib/validators/joinParty.schema";
 import { joinParty } from "@/services/party.service";
+import Link from "next/link";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const Page = () => {
   const {
@@ -28,6 +30,16 @@ const Page = () => {
   return (
     <main className="flex-1 flex items-center justify-center px-6 py-12 lg:py-24 dreamwave-bg">
       <div className="w-full max-w-125">
+        <div className="mb-8">
+          <Link
+            className="inline-flex items-center gap-2 text-sage font-semibold text-sm hover:text-earth transition-colors"
+            href="/dashboard"
+            replace
+          >
+            <ArrowBackIcon />
+            Dashboard
+          </Link>
+        </div>
         <div className="bg-card rounded-[2.5rem] p-10 lg:p-14 shadow-xl shadow-earth/5 border border-sage/10 text-center">
           <div className="w-16 h-16 bg-sage/10 rounded-2xl flex items-center justify-center text-sage mx-auto mb-8">
             <GroupAddIcon />
@@ -90,7 +102,7 @@ const Page = () => {
               <ArrowForwardIcon />
             </Button>
           </form>
-          <div className="mt-8 pt-8 border-t border-sage/10">
+          {/* <div className="mt-8 pt-8 border-t border-sage/10">
             <a
               className="text-sm font-bold text-sage hover:text-primary-foreground transition-colors flex items-center justify-center gap-2"
               href="#"
@@ -98,16 +110,16 @@ const Page = () => {
               <InsertLinkIcon />
               Need a link instead?
             </a>
-          </div>
+          </div> */}
         </div>
         <p className="text-center mt-8 text-earth/40 text-sm">
           Don&apos;t have a code?{" "}
-          <a
+          <Link
             className="text-earth/60 font-bold hover:text-primary-foreground underline decoration-sage/30 underline-offset-4"
-            href="#"
+            href="/party/create"
           >
-            Create your own session
-          </a>
+            Create your own party
+          </Link>
         </p>
       </div>
     </main>

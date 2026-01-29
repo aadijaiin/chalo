@@ -13,7 +13,7 @@ export default function CallbackClient() {
 
   useEffect(() => {
     if (!code) {
-      router.replace("/signIn");
+      router.replace("/signin");
       return;
     }
 
@@ -22,7 +22,7 @@ export default function CallbackClient() {
         await api.post("/auth/google/callback/", { code });
         router.replace("/");
       } catch {
-        router.replace("/signIn");
+        router.replace("/signin");
       }
     };
 
