@@ -21,8 +21,10 @@ import { createPartySchema } from "@/lib/validators/createParty.schema";
 import { createParty } from "@/services/party.service";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
+  const router = useRouter();
   const form = useForm({
     resolver: zodResolver(createPartySchema),
     defaultValues: {
@@ -35,8 +37,9 @@ const Page = () => {
 
   const onSubmit = async (data) => {
     try {
-      await createParty(data);
+      const res = await createParty(data);
       toast.success("Party created successfully!");
+      router.push(`/party/${res.id}/code`);
     } catch {}
   };
   return (

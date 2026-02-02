@@ -1,97 +1,239 @@
-"use client";
-
-import React, { useEffect, useRef, useState } from "react";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+'use client';
+import React, {useEffect, useRef, useState} from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 const LandingMap = () => {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
+	const mapContainer = useRef(null);
+	const map = useRef(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const styleUrl = '/streets-v2-dark.json';
 
-  const styleUrl = "/streets-v2-dark.json";
+	// Two very close locations - like friends in different stores in a mall/market
+	// Select Citywalk Mall, Saket - One friend at one end, another ~80m away
+	const startPoint = [77.2167, 28.5244]; // Friend 1 - Food court area
+	const endPoint = [77.2174, 28.5251]; // Friend 2 - Shopping section (~80m away)
 
-  useEffect(() => {
-    if (map.current) return;
-    if (!mapContainer.current) return;
+	useEffect(() => {
+		if (map.current) return;
+		if (!mapContainer.current) return;
 
-    // Get user location first
-    if (!navigator.geolocation) {
-      console.error("Geolocation not supported");
-      initializeMap([0, 0], 2);
-      return;
-    }
+		initializeMap();
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { longitude, latitude } = pos.coords;
-        initializeMap([longitude, latitude], 15.5);
-      },
-      (err) => {
-        console.error("Geolocation error:", err);
-        initializeMap([0, 0], 2);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    );
+		function initializeMap() {
+			// Calculate center point between the two locations
+			const centerLng = (startPoint[0] + endPoint[0]) / 2;
+			const centerLat = (startPoint[1] + endPoint[1]) / 2;
 
-    function initializeMap(center, zoom) {
-      map.current = new maplibregl.Map({
-        container: mapContainer.current,
-        style: styleUrl,
-        center: center,
-        zoom: zoom,
-        attributionControl: false,
-      });
+			map.current = new maplibregl.Map({
+				container: mapContainer.current,
+				style: styleUrl,
+				center: [centerLng, centerLat],
+				zoom: 17.5, // Very close zoom to show nearby locations clearly
+				attributionControl: false,
+				pitch: 0, // Slight tilt for better perspective
+			});
 
-      map.current.addControl(new maplibregl.NavigationControl(), "top-right");
+			map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-      // Wait for all tiles to load
-      map.current.on("load", () => {
-        // Add a small delay to ensure tiles are rendered
-        setTimeout(() => {
-          setIsLoading(false);
+			map.current.on('load', () => {
+				// Add markers
+				addMarkers();
 
-          // Add marker after map is loaded
-          if (center[0] !== 0 || center[1] !== 0) {
-            const el = document.createElement("div");
-            el.style.width = "18px";
-            el.style.height = "18px";
-            el.style.backgroundColor = "#4F46E5";
-            el.style.border = "3px solid white";
-            el.style.borderRadius = "50%";
-            el.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+				// Fetch and display route
+				fetchRoute();
+			});
+		}
 
-            new maplibregl.Marker(el).setLngLat(center).addTo(map.current);
-          }
-        }, 100);
-      });
-    }
+		function addMarkers() {
+			// Friend 1 marker (purple) - slightly larger for visibility
+			const marker1El = document.createElement('div');
+			marker1El.style.width = '28px';
+			marker1El.style.height = '28px';
+			marker1El.style.backgroundColor = '#8B5CF6';
+			marker1El.style.border = '4px solid white';
+			marker1El.style.borderRadius = '50%';
+			marker1El.style.boxShadow = '0 0 20px rgba(139,92,246,0.6)';
+			marker1El.style.cursor = 'pointer';
 
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
+			// Add pulse animation
+			marker1El.style.animation = 'pulse 2s infinite';
 
-  return (
-    <div className="relative w-full h-full">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 rounded-2xl z-10">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-white text-sm">Loading map...</p>
-          </div>
-        </div>
-      )}
-      <div
-        ref={mapContainer}
-        className="w-full h-full rounded-2xl shadow-lg"
-        style={{ opacity: isLoading ? 0 : 1, transition: "opacity 0.3s" }}
-      />
-    </div>
-  );
+			new maplibregl.Marker(marker1El)
+				.setLngLat(startPoint)
+				.setPopup(
+					new maplibregl.Popup().setHTML(
+						'<strong>Alex</strong><br/>🍕 At food court',
+					),
+				)
+				.addTo(map.current);
+
+			// Friend 2 marker (pink)
+			const marker2El = document.createElement('div');
+			marker2El.style.width = '28px';
+			marker2El.style.height = '28px';
+			marker2El.style.backgroundColor = '#EC4899';
+			marker2El.style.border = '4px solid white';
+			marker2El.style.borderRadius = '50%';
+			marker2El.style.boxShadow = '0 0 20px rgba(236,72,153,0.6)';
+			marker2El.style.cursor = 'pointer';
+
+			new maplibregl.Marker(marker2El)
+				.setLngLat(endPoint)
+				.setPopup(
+					new maplibregl.Popup().setHTML(
+						'<strong>Sam</strong><br/>👕 Shopping',
+					),
+				)
+				.addTo(map.current);
+
+			// Friend 3 marker (cyan) - adding a third friend for realism
+			const midPoint = [77.217, 28.5247];
+			const marker3El = document.createElement('div');
+			marker3El.style.width = '28px';
+			marker3El.style.height = '28px';
+			marker3El.style.backgroundColor = '#06B6D4';
+			marker3El.style.border = '4px solid white';
+			marker3El.style.borderRadius = '50%';
+			marker3El.style.boxShadow = '0 0 20px rgba(6,182,212,0.6)';
+			marker3El.style.cursor = 'pointer';
+
+			new maplibregl.Marker(marker3El)
+				.setLngLat(midPoint)
+				.setPopup(
+					new maplibregl.Popup().setHTML('<strong>Jordan</strong><br/>☕ Café'),
+				)
+				.addTo(map.current);
+		}
+
+		async function fetchRoute() {
+			try {
+				// OpenRouteService API endpoint
+				const apiKey =
+					'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjFmMTQxYTc0ZWMwOTRjZGM4MzZmZWJjOTcxN2ViZWM5IiwiaCI6Im11cm11cjY0In0='; // Replace with your API key
+				const url =
+					'https://api.openrouteservice.org/v2/directions/foot-walking';
+
+				const response = await fetch(url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: apiKey,
+					},
+					body: JSON.stringify({
+						coordinates: [startPoint, endPoint],
+					}),
+				});
+
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+
+				const data = await response.json();
+				const routeCoordinates = data.features[0].geometry.coordinates;
+
+				// Add route as a line on the map
+				map.current.addSource('route', {
+					type: 'geojson',
+					data: {
+						type: 'Feature',
+						properties: {},
+						geometry: {
+							type: 'LineString',
+							coordinates: routeCoordinates,
+						},
+					},
+				});
+
+				// Dashed line to show connection
+				map.current.addLayer({
+					id: 'route',
+					type: 'line',
+					source: 'route',
+					layout: {
+						'line-join': 'round',
+						'line-cap': 'round',
+					},
+					paint: {
+						'line-color': '#06B6D4',
+						'line-width': 2.5,
+						'line-opacity': 0.8,
+						'line-dasharray': [3, 3],
+					},
+				});
+
+				// Glowing background
+				map.current.addLayer(
+					{
+						id: 'route-glow',
+						type: 'line',
+						source: 'route',
+						layout: {
+							'line-join': 'round',
+							'line-cap': 'round',
+						},
+						paint: {
+							'line-color': '#06B6D4',
+							'line-width': 8,
+							'line-opacity': 0.15,
+							'line-blur': 4,
+						},
+					},
+					'route',
+				);
+
+				setIsLoading(false);
+			} catch (error) {
+				console.error('Error fetching route:', error);
+				setIsLoading(false);
+			}
+		}
+
+		return () => {
+			if (map.current) {
+				map.current.remove();
+				map.current = null;
+			}
+		};
+	}, []);
+
+	return (
+		<div style={{position: 'relative', width: '100%', height: '100%'}}>
+			{isLoading && (
+				<div
+					style={{
+						position: 'absolute',
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						backgroundColor: 'rgba(0, 0, 0, 0.7)',
+						color: 'white',
+						zIndex: 1000,
+					}}
+				>
+					Loading map...
+				</div>
+			)}
+			<div ref={mapContainer} style={{width: '100%', height: '100%'}} />
+			<style jsx>{`
+				@keyframes pulse {
+					0%,
+					100% {
+						transform: scale(1);
+						opacity: 1;
+					}
+					50% {
+						transform: scale(1.1);
+						opacity: 0.8;
+					}
+				}
+			`}</style>
+		</div>
+	);
 };
 
 export default LandingMap;

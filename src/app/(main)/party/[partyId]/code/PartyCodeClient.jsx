@@ -8,8 +8,11 @@ import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 import FlagIcon from "@mui/icons-material/Flag";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { getPartyInfo } from "@/services/party.service";
 
-const PartyCodeClient = ({ code, paryId }) => {
+const PartyCodeClient = ({ partyId, code }) => {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     if (!navigator.clipboard) {
@@ -121,7 +124,10 @@ const PartyCodeClient = ({ code, paryId }) => {
               Share Link
             </Button>
           </div>
-          <Button className="w-full h-16 bg-primary-foreground text-white rounded-xl font-bold text-lg shadow-xl shadow-primary-foreground/20 hover:brightness-105 active:scale-[0.99] transition-all flex items-center justify-center gap-3">
+          <Button
+            onClick={() => router.push(`map`)}
+            className="w-full h-16 bg-primary-foreground text-white rounded-xl font-bold text-lg shadow-xl shadow-primary-foreground/20 hover:brightness-105 active:scale-[0.99] transition-all flex items-center justify-center gap-3"
+          >
             Go to Live Map
             <MapIcon />
           </Button>
