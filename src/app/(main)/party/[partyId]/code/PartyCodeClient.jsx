@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ShareIcon from "@mui/icons-material/Share";
@@ -10,10 +10,26 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getPartyInfo } from "@/services/party.service";
-
-const PartyCodeClient = ({ partyId, code }) => {
+import axios from "axios";
+const PartyCodeClient = ({ partyId }) => {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [party, setParty] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPartyInfo(partyId)
+      .then((data) => {
+        setParty(data);
+        console.log("party data: ", data);
+      })
+      .catch((err) => {
+        toast.error(err.response?.data?.detail || "Failed to load party");
+      })
+      .finally(() => setLoading(false));
+  }, [partyId]);
+
+  const code = party?.code;
   const handleCopy = () => {
     if (!navigator.clipboard) {
       toast.error("Clipboard not supported");
@@ -26,10 +42,15 @@ const PartyCodeClient = ({ partyId, code }) => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       })
-      .catch((err) => {
-        toast.error("Failed to copy:", err);
-      });
+      .catch((err) => toast.error("Failed to copy:", err));
   };
+
+  if (loading)
+    return (
+      <main className="flex items-center justify-center min-h-screen">
+        <p className="text-sage font-medium">Loading party...</p>
+      </main>
+    );
 
   return (
     <main className="flex items-center justify-center min-h-screen w-full px-6">
@@ -53,7 +74,7 @@ const PartyCodeClient = ({ partyId, code }) => {
             Party Created Successfully!
           </p>
           <h2 className="text-4xl font-extrabold text-primary-foreground uppercase tracking-tight leading-tight text-center">
-            Beach Trip 2024
+            {party?.name}
           </h2>
         </div>
         <div className="flex flex-col items-center gap-2 mb-8">
@@ -142,7 +163,7 @@ const PartyCodeClient = ({ partyId, code }) => {
                 Time Remaining
               </p>
               <p className="text-sm font-extrabold text-earth">
-                Sharing expires in 4 hours
+                Sharing expires in {party?.duration} mins
               </p>
             </div>
           </div>
