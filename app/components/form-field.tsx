@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Eye, EyeOff, type LucideIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, View, type TextInputInstance, type TextInputProps } from 'react-native';
 import Animated, {
   FadeInDown,
   FadeOut,
@@ -24,7 +24,7 @@ type FormFieldProps = TextInputProps & {
   secure?: boolean;
 };
 
-export const FormField = React.forwardRef<TextInput, FormFieldProps>(function FormField(
+export const FormField = React.forwardRef<TextInputInstance, FormFieldProps>(function FormField(
   { label, icon, error, secure, onFocus, onBlur, ...props },
   ref
 ) {

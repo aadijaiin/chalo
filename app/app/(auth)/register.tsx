@@ -13,7 +13,7 @@ import { router } from 'expo-router';
 import { AtSign, Lock, Mail, MailCheck, User } from 'lucide-react-native';
 import * as React from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { View, type TextInput } from 'react-native';
+import { View, type TextInputInstance } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
@@ -23,9 +23,9 @@ export default function Register() {
     seed: randomSeed(),
   }));
   const [confirmEmail, setConfirmEmail] = React.useState<string | null>(null);
-  const usernameRef = React.useRef<TextInput>(null);
-  const emailRef = React.useRef<TextInput>(null);
-  const passwordRef = React.useRef<TextInput>(null);
+  const usernameRef = React.useRef<TextInputInstance>(null);
+  const emailRef = React.useRef<TextInputInstance>(null);
+  const passwordRef = React.useRef<TextInputInstance>(null);
 
   const {
     control,
@@ -158,7 +158,7 @@ export default function Register() {
             autoComplete="new-password"
             textContentType="newPassword"
             returnKeyType="go"
-            onSubmitEditing={onSubmit}
+            onSubmitEditing={() => onSubmit()}
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
@@ -166,7 +166,7 @@ export default function Register() {
           />
         )}
       />
-      <Button size="lg" loading={isSubmitting} onPress={onSubmit} className="mt-2">
+      <Button size="lg" loading={isSubmitting} onPress={() => onSubmit()} className="mt-2">
         <Text>Create account</Text>
       </Button>
       <Text className="text-center text-xs text-muted-foreground">

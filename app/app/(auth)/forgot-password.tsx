@@ -63,7 +63,7 @@ export default function ForgotPassword() {
             autoCapitalize="none"
             autoComplete="email"
             returnKeyType="send"
-            onSubmitEditing={onSubmit}
+            onSubmitEditing={() => onSubmit()}
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
@@ -71,7 +71,7 @@ export default function ForgotPassword() {
           />
         )}
       />
-      <Button size="lg" loading={isSubmitting} onPress={onSubmit}>
+      <Button size="lg" loading={isSubmitting} onPress={() => onSubmit()}>
         <Text>Send reset link</Text>
       </Button>
     </AuthShell>

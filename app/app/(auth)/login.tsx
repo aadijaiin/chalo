@@ -10,11 +10,11 @@ import { router } from 'expo-router';
 import { Lock, Mail } from 'lucide-react-native';
 import * as React from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, type TextInput } from 'react-native';
+import { Pressable, type TextInputInstance } from 'react-native';
 import { toast } from 'sonner-native';
 
 export default function Login() {
-  const passwordRef = React.useRef<TextInput>(null);
+  const passwordRef = React.useRef<TextInputInstance>(null);
   const {
     control,
     handleSubmit,
@@ -76,7 +76,7 @@ export default function Login() {
             autoComplete="current-password"
             textContentType="password"
             returnKeyType="go"
-            onSubmitEditing={onSubmit}
+            onSubmitEditing={() => onSubmit()}
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
@@ -87,7 +87,7 @@ export default function Login() {
       <Pressable onPress={() => router.push('/forgot-password')} className="-mt-1 self-end" hitSlop={8}>
         <Text className="text-sm font-semibold text-primary">Forgot password?</Text>
       </Pressable>
-      <Button size="lg" loading={isSubmitting} onPress={onSubmit} className="mt-2">
+      <Button size="lg" loading={isSubmitting} onPress={() => onSubmit()} className="mt-2">
         <Text>Sign in</Text>
       </Button>
     </AuthShell>
