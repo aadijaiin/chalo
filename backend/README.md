@@ -1,0 +1,27 @@
+# chalo — backend
+
+No servers to run. The backend is a [Supabase](https://supabase.com) project
+(Postgres + Auth + Realtime) on the free tier, which needs no credit card.
+This folder holds its config and SQL migrations.
+
+## One-time setup
+
+1. Create a free project at [supabase.com/dashboard](https://supabase.com/dashboard).
+2. Apply the migrations, using either option:
+   - **Dashboard:** open *SQL Editor*, paste the files in `supabase/migrations/` (in order) and run them.
+   - **CLI:**
+     ```bash
+     npx supabase login
+     npx supabase link --project-ref <your-project-ref>
+     npx supabase db push
+     ```
+3. Copy *Project Settings → API → Project URL* and the *publishable* (or *anon*) key into `app/.env`.
+4. *(Recommended while developing)* Turn off *Authentication → Sign In / Providers → Email → Confirm email*.
+   The free built-in mailer only sends a few emails per hour. The app handles both modes.
+
+## What's here
+
+- `supabase/migrations/…_profiles.sql`: the `profiles` table (username, name, avatar), row-level
+  security, and a trigger that creates the profile from sign-up metadata.
+
+Coming next: `parties`, `party_members`, and live location over Supabase Realtime broadcast.
