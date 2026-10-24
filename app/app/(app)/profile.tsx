@@ -1,30 +1,21 @@
 import { AvatarView } from '@/components/avatar-view';
 import { PressableScale } from '@/components/pressable-scale';
+import { ThemeSegmented } from '@/components/theme-segmented';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { useAuth } from '@/lib/auth';
-import type { ThemePreference } from '@/lib/preferences';
 import { supabase } from '@/lib/supabase';
-import { useThemePreference } from '@/lib/theme-preference';
-import { cn } from '@/lib/utils';
 import { router } from 'expo-router';
-import { LogOut, Monitor, Moon, Sun, X, type LucideIcon } from 'lucide-react-native';
+import { LogOut, X } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
-import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const THEMES: { value: ThemePreference; label: string; icon: LucideIcon }[] = [
-  { value: 'system', label: 'System', icon: Monitor },
-  { value: 'light', label: 'Light', icon: Sun },
-  { value: 'dark', label: 'Dark', icon: Moon },
-];
 
 export default function Profile() {
   const { profile } = useAuth();
-  const { preference, setPreference } = useThemePreference();
   const [signingOut, setSigningOut] = React.useState(false);
 
   async function signOut() {
@@ -61,37 +52,7 @@ export default function Profile() {
           <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Appearance
           </Text>
-          <View className="flex-row rounded-2xl bg-muted p-1">
-            {THEMES.map((theme) => {
-              const active = preference === theme.value;
-              return (
-                <PressableScale
-                  key={theme.value}
-                  onPress={() => setPreference(theme.value)}
-                  className="flex-1">
-                  <Animated.View
-                    layout={LinearTransition.springify()}
-                    className={cn(
-                      'flex-row items-center justify-center gap-2 rounded-xl py-3',
-                      active && 'bg-card shadow-sm shadow-black/10'
-                    )}>
-                    <Icon
-                      as={theme.icon}
-                      size={16}
-                      className={active ? 'text-primary' : 'text-muted-foreground'}
-                    />
-                    <Text
-                      className={cn(
-                        'text-sm font-semibold',
-                        active ? 'text-foreground' : 'text-muted-foreground'
-                      )}>
-                      {theme.label}
-                    </Text>
-                  </Animated.View>
-                </PressableScale>
-              );
-            })}
-          </View>
+          <ThemeSegmented />
         </Animated.View>
 
         <Separator />
