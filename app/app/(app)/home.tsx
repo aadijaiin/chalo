@@ -1,0 +1,85 @@
+import { AvatarView } from '@/components/avatar-view';
+import { JoinCodeCard } from '@/components/dashboard/join-code-card';
+import { LiveLocationCard } from '@/components/dashboard/live-location-card';
+import { RecentParties } from '@/components/dashboard/recent-parties';
+import { StartPartyCard } from '@/components/dashboard/start-party-card';
+import { PressableScale } from '@/components/pressable-scale';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Text } from '@/components/ui/text';
+import { useAuth } from '@/lib/auth';
+import { notify } from '@/lib/notify';
+import { router } from 'expo-router';
+import * as React from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 5) return 'Up late';
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+const enter = (i: number) => FadeInDown.duration(450).delay(80 * i);
+
+export default function Home() {
+  const { profile } = useAuth();
+  const firstName = profile?.fullName.split(' ')[0] || profile?.username || '';
+
+  const comingSoon = () => notify.info('Parties land in the next build', 'Live group tracking is up next.');
+
+  return (
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerClassName="gap-5 px-5 pb-10 pt-2"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          <Animated.View entering={enter(0)} className="flex-row items-center gap-3">
+            <PressableScale onPress={() => router.push('/profile')} accessibilityLabel="Open profile">
+              {profile ? (
+                <View className="rounded-full border-2 border-primary/30 p-0.5">
+                  <AvatarView avatar={profile.avatar} size={44} />
+                </View>
+              ) : (
+                <Skeleton className="h-12 w-12 rounded-full" />
+              )}
+            </PressableScale>
+            <View className="flex-1">
+              <Text className="text-xs text-muted-foreground">{greeting()}</Text>
+              {firstName ? (
+                <Text className="text-xl font-extrabold tracking-tight">{firstName}</Text>
+              ) : (
+                <Skeleton className="mt-1 h-5 w-24" />
+              )}
+            </View>
+            <ThemeToggle />
+          </Animated.View>
+
+          <Animated.View entering={enter(1)}>
+            <StartPartyCard onPress={comingSoon} />
+          </Animated.View>
+
+          <Animated.View entering={enter(2)}>
+            {profile ? (
+              <LiveLocationCard avatar={profile.avatar} onOpen={() => router.push('/map')} />
+            ) : (
+              <Skeleton className="h-64 rounded-3xl" />
+            )}
+          </Animated.View>
+
+          <Animated.View entering={enter(3)}>
+            <JoinCodeCard onJoin={comingSoon} />
+          </Animated.View>
+
+          <Animated.View entering={enter(4)}>
+            <RecentParties />
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}

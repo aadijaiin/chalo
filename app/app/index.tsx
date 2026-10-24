@@ -14,7 +14,7 @@ export default function Gate() {
   }, []);
 
   if (isLoading || onboarded === null) return <SplashLoader />;
-  if (session) return <Redirect href="/map" />;
+  if (session) return <Redirect href="/home" />;
   if (!onboarded) return <Redirect href="/onboarding" />;
   return <Redirect href="/login" />;
 }
