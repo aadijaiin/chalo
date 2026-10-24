@@ -5,7 +5,6 @@ import { Pressable, type GestureResponderEvent, type PressableProps } from 'reac
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-cssInterop(AnimatedPressable, { className: 'style' });
 
 type PressableScaleProps = PressableProps & {
   className?: string;
@@ -17,7 +16,7 @@ type PressableScaleProps = PressableProps & {
 const SPRING = { damping: 18, stiffness: 320, mass: 0.6 };
 
 /** A Pressable that springs down on touch and gives a light haptic tick. */
-export function PressableScale({
+function PressableScaleImpl({
   scaleTo = 0.96,
   haptic = true,
   onPressIn,
@@ -48,3 +47,8 @@ export function PressableScale({
     />
   );
 }
+
+// NativeWind resolves className into a plain style at this boundary; handing
+// className straight to the Reanimated component drops it once an animated
+// style is merged in, which left every button unstyled.
+export const PressableScale = cssInterop(PressableScaleImpl, { className: 'style' });
