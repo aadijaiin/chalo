@@ -15,7 +15,7 @@ import * as React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { View, type TextInputInstance } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
-import { toast } from 'sonner-native';
+import { notify } from '@/lib/notify';
 
 export default function Register() {
   const [avatar, setAvatar] = React.useState<AvatarConfig>(() => ({
@@ -50,11 +50,9 @@ export default function Register() {
       },
     });
     if (error) {
-      haptics.error();
       // The profiles trigger rejects duplicate usernames, which surfaces as a generic DB error.
-      toast.error(
-        error.message.includes('Database error') ? 'That username is taken, try another' : error.message
-      );
+      if (error.message.includes('Database error')) notify.error('Username taken', 'Try a different one.');
+      else notify.error("Couldn't create your account", error.message);
       return;
     }
     haptics.success();

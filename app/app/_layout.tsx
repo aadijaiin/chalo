@@ -19,7 +19,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
 export {
@@ -46,6 +46,7 @@ export default function RootLayout() {
 function RootNavigator() {
   const { colorScheme } = useColorScheme();
   const { isReady } = useThemePreference();
+  const insets = useSafeAreaInsets();
   const [fontsLoaded] = useFonts({
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
@@ -71,7 +72,7 @@ function RootNavigator() {
         <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
         <Stack.Screen name="(app)" options={{ animation: 'fade' }} />
       </Stack>
-      <Toaster theme={scheme} position="top-center" richColors />
+      <Toaster position="top-center" offset={insets.top + 8} gap={8} visibleToasts={3} swipeToDismissDirection="up" />
       <PortalHost />
     </ThemeProvider>
   );

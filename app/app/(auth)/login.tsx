@@ -11,7 +11,7 @@ import { Lock, Mail } from 'lucide-react-native';
 import * as React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, type TextInputInstance } from 'react-native';
-import { toast } from 'sonner-native';
+import { notify } from '@/lib/notify';
 
 export default function Login() {
   const passwordRef = React.useRef<TextInputInstance>(null);
@@ -27,8 +27,10 @@ export default function Login() {
   const onSubmit = handleSubmit(async ({ email, password }) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      haptics.error();
-      toast.error(error.message === 'Email not confirmed' ? 'Confirm your email first' : error.message);
+      notify.error(
+        error.message === 'Email not confirmed' ? 'Confirm your email first' : "Couldn't sign you in",
+        error.message === 'Email not confirmed' ? 'Check your inbox for the link.' : error.message
+      );
       return;
     }
     haptics.success();

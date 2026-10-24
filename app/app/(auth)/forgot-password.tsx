@@ -13,7 +13,7 @@ import * as React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
-import { toast } from 'sonner-native';
+import { notify } from '@/lib/notify';
 
 export default function ForgotPassword() {
   const [sentTo, setSentTo] = React.useState<string | null>(null);
@@ -26,8 +26,7 @@ export default function ForgotPassword() {
   const onSubmit = handleSubmit(async ({ email }) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) {
-      haptics.error();
-      toast.error(error.message);
+      notify.error("Couldn't send the link", error.message);
       return;
     }
     haptics.success();
