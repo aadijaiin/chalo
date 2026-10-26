@@ -17,7 +17,7 @@ const LocationContext = React.createContext<LocationContextValue>({
 
 const GEOCODE_EVERY_M = 250;
 
-function distanceM(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) {
+export function distanceM(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) {
   const R = 6371e3;
   const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
   const dLng = ((b.longitude - a.longitude) * Math.PI) / 180;

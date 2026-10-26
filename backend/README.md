@@ -28,4 +28,6 @@ This folder holds its config and SQL migrations.
   plus the `create_party` / `join_party` / `leave_party` / `end_party` RPCs that issue and check the
   6-character codes. Both tables are on Realtime so lobbies update live.
 
-Coming next: live location over Supabase Realtime broadcast.
+- `supabase/migrations/…_party_live_location.sql`: who may use each party's private Realtime
+  channel (`party:<id>`). Members publish their latest position as Presence state; positions are
+  never written to a table.

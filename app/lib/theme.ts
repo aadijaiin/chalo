@@ -79,3 +79,10 @@ export const NAV_THEME: Record<'light' | 'dark', Theme> = {
     },
   },
 };
+
+// Ring colors that tell party members apart on the map. You are always the brand color.
+export const MEMBER_COLORS = ['hsl(200 62% 48%)', 'hsl(262 48% 60%)', 'hsl(38 78% 50%)', 'hsl(152 40% 42%)', 'hsl(330 55% 56%)', 'hsl(180 45% 40%)'];
+
+export function memberColor(index: number) {
+  return MEMBER_COLORS[index % MEMBER_COLORS.length];
+}

@@ -4,14 +4,16 @@ import { SplashLoader } from '@/components/splash-loader';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { useParty } from '@/hooks/use-party';
 import { useAuth } from '@/lib/auth';
+import { formatDistance, timeAgo } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
+import { distanceM, useLocation } from '@/lib/location';
 import { notify } from '@/lib/notify';
 import { inviteMessage, parties, type Party, type PartyMember } from '@/lib/parties';
-import { THEME } from '@/lib/theme';
+import { usePartyLive, type Connection, type Peer } from '@/lib/party-live';
+import { memberColor, THEME } from '@/lib/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { ChevronLeft, Crown, LogOut, Map as MapIcon, Share2, UserPlus } from 'lucide-react-native';
 import * as React from 'react';
 import { Alert, ScrollView, Share, StyleSheet, View } from 'react-native';
@@ -20,24 +22,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const enter = (i: number) => FadeInDown.duration(400).delay(70 * i);
 
-function timeAgo(iso: string) {
-  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins} min ago`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs} h ago`;
-  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-}
-
 function goHome() {
   if (router.canDismiss()) router.dismissAll();
   router.replace('/home');
 }
 
 export default function PartyLobby() {
-  const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
-  const { state } = useParty(id);
+  const { state, peers, connection } = usePartyLive();
+  const { location } = useLocation();
+  const me = location.status === 'ready' ? location.coords : null;
 
   if (state.status === 'loading') return <SplashLoader />;
 
@@ -84,7 +78,11 @@ export default function PartyLobby() {
             <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Crew · {active.length}
             </Text>
-            {!ended ? <Text className="text-xs text-muted-foreground">Updates live</Text> : null}
+            {!ended ? (
+              <Text className="text-xs text-muted-foreground">
+                {Object.values(peers).filter((p) => p.online).length + (me && connection === 'live' ? 1 : 0)} sharing location
+              </Text>
+            ) : null}
           </View>
           <View className="overflow-hidden rounded-3xl border border-border bg-card">
             {active.map((m, i) => (
@@ -93,6 +91,8 @@ export default function PartyLobby() {
                 member={m}
                 isHost={m.userId === party.hostId}
                 isMe={m.userId === profile?.id}
+                color={m.userId === profile?.id ? THEME.light.primary : memberColor(i)}
+                status={memberStatus(m.userId === profile?.id, peers[m.userId], me, connection)}
                 divider={i > 0}
               />
             ))}
@@ -120,7 +120,7 @@ export default function PartyLobby() {
           </Button>
         ) : (
           <>
-            <Button size="lg" onPress={() => router.push('/map')}>
+            <Button size="lg" onPress={() => router.push({ pathname: '/party/[id]/map', params: { id: party.id } })}>
               <Icon as={MapIcon} size={18} className="text-primary-foreground" />
               <Text>Open live map</Text>
             </Button>
@@ -181,15 +181,38 @@ function CodeCard({ party, ended }: { party: Party; ended: boolean }) {
   );
 }
 
+type MemberStatus = { live: boolean; label: string };
+
+function memberStatus(
+  isMe: boolean,
+  peer: Peer | undefined,
+  me: { latitude: number; longitude: number } | null,
+  connection: Connection
+): MemberStatus {
+  if (isMe) {
+    if (!me) return { live: false, label: 'Waiting for GPS' };
+    if (connection === 'connecting') return { live: false, label: 'Connecting…' };
+    if (connection === 'off') return { live: false, label: "Can't reach the party right now" };
+    return { live: true, label: 'Sharing your location' };
+  }
+  if (!peer) return { live: false, label: 'Not sharing yet' };
+  const away = me ? formatDistance(distanceM(me, { latitude: peer.lat, longitude: peer.lng })) : 'on the map';
+  return peer.online ? { live: true, label: away } : { live: false, label: `Offline · seen ${timeAgo(peer.at)}` };
+}
+
 function MemberRow({
   member,
   isHost,
   isMe,
+  color,
+  status,
   divider,
 }: {
   member: PartyMember;
   isHost: boolean;
   isMe: boolean;
+  color: string;
+  status: MemberStatus;
   divider: boolean;
 }) {
   return (
@@ -198,13 +221,22 @@ function MemberRow({
       exiting={FadeOut.duration(200)}
       layout={LinearTransition}
       className={divider ? 'flex-row items-center gap-3 border-t border-border p-4' : 'flex-row items-center gap-3 p-4'}>
-      <AvatarView avatar={member.avatar} size={44} />
+      <View>
+        <View className="rounded-full p-[2px]" style={{ backgroundColor: color }}>
+          <AvatarView avatar={member.avatar} size={42} />
+        </View>
+        <View
+          className={status.live ? 'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-card bg-sage' : 'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-card bg-muted-foreground/50'}
+        />
+      </View>
       <View className="flex-1">
         <Text className="font-semibold" numberOfLines={1}>
           {member.fullName || member.username}
           {isMe ? <Text className="font-normal text-muted-foreground"> (you)</Text> : null}
         </Text>
-        <Text className="text-xs text-muted-foreground">@{member.username}</Text>
+        <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+          @{member.username} · {status.label}
+        </Text>
       </View>
       {isHost ? (
         <View className="flex-row items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1">

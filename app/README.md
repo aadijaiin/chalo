@@ -52,9 +52,19 @@ app/                 routes (expo-router)
   index.tsx          gate: map / onboarding / sign in
   onboarding.tsx
   (auth)/            login, register, forgot-password
-  (app)/             map, profile (signed-in only)
+  (app)/             home, solo map, profile, party/new, party/[id] (lobby + live map), join/[code]
 components/ui/       Reusables components (CLI-managed)
 components/          app components (avatar, map marker, form field…)
-hooks/               use-live-location
-lib/                 supabase client, auth context, theme, avatar helpers
+hooks/               use-live-location, use-party
+lib/                 supabase client, auth, theme, avatars, parties API, party-live (Realtime presence)
+```
+
+## Testing a party with two people
+
+Run the iOS simulator next to your phone and sign in as a second account:
+
+```bash
+npx expo run:ios --device "iPhone 18 Pro" --no-bundler        # with `npm start` already running
+xcrun simctl location booted set 28.7405,77.5110                 # park the simulator somewhere
+xcrun simctl location booted start --speed=14 28.74,77.51 28.75,77.50   # or make it drive (m/s)
 ```
