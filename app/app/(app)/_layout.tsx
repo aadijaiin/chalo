@@ -11,6 +11,9 @@ export default function AppLayout() {
         <Stack.Screen name="home" />
         <Stack.Screen name="map" />
         <Stack.Screen name="profile" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="party/new" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="party/[id]" />
+        <Stack.Screen name="join/[code]" options={{ animation: 'fade' }} />
       </Stack>
     </LocationProvider>
   );

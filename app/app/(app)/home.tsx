@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { useAuth } from '@/lib/auth';
 import { notify } from '@/lib/notify';
+import { parties } from '@/lib/parties';
 import { router } from 'expo-router';
 import * as React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
@@ -29,7 +30,16 @@ export default function Home() {
   const { profile } = useAuth();
   const firstName = profile?.fullName.split(' ')[0] || profile?.username || '';
 
-  const comingSoon = () => notify.info('Parties land in the next build', 'Live group tracking is up next.');
+  async function join(code: string) {
+    try {
+      const party = await parties.join(code);
+      router.push({ pathname: '/party/[id]', params: { id: party.id } });
+      return true;
+    } catch (e) {
+      notify.error("Couldn't join", (e as Error).message);
+      return false;
+    }
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -60,7 +70,7 @@ export default function Home() {
           </Animated.View>
 
           <Animated.View entering={enter(1)}>
-            <StartPartyCard onPress={comingSoon} />
+            <StartPartyCard onPress={() => router.push('/party/new')} />
           </Animated.View>
 
           <Animated.View entering={enter(2)}>
@@ -72,11 +82,11 @@ export default function Home() {
           </Animated.View>
 
           <Animated.View entering={enter(3)}>
-            <JoinCodeCard onJoin={comingSoon} />
+            <JoinCodeCard onJoin={join} />
           </Animated.View>
 
           <Animated.View entering={enter(4)}>
-            <RecentParties />
+            {profile ? <RecentParties userId={profile.id} /> : null}
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>

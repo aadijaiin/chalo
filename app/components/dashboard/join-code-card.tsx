@@ -1,31 +1,39 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { haptics } from '@/lib/haptics';
+import { CODE_LENGTH as LENGTH, normalizeCode } from '@/lib/parties';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 import { Pressable, TextInput, View, type TextInputInstance } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
-const LENGTH = 6;
-
 /** Six code boxes backed by one hidden input, so paste and backspace just work. */
-export function JoinCodeCard({ onJoin }: { onJoin: (code: string) => void }) {
+export function JoinCodeCard({ onJoin }: { onJoin: (code: string) => Promise<boolean> }) {
   const inputRef = React.useRef<TextInputInstance>(null);
   const [code, setCode] = React.useState('');
   const [focused, setFocused] = React.useState(false);
+  const [joining, setJoining] = React.useState(false);
   const shake = useSharedValue(0);
   const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
 
-  function submit() {
+  function reject() {
+    haptics.error();
+    shake.value = withSequence(...[-8, 8, -6, 6, -3, 0].map((x) => withTiming(x, { duration: 45 })));
+  }
+
+  async function submit() {
+    if (joining) return;
     if (code.length < LENGTH) {
-      haptics.error();
-      shake.value = withSequence(
-        ...[-8, 8, -6, 6, -3, 0].map((x) => withTiming(x, { duration: 45 }))
-      );
+      reject();
       inputRef.current?.focus();
       return;
     }
-    onJoin(code);
+    inputRef.current?.blur();
+    setJoining(true);
+    const joined = await onJoin(code);
+    setJoining(false);
+    if (joined) setCode('');
+    else reject();
   }
 
   return (
@@ -56,7 +64,7 @@ export function JoinCodeCard({ onJoin }: { onJoin: (code: string) => void }) {
       <TextInput
         ref={inputRef}
         value={code}
-        onChangeText={(t) => setCode(t.replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, LENGTH))}
+        onChangeText={(t) => setCode(normalizeCode(t))}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onSubmitEditing={submit}
@@ -67,7 +75,7 @@ export function JoinCodeCard({ onJoin }: { onJoin: (code: string) => void }) {
         className="absolute h-0 w-0 opacity-0"
       />
 
-      <Button variant="secondary" size="lg" onPress={submit}>
+      <Button variant="secondary" size="lg" loading={joining} onPress={submit}>
         <Text>Join party</Text>
       </Button>
     </View>

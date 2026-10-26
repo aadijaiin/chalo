@@ -24,4 +24,8 @@ This folder holds its config and SQL migrations.
 - `supabase/migrations/…_profiles.sql`: the `profiles` table (username, name, avatar), row-level
   security, and a trigger that creates the profile from sign-up metadata.
 
-Coming next: `parties`, `party_members`, and live location over Supabase Realtime broadcast.
+- `supabase/migrations/…_parties.sql`: `parties` and `party_members`, readable only by members,
+  plus the `create_party` / `join_party` / `leave_party` / `end_party` RPCs that issue and check the
+  6-character codes. Both tables are on Realtime so lobbies update live.
+
+Coming next: live location over Supabase Realtime broadcast.
