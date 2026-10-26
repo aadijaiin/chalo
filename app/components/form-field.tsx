@@ -52,6 +52,9 @@ export const FormField = React.forwardRef<TextInputInstance, FormFieldProps>(fun
           className="h-full flex-1 border-0 bg-transparent px-0 shadow-none dark:bg-transparent"
           placeholderTextColor={t.mutedForeground}
           secureTextEntry={secure && hidden}
+          // "Next" hands focus to the following field; keep the keyboard up instead of
+          // blurring, which would close it and leave the next field focused without one.
+          submitBehavior={props.returnKeyType === 'next' ? 'submit' : undefined}
           onFocus={(e) => {
             focus.value = withTiming(1, { duration: 180 });
             onFocus?.(e);

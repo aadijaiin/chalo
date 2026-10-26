@@ -22,6 +22,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
@@ -36,11 +37,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ThemePreferenceProvider>
-          <AuthProvider>
-            <RootNavigator />
-          </AuthProvider>
-        </ThemePreferenceProvider>
+        <KeyboardProvider>
+          <ThemePreferenceProvider>
+            <AuthProvider>
+              <RootNavigator />
+            </AuthProvider>
+          </ThemePreferenceProvider>
+        </KeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -76,7 +79,13 @@ function RootNavigator() {
         <Stack.Screen name="(app)" options={{ animation: 'fade' }} />
       </Stack>
       <ConfirmHost />
-      <Toaster position="top-center" offset={insets.top + 8} gap={8} visibleToasts={3} swipeToDismissDirection="up" />
+      <Toaster
+        position="top-center"
+        offset={insets.top + 8}
+        gap={8}
+        visibleToasts={3}
+        swipeToDismissDirection="up"
+      />
       <PortalHost />
     </ThemeProvider>
   );

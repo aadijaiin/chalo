@@ -1,5 +1,6 @@
 import { AvatarView } from '@/components/avatar-view';
 import { FormField } from '@/components/form-field';
+import { KeyboardScrollView } from '@/components/keyboard-scroll-view';
 import { PressableScale } from '@/components/pressable-scale';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -12,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { router } from 'expo-router';
 import { Flag, X } from 'lucide-react-native';
 import * as React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -55,65 +56,70 @@ export default function NewParty() {
         </PressableScale>
       </View>
 
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerClassName="flex-grow gap-7 px-6 pb-6" keyboardShouldPersistTaps="handled">
-          <Animated.View entering={enter(0)} className="gap-4">
-            {profile ? (
-              <View className="self-start rounded-full border-2 border-primary/30 p-0.5">
-                <AvatarView avatar={profile.avatar} size={56} />
-              </View>
-            ) : null}
-            <View className="gap-1">
-              <Text className="text-3xl font-extrabold tracking-tight">Start a party</Text>
-              <Text className="text-sm text-muted-foreground">
-                You'll get a code to share. Everyone who joins shows up on one live map.
-              </Text>
+      <KeyboardScrollView
+        bottomOffset={24}
+        contentContainerClassName="flex-grow gap-7 px-6 pb-6"
+        keyboardShouldPersistTaps="handled">
+        <Animated.View entering={enter(0)} className="gap-4">
+          {profile ? (
+            <View className="self-start rounded-full border-2 border-primary/30 p-0.5">
+              <AvatarView avatar={profile.avatar} size={56} />
             </View>
-          </Animated.View>
+          ) : null}
+          <View className="gap-1">
+            <Text className="text-3xl tracking-tight font-extrabold">Start a party</Text>
+            <Text className="text-sm text-muted-foreground">
+              You'll get a code to share. Everyone who joins shows up on one live map.
+            </Text>
+          </View>
+        </Animated.View>
 
-          <Animated.View entering={enter(1)} className="gap-3">
-            <FormField
-              label="Party name"
-              icon={Flag}
-              value={name}
-              onChangeText={(t) => setName(t.slice(0, MAX_NAME))}
-              placeholder={placeholder}
-              autoCapitalize="words"
-              returnKeyType="go"
-              onSubmitEditing={create}
-            />
-            <View className="flex-row flex-wrap gap-2">
-              {SUGGESTIONS.map((s) => {
-                const selected = name === s;
-                return (
-                  <PressableScale
-                    key={s}
-                    onPress={() => {
-                      haptics.select();
-                      setName(selected ? '' : s);
-                    }}
+        <Animated.View entering={enter(1)} className="gap-3">
+          <FormField
+            label="Party name"
+            icon={Flag}
+            value={name}
+            onChangeText={(t) => setName(t.slice(0, MAX_NAME))}
+            placeholder={placeholder}
+            autoCapitalize="words"
+            returnKeyType="go"
+            onSubmitEditing={create}
+          />
+          <View className="flex-row flex-wrap gap-2">
+            {SUGGESTIONS.map((s) => {
+              const selected = name === s;
+              return (
+                <PressableScale
+                  key={s}
+                  onPress={() => {
+                    haptics.select();
+                    setName(selected ? '' : s);
+                  }}
+                  className={cn(
+                    'rounded-full border px-3.5 py-2',
+                    selected ? 'border-primary bg-primary/10' : 'border-border bg-card'
+                  )}>
+                  <Text
                     className={cn(
-                      'rounded-full border px-3.5 py-2',
-                      selected ? 'border-primary bg-primary/10' : 'border-border bg-card'
+                      'text-sm font-medium',
+                      selected ? 'text-primary' : 'text-foreground'
                     )}>
-                    <Text className={cn('text-sm font-medium', selected ? 'text-primary' : 'text-foreground')}>
-                      {s}
-                    </Text>
-                  </PressableScale>
-                );
-              })}
-            </View>
-          </Animated.View>
+                    {s}
+                  </Text>
+                </PressableScale>
+              );
+            })}
+          </View>
+        </Animated.View>
 
-          <View className="flex-1" />
+        <View className="flex-1" />
 
-          <Animated.View entering={enter(2)}>
-            <Button size="lg" loading={creating} onPress={create}>
-              <Text>Create party</Text>
-            </Button>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <Animated.View entering={enter(2)}>
+          <Button size="lg" loading={creating} onPress={create}>
+            <Text>Create party</Text>
+          </Button>
+        </Animated.View>
+      </KeyboardScrollView>
     </SafeAreaView>
   );
 }
