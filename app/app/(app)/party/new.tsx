@@ -4,10 +4,10 @@ import { PressableScale } from '@/components/pressable-scale';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { usePartyActions } from '@/hooks/use-party-actions';
 import { useAuth } from '@/lib/auth';
 import { haptics } from '@/lib/haptics';
 import { notify } from '@/lib/notify';
-import { parties } from '@/lib/parties';
 import { cn } from '@/lib/utils';
 import { router } from 'expo-router';
 import { Flag, X } from 'lucide-react-native';
@@ -26,6 +26,7 @@ export default function NewParty() {
   const firstName = profile?.fullName.split(' ')[0] || profile?.username || 'My';
   const [name, setName] = React.useState('');
   const [creating, setCreating] = React.useState(false);
+  const actions = usePartyActions();
 
   const placeholder = `${firstName}'s trip`;
 
@@ -33,7 +34,8 @@ export default function NewParty() {
     const finalName = (name.trim() || placeholder).slice(0, MAX_NAME);
     setCreating(true);
     try {
-      const party = await parties.create(finalName);
+      const party = await actions.create(finalName);
+      if (!party) return setCreating(false);
       haptics.success();
       router.replace({ pathname: '/party/[id]', params: { id: party.id } });
     } catch (e) {

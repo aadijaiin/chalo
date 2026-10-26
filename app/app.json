@@ -12,7 +12,12 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.chalo.app"
+      "bundleIdentifier": "com.chalo.app",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location"
+        ]
+      }
     },
     "android": {
       "package": "com.chalo.app",
@@ -22,7 +27,10 @@
       },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "web": {
@@ -51,7 +59,11 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "chalo shows your live position on the map and shares it only with parties you join."
+          "locationWhenInUsePermission": "chalo shows your live position on the map and shares it only with parties you join.",
+          "locationAlwaysAndWhenInUsePermission": "chalo keeps sharing your position with your party while your phone is locked, until you leave the party.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "isIosBackgroundLocationEnabled": true
         }
       ]
     ],

@@ -1,4 +1,5 @@
 import { AvatarView } from '@/components/avatar-view';
+import { ActivePartyCard } from '@/components/dashboard/active-party-card';
 import { JoinCodeCard } from '@/components/dashboard/join-code-card';
 import { LiveLocationCard } from '@/components/dashboard/live-location-card';
 import { RecentParties } from '@/components/dashboard/recent-parties';
@@ -7,13 +8,13 @@ import { PressableScale } from '@/components/pressable-scale';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
+import { usePartyActions } from '@/hooks/use-party-actions';
 import { useAuth } from '@/lib/auth';
 import { notify } from '@/lib/notify';
-import { parties } from '@/lib/parties';
 import { router } from 'expo-router';
 import * as React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function greeting() {
@@ -30,14 +31,17 @@ export default function Home() {
   const { profile } = useAuth();
   const firstName = profile?.fullName.split(' ')[0] || profile?.username || '';
 
+  const actions = usePartyActions();
+
   async function join(code: string) {
     try {
-      const party = await parties.join(code);
+      const party = await actions.join(code);
+      if (!party) return 'cancelled';
       router.push({ pathname: '/party/[id]', params: { id: party.id } });
-      return true;
+      return 'joined';
     } catch (e) {
       notify.error("Couldn't join", (e as Error).message);
-      return false;
+      return 'failed';
     }
   }
 
@@ -69,11 +73,13 @@ export default function Home() {
             <ThemeToggle />
           </Animated.View>
 
-          <Animated.View entering={enter(1)}>
+          <ActivePartyCard />
+
+          <Animated.View entering={enter(1)} layout={LinearTransition}>
             <StartPartyCard onPress={() => router.push('/party/new')} />
           </Animated.View>
 
-          <Animated.View entering={enter(2)}>
+          <Animated.View entering={enter(2)} layout={LinearTransition}>
             {profile ? (
               <LiveLocationCard avatar={profile.avatar} onOpen={() => router.push('/map')} />
             ) : (
@@ -81,11 +87,11 @@ export default function Home() {
             )}
           </Animated.View>
 
-          <Animated.View entering={enter(3)}>
+          <Animated.View entering={enter(3)} layout={LinearTransition}>
             <JoinCodeCard onJoin={join} />
           </Animated.View>
 
-          <Animated.View entering={enter(4)}>
+          <Animated.View entering={enter(4)} layout={LinearTransition}>
             {profile ? <RecentParties userId={profile.id} /> : null}
           </Animated.View>
         </ScrollView>

@@ -1,6 +1,9 @@
 import '@/global.css';
 
 import { AuthProvider } from '@/lib/auth';
+import { ConfirmHost } from '@/lib/confirm';
+// Registers the background location task at startup, before the OS can deliver fixes to it.
+import '@/lib/sharing';
 import { NAV_THEME } from '@/lib/theme';
 import { ThemePreferenceProvider, useThemePreference } from '@/lib/theme-preference';
 import {
@@ -72,6 +75,7 @@ function RootNavigator() {
         <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
         <Stack.Screen name="(app)" options={{ animation: 'fade' }} />
       </Stack>
+      <ConfirmHost />
       <Toaster position="top-center" offset={insets.top + 8} gap={8} visibleToasts={3} swipeToDismissDirection="up" />
       <PortalHost />
     </ThemeProvider>

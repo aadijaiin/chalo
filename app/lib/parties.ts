@@ -75,22 +75,74 @@ export function inviteMessage(party: Party) {
   return `Join my chalo party "${party.name}" 🚗\nCode: ${party.code}\nchalo://join/${party.code}`;
 }
 
+export type PartyLocation = {
+  userId: string;
+  lat: number;
+  lng: number;
+  accuracy: number | null;
+  speed: number | null;
+  heading: number | null;
+  updatedAt: number;
+};
+
+export type LocationRow = {
+  party_id: string;
+  user_id: string;
+  lat: number;
+  lng: number;
+  accuracy: number | null;
+  speed: number | null;
+  heading: number | null;
+  updated_at: string;
+};
+
+export function toLocation(row: LocationRow): PartyLocation {
+  return {
+    userId: row.user_id,
+    lat: row.lat,
+    lng: row.lng,
+    accuracy: row.accuracy,
+    speed: row.speed,
+    heading: row.heading,
+    updatedAt: new Date(row.updated_at).getTime(),
+  };
+}
+
+/** Thrown by create/join when you're already live in another party; retry with replace once the user agrees. */
+export class PartyConflictError extends Error {
+  constructor(
+    public partyName: string,
+    public role: 'host' | 'member'
+  ) {
+    super(`You're already in ${partyName}`);
+  }
+}
+
+type RpcError = { message: string; details?: string | null; hint?: string | null };
+
 /** Turns RPC errors into something a person can act on. */
-function friendlyError(error: { message: string }) {
+function friendlyError(error: RpcError) {
+  if (error.message.includes('in_another_party')) {
+    return new PartyConflictError(error.details ?? 'another party', error.hint === 'host' ? 'host' : 'member');
+  }
   if (error.message.includes('party_not_found')) return new Error("No live party with that code. Check it with the host.");
   if (error.message.includes('Could not find the function')) return new Error('Parties aren\'t set up on the server yet.');
   return new Error(error.message);
 }
 
 export const parties = {
-  async create(name: string) {
-    const { data, error } = await supabase.rpc('create_party', { party_name: name }).single<PartyRow>();
+  async create(name: string, replaceCurrent = false) {
+    const { data, error } = await supabase
+      .rpc('create_party', { party_name: name, replace_current: replaceCurrent })
+      .single<PartyRow>();
     if (error) throw friendlyError(error);
     return toParty(data);
   },
 
-  async join(code: string) {
-    const { data, error } = await supabase.rpc('join_party', { party_code: normalizeCode(code) }).single<PartyRow>();
+  async join(code: string, replaceCurrent = false) {
+    const { data, error } = await supabase
+      .rpc('join_party', { party_code: normalizeCode(code), replace_current: replaceCurrent })
+      .single<PartyRow>();
     if (error) throw friendlyError(error);
     return toParty(data);
   },
@@ -120,6 +172,48 @@ export const parties = {
       .returns<MemberRow[]>();
     if (error) throw friendlyError(error);
     return data.map(toMember);
+  },
+
+  /** The live party you're currently in, if any. */
+  async current(userId: string) {
+    const { data, error } = await supabase
+      .from('party_members')
+      .select('joined_at, parties!inner(*)')
+      .eq('user_id', userId)
+      .is('left_at', null)
+      .is('parties.ended_at', null)
+      .order('joined_at', { ascending: false })
+      .limit(1)
+      .returns<{ parties: PartyRow }[]>();
+    if (error) throw friendlyError(error);
+    return data[0] ? toParty(data[0].parties) : null;
+  },
+
+  async locations(partyId: string) {
+    const { data, error } = await supabase
+      .from('party_locations')
+      .select('*')
+      .eq('party_id', partyId)
+      .returns<LocationRow[]>();
+    if (error) throw friendlyError(error);
+    return data.map(toLocation);
+  },
+
+  /** Returns false when you're no longer live in this party, so the caller should stop sharing. */
+  async shareLocation(
+    partyId: string,
+    c: { latitude: number; longitude: number; accuracy: number | null; speed: number | null; heading: number | null }
+  ) {
+    const { data, error } = await supabase.rpc('share_location', {
+      pid: partyId,
+      lat: c.latitude,
+      lng: c.longitude,
+      accuracy: c.accuracy,
+      speed: c.speed != null && c.speed >= 0 ? c.speed : null,
+      heading: c.heading != null && c.heading >= 0 ? c.heading : null,
+    });
+    if (error) throw friendlyError(error);
+    return data as boolean;
   },
 
   /** Every party the user has been in, newest first. RLS limits rows to those. */

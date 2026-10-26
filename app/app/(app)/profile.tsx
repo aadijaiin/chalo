@@ -6,6 +6,7 @@ import { Icon } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { useAuth } from '@/lib/auth';
+import { useSharing } from '@/lib/sharing';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 import { LogOut, X } from 'lucide-react-native';
@@ -17,9 +18,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function Profile() {
   const { profile } = useAuth();
   const [signingOut, setSigningOut] = React.useState(false);
+  const sharing = useSharing();
 
   async function signOut() {
     setSigningOut(true);
+    // Nobody should keep receiving your position after you sign out of this phone.
+    await sharing.stop();
     await supabase.auth.signOut();
     // The (app) layout redirects to sign in once the session clears.
   }
