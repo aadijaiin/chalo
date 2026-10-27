@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {Contact, LegalPage} from '@/components/site/LegalPage';
 
 export const metadata = {
@@ -98,8 +99,12 @@ export default function PrivacyPage() {
 					still works while it&apos;s open.
 				</li>
 				<li>
-					To delete your account and everything linked to it, or to get a copy of your data, contact us
-					at <Contact />.
+					You can delete your account and everything linked to it from the app (tap your avatar, then{' '}
+					<strong>Delete account</strong>), or by emailing us. See{' '}
+					<Link href="/delete-account">deleting your account</Link> for what&apos;s removed.
+				</li>
+				<li>
+					To get a copy of your data, contact us at <Contact />.
 				</li>
 			</ul>
 

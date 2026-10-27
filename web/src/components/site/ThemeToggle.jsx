@@ -2,12 +2,14 @@
 
 import {Moon, Sun} from 'lucide-react';
 import {useTheme} from 'next-themes';
-import {useEffect, useState} from 'react';
+import {useSyncExternalStore} from 'react';
+
+const noSubscribe = () => () => {};
 
 export function ThemeToggle() {
 	const {resolvedTheme, setTheme} = useTheme();
-	const [mounted, setMounted] = useState(false);
-	useEffect(() => setMounted(true), []);
+	// false while server-rendering and hydrating, true after: the theme is only known in the browser.
+	const mounted = useSyncExternalStore(noSubscribe, () => true, () => false);
 
 	const dark = mounted && resolvedTheme === 'dark';
 	return (

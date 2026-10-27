@@ -51,3 +51,7 @@ This folder holds its config and SQL migrations.
 - `supabase/migrations/…_stops_and_behind.sql`: every stop pin is a waypoint on everyone's route
   (`share_location()` returns them with the destination), and a server-set `behind` status with a
   push when someone falls 5 km behind the lead; it clears itself once they're within 3 km.
+- `supabase/migrations/…_recap_battery_fair_behind.sql`: breadcrumb trails for trip recaps (pruned
+  after 30 days), battery level on locations, and fell-behind measured against your starting gap.
+- `supabase/migrations/…_delete_account.sql`: `delete_my_account()` for in-app account deletion.
+  Hosted parties pass to the longest-standing member first, so others keep their history.

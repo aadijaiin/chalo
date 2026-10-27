@@ -6,11 +6,14 @@ import { Icon } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { useAuth } from '@/lib/auth';
+import { confirm } from '@/lib/confirm';
+import { haptics } from '@/lib/haptics';
+import { notify } from '@/lib/notify';
 import { unregisterForPush } from '@/lib/push';
 import { useSharing } from '@/lib/sharing';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
-import { LogOut, X } from 'lucide-react-native';
+import { LogOut, Trash2, X } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -19,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function Profile() {
   const { profile } = useAuth();
   const [signingOut, setSigningOut] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
   const sharing = useSharing();
 
   async function signOut() {
@@ -29,6 +33,33 @@ export default function Profile() {
     await unregisterForPush();
     await supabase.auth.signOut();
     // The (app) layout redirects to sign in once the session clears.
+  }
+
+  async function deleteAccount() {
+    const ok = await confirm({
+      icon: Trash2,
+      title: 'Delete your account?',
+      message:
+        'This removes your profile, location history, pings and party memberships for good. Parties you host are handed to someone else in them. This can’t be undone.',
+      confirmLabel: 'Delete account',
+      cancelLabel: 'Keep it',
+      destructive: true,
+    });
+    if (!ok) return;
+    setDeleting(true);
+    // Stop sharing and pushes first; both need the session that deleting the account ends.
+    await sharing.stop();
+    await unregisterForPush();
+    const { error } = await supabase.rpc('delete_my_account');
+    if (error) {
+      haptics.error();
+      notify.error("Couldn't delete your account", error.message);
+      setDeleting(false);
+      return;
+    }
+    // The account is gone server-side, so only clear this device's session.
+    await supabase.auth.signOut({ scope: 'local' });
+    notify.success('Account deleted', 'Everything linked to it has been removed.');
   }
 
   return (
@@ -72,10 +103,15 @@ export default function Profile() {
         </Animated.View>
 
         <View className="flex-1" />
-        <Button size="lg" variant="outline" loading={signingOut} onPress={signOut}>
-          <Icon as={LogOut} size={18} className="text-destructive" />
-          <Text className="text-destructive">Sign out</Text>
-        </Button>
+        <View className="gap-2">
+          <Button size="lg" variant="outline" loading={signingOut} disabled={deleting} onPress={signOut}>
+            <Icon as={LogOut} size={18} className="text-destructive" />
+            <Text className="text-destructive">Sign out</Text>
+          </Button>
+          <Button variant="ghost" loading={deleting} disabled={signingOut} onPress={deleteAccount}>
+            <Text className="text-sm text-muted-foreground">Delete account</Text>
+          </Button>
+        </View>
       </View>
     </SafeAreaView>
   );

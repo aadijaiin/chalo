@@ -1,7 +1,7 @@
 'use client';
 
 import {CircleCheck, KeyRound, LoaderCircle} from 'lucide-react';
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useState, useSyncExternalStore} from 'react';
 import {browserClient, supabaseConfigured} from '@/lib/supabase';
 
 // Same rule as signing up in the app.
@@ -11,8 +11,9 @@ function passwordProblem(p) {
 	return null;
 }
 
+const noSubscribe = () => () => {};
+
 function linkError() {
-	if (typeof window === 'undefined') return null;
 	const params = new URLSearchParams(window.location.hash.slice(1) || window.location.search.slice(1));
 	return params.get('error_description');
 }
@@ -20,21 +21,16 @@ function linkError() {
 export default function ResetForm() {
 	const supabase = useMemo(() => (supabaseConfigured ? browserClient() : null), []);
 	// checking → ready (link worked) | invalid (expired or opened twice) → done
-	const [stage, setStage] = useState('checking');
+	const [checked, setStage] = useState(supabaseConfigured ? 'checking' : 'invalid');
+	const badLink = useSyncExternalStore(noSubscribe, linkError, () => null);
+	const stage = badLink ? 'invalid' : checked;
 	const [error, setError] = useState(null);
 	const [password, setPassword] = useState('');
 	const [confirm, setConfirm] = useState('');
 	const [saving, setSaving] = useState(false);
 
 	useEffect(() => {
-		if (!supabase) {
-			setStage('invalid');
-			return;
-		}
-		if (linkError()) {
-			setStage('invalid');
-			return;
-		}
+		if (!supabase || badLink) return;
 		const {data} = supabase.auth.onAuthStateChange((event, session) => {
 			if (session && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
 				setStage('ready');
@@ -46,7 +42,7 @@ export default function ResetForm() {
 			clearTimeout(t);
 			data.subscription.unsubscribe();
 		};
-	}, [supabase]);
+	}, [supabase, badLink]);
 
 	async function save(e) {
 		e.preventDefault();

@@ -57,8 +57,9 @@ export default function TermsPage() {
 
 			<h2>Ending your account</h2>
 			<p>
-				You can stop using chalo at any time. To delete your account, contact us at <Contact />. We may
-				close accounts that break these terms.
+				You can stop using chalo at any time, and delete your account from the app or by contacting us at{' '}
+				<Contact /> (<Link href="/delete-account">how</Link>). We may close accounts that break these
+				terms.
 			</p>
 
 			<h2>Changes</h2>
