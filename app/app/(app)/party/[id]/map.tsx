@@ -1,6 +1,7 @@
 import { AvatarView } from '@/components/avatar-view';
 import { LiveDot } from '@/components/live-dot';
 import { PeerMarker } from '@/components/map/peer-marker';
+import { EveryoneHere } from '@/components/map/everyone-here';
 import { PersonSheet } from '@/components/map/person-sheet';
 import { PinEditor, type PinDraft } from '@/components/map/pin-editor';
 import { PIN_COLORS, PinMarker } from '@/components/map/pin-marker';
@@ -17,6 +18,7 @@ import { Icon } from '@/components/ui/icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { useFollowCamera, type FollowMode } from '@/hooks/use-follow-camera';
+import { useHideDevTools } from '@/hooks/use-hide-dev-tools';
 import { useRouteTo } from '@/hooks/use-route-to';
 import { useAuth } from '@/lib/auth';
 import { formatDistance, timeAgo, tripLabel } from '@/lib/format';
@@ -90,6 +92,7 @@ export default function PartyMap() {
   const [planOpen, setPlanOpen] = React.useState(false);
   // Off, keep you centred, or centred and turned to your direction of travel.
   const [follow, setFollow] = React.useState<FollowMode>('off');
+  useHideDevTools();
   const framed = React.useRef(false);
   const framedWithFriends = React.useRef(false);
 
@@ -270,6 +273,13 @@ export default function PartyMap() {
   const isHost = party.hostId === profile?.id;
   const openMember = person ? others.find((o) => o.member.userId === person) : undefined;
   const sheetOpen = Boolean(openMember || openPin);
+  // Everyone (at least two of you) has reached the destination.
+  const allHere =
+    Boolean(dest) &&
+    !party.endedAt &&
+    others.length > 0 &&
+    Boolean(myTrip?.eta?.arrived) &&
+    others.every((o) => o.peer?.remainingM === 0);
   const canPin = sharingHere && !party.endedAt;
   const nameOf = (userId: string | null) => {
     if (userId === profile?.id) return 'you';
@@ -520,7 +530,7 @@ export default function PartyMap() {
         <Animated.View
           entering={FadeIn.delay(300)}
           exiting={FadeOut.duration(150)}
-          style={{ bottom: insets.bottom + 196 + (myStatus ? 64 : 0) }}
+          style={{ bottom: insets.bottom + 196 + (myStatus ? 64 : 0) + (allHere ? 76 : 0) }}
           className="absolute right-4 gap-3">
           {sharingHere && !party.endedAt ? (
             <PressableScale
@@ -588,6 +598,7 @@ export default function PartyMap() {
         entering={FadeInUp.duration(450).delay(100)}
         style={{ paddingBottom: insets.bottom + 12 }}
         className="absolute bottom-0 left-0 right-0 gap-2">
+        {allHere && !sheetOpen ? <EveryoneHere party={party} isHost={isHost} /> : null}
         {myStatus ? <MyStatusBar key={myStatus.id} ping={myStatus} /> : null}
         {openMember ? (
           <PersonSheet
