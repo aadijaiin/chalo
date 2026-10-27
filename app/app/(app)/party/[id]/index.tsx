@@ -1,5 +1,6 @@
 import { AvatarView } from '@/components/avatar-view';
 import { LiveDot } from '@/components/live-dot';
+import { OfflineMapCard } from '@/components/party/offline-map-card';
 import { PressableScale } from '@/components/pressable-scale';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -116,6 +117,12 @@ export default function PartyLobby() {
               isHost={isHost}
               mine={sharingHere ? (myTrip?.eta ?? null) : null}
             />
+          </Animated.View>
+        ) : null}
+
+        {!ended && party.destination && sharingHere ? (
+          <Animated.View entering={enter(1.75)} layout={LinearTransition}>
+            <OfflineMapCard partyId={party.id} route={myTrip?.ahead ?? null} />
           </Animated.View>
         ) : null}
 
