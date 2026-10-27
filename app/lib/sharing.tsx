@@ -1,6 +1,7 @@
 import { useAuth } from '@/lib/auth';
 import { distanceM, useLocation } from '@/lib/location';
 import { parties, type Party } from '@/lib/parties';
+import { registerForPush } from '@/lib/push';
 import { destinationKey } from '@/lib/routing';
 import { clearTrip, tripUpdate, type Destination } from '@/lib/trip';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -352,7 +353,11 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
       target,
       background,
       backgroundAccess,
-      start: (party: SharingTarget) => begin(party, Platform.OS !== 'web'),
+      start: async (party: SharingTarget) => {
+        await begin(party, Platform.OS !== 'web');
+        // Joining a party is when pings start to matter, so ask then, once location is sorted.
+        registerForPush(true);
+      },
       stop,
       requestBackground,
       refresh,

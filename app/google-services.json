@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "234117820359",
+    "project_id": "chalo-f2c74",
+    "storage_bucket": "chalo-f2c74.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:234117820359:android:9d319787523199eb53f3e2",
+        "android_client_info": {
+          "package_name": "com.chalo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEjvH9muqCXOicir_TG2ThucJKv_hzRZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,8 @@
 import { AvatarView } from '@/components/avatar-view';
 import { LiveDot } from '@/components/live-dot';
 import { PeerMarker } from '@/components/map/peer-marker';
+import { PingSheet } from '@/components/map/ping-sheet';
+import { MyStatusBar, PingBadge, SosBanner } from '@/components/map/ping-status';
 import { SmoothMarker } from '@/components/map/smooth-marker';
 import { UserMarker } from '@/components/map/user-marker';
 import { PressableScale } from '@/components/pressable-scale';
@@ -17,6 +19,7 @@ import { distanceM, useLocation } from '@/lib/location';
 import { usePartyLive, type Peer } from '@/lib/party-live';
 import { endedMessage, type PartyMember } from '@/lib/parties';
 import { destinationKey } from '@/lib/routing';
+import { PING_META, type Ping, type PingKind } from '@/lib/pings';
 import { useSharing } from '@/lib/sharing';
 import { useMyTrip } from '@/lib/trip';
 import { MAP_STYLE, memberColor, THEME } from '@/lib/theme';
@@ -24,7 +27,7 @@ import { cn } from '@/lib/utils';
 import { Camera, GeoJSONSource, Layer, Map, Marker, type CameraRef } from '@maplibre/maplibre-react-native';
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
-import { ChevronLeft, Flag, LocateFixed, Users } from 'lucide-react-native';
+import { ChevronLeft, Flag, LocateFixed, Megaphone, Users } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -48,7 +51,8 @@ export default function PartyMap() {
   const { colorScheme } = useColorScheme();
   const scheme = colorScheme ?? 'light';
   const { profile } = useAuth();
-  const { state, peers, connection } = usePartyLive();
+  const { state, peers, connection, pings } = usePartyLive();
+  const [pinging, setPinging] = React.useState(false);
   const sharing = useSharing();
   const { location } = useLocation();
   const cameraRef = React.useRef<CameraRef>(null);
@@ -125,6 +129,9 @@ export default function PartyMap() {
   const { party } = state;
   const sharingHere = sharing.target?.id === party.id;
   const liveCount = onMap.filter((o) => o.peer.online).length + (sharingHere && me ? 1 : 0);
+  const myStatus = profile && sharingHere ? pings[profile.id] : undefined;
+  const sosFrom = others.filter((o) => pings[o.member.userId]?.kind === 'sos');
+  const isHost = party.hostId === profile?.id;
 
   return (
     <View className="flex-1 bg-background">
@@ -182,6 +189,7 @@ export default function PartyMap() {
               color={color}
               online={peer.online}
               size={selected === member.userId ? 48 : 40}
+              ping={pings[member.userId]?.kind}
             />
           </SmoothMarker>
         ))}
@@ -229,6 +237,15 @@ export default function PartyMap() {
             <Text className="text-xs font-semibold text-background">Connection lost · positions may be stale</Text>
           </Animated.View>
         ) : null}
+        {sosFrom.map(({ member, peer }) => (
+          <SosBanner
+            key={pings[member.userId].id}
+            ping={pings[member.userId]}
+            who={firstName(member)}
+            canClear={isHost}
+            onShow={() => (peer ? focus(member.userId, [peer.lng, peer.lat]) : undefined)}
+          />
+        ))}
         {dest ? (
           <Animated.View entering={FadeInDown.duration(300)} exiting={FadeOut.duration(200)} className="self-start">
             <PressableScale
@@ -254,8 +271,19 @@ export default function PartyMap() {
 
       <Animated.View
         entering={FadeIn.delay(300)}
-        style={{ bottom: insets.bottom + 196 }}
+        style={{ bottom: insets.bottom + 196 + (myStatus ? 64 : 0) }}
         className="absolute right-4 gap-3">
+        {sharingHere && !party.endedAt ? (
+          <PressableScale
+            onPress={() => {
+              haptics.select();
+              setPinging(true);
+            }}
+            accessibilityLabel="Ping the crew"
+            className="h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg shadow-black/20">
+            <Icon as={Megaphone} size={20} className="text-primary-foreground" />
+          </PressableScale>
+        ) : null}
         {onMap.length > 0 ? (
           <Animated.View entering={FadeIn}>
             <PressableScale
@@ -282,7 +310,8 @@ export default function PartyMap() {
       <Animated.View
         entering={FadeInUp.duration(450).delay(100)}
         style={{ paddingBottom: insets.bottom + 12 }}
-        className="absolute bottom-0 left-0 right-0">
+        className="absolute bottom-0 left-0 right-0 gap-2">
+        {myStatus ? <MyStatusBar key={myStatus.id} ping={myStatus} /> : null}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 px-4 pt-2">
           {profile ? (
             <CrewCard
@@ -290,8 +319,11 @@ export default function PartyMap() {
               name="You"
               color={THEME.light.primary}
               live={sharingHere && Boolean(me)}
+              status={myStatus?.kind}
               detail={
-                !sharingHere
+                myStatus
+                  ? pingDetail(myStatus)
+                  : !sharingHere
                   ? 'Not sharing'
                   : !me
                     ? 'Waiting for GPS'
@@ -312,7 +344,8 @@ export default function PartyMap() {
                 name={firstName(member)}
                 color={color}
                 live={Boolean(peer?.online)}
-                detail={peerDetail(peer, coords, Boolean(dest))}
+                status={pings[member.userId]?.kind}
+                detail={pings[member.userId] ? pingDetail(pings[member.userId]) : peerDetail(peer, coords, Boolean(dest))}
                 selected={selected === member.userId}
                 onPress={peer ? () => focus(member.userId, [peer.lng, peer.lat]) : undefined}
               />
@@ -320,6 +353,7 @@ export default function PartyMap() {
           ))}
         </ScrollView>
       </Animated.View>
+      {pinging ? <PingSheet partyId={party.id} onClose={() => setPinging(false)} /> : null}
       {party.endedAt ? (
         <Animated.View
           entering={motion.fade()}
@@ -344,6 +378,11 @@ function firstName(m: PartyMember) {
   return m.fullName.split(' ')[0] || m.username;
 }
 
+function pingDetail(ping: Ping) {
+  const meta = PING_META[ping.kind];
+  return `${meta.label} · ${timeAgo(ping.at)}`;
+}
+
 function peerDetail(peer: Peer | undefined, me: { latitude: number; longitude: number } | null, hasDestination: boolean) {
   if (!peer) return 'Not sharing yet';
   const trip = hasDestination ? tripLabel(peer) : null;
@@ -359,6 +398,7 @@ function CrewCard({
   name,
   color,
   live,
+  status,
   detail,
   selected,
   onPress,
@@ -367,6 +407,7 @@ function CrewCard({
   name: string;
   color: string;
   live: boolean;
+  status?: PingKind;
   detail: string;
   selected: boolean;
   onPress?: () => void;
@@ -393,7 +434,11 @@ function CrewCard({
             <View className="rounded-full p-[2px]" style={{ backgroundColor: color }}>
               <AvatarView avatar={avatar} size={38} />
             </View>
-            <LiveDot live={live} size={9} />
+            {status ? (
+              <PingBadge kind={status} size={12} className={status === 'sos' ? '' : 'bg-primary/10'} />
+            ) : (
+              <LiveDot live={live} size={9} />
+            )}
           </View>
           <View className="gap-0.5">
             <Text className="font-bold" numberOfLines={1}>

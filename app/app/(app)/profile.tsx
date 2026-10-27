@@ -6,6 +6,7 @@ import { Icon } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { useAuth } from '@/lib/auth';
+import { unregisterForPush } from '@/lib/push';
 import { useSharing } from '@/lib/sharing';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
@@ -24,6 +25,8 @@ export default function Profile() {
     setSigningOut(true);
     // Nobody should keep receiving your position after you sign out of this phone.
     await sharing.stop();
+    // Or pushes: this device would keep getting the old account's pings.
+    await unregisterForPush();
     await supabase.auth.signOut();
     // The (app) layout redirects to sign in once the session clears.
   }
