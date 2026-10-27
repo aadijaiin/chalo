@@ -762,6 +762,14 @@ export default function PartyMap() {
             <Button
               className="mt-2 self-stretch"
               size="lg"
+              onPress={() =>
+                router.replace({ pathname: '/party/[id]/recap', params: { id: party.id } })
+              }>
+              <Text>See trip recap</Text>
+            </Button>
+            <Button
+              className="self-stretch"
+              size="lg"
               variant="secondary"
               onPress={() => router.replace('/home')}>
               <Text>Back home</Text>

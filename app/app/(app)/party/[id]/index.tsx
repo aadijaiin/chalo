@@ -25,13 +25,14 @@ import { router } from 'expo-router';
 import {
   Check,
   ChevronLeft,
-  Copy,
   ChevronRight,
+  Copy,
   Crown,
   Flag,
   LogOut,
   Map as MapIcon,
   MapPinned,
+  Route,
   Share2,
   ShieldAlert,
   UserPlus,
@@ -95,6 +96,12 @@ export default function PartyLobby() {
         <Text className="flex-1 text-lg font-bold" numberOfLines={1}>
           {party.name}
         </Text>
+        <PressableScale
+          onPress={() => router.push({ pathname: '/party/[id]/recap', params: { id: party.id } })}
+          accessibilityLabel={ended ? 'Trip recap' : 'Trip so far'}
+          className="h-10 w-10 items-center justify-center rounded-full bg-muted">
+          <Icon as={Route} size={18} className="text-primary" />
+        </PressableScale>
       </View>
 
       <ScrollView
@@ -179,9 +186,21 @@ export default function PartyLobby() {
 
       <View className="gap-3 px-5 pb-2">
         {ended || !iAmIn ? (
-          <Button size="lg" variant="secondary" onPress={goHome}>
-            <Text>Back home</Text>
-          </Button>
+          <>
+            {ended ? (
+              <Button
+                size="lg"
+                onPress={() =>
+                  router.push({ pathname: '/party/[id]/recap', params: { id: party.id } })
+                }>
+                <Icon as={Route} size={18} className="text-primary-foreground" />
+                <Text>See trip recap</Text>
+              </Button>
+            ) : null}
+            <Button size="lg" variant="secondary" onPress={goHome}>
+              <Text>Back home</Text>
+            </Button>
+          </>
         ) : (
           <>
             <Button

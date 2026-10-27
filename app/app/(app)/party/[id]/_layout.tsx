@@ -10,6 +10,7 @@ export default function PartyLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="map" options={{ animation: 'fade' }} />
         <Stack.Screen name="destination" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="recap" />
       </Stack>
     </PartyLiveProvider>
   );
