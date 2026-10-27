@@ -15,7 +15,7 @@ import { haptics } from '@/lib/haptics';
 import { EASE_OUT, motion } from '@/lib/motion';
 import { distanceM, useLocation } from '@/lib/location';
 import { usePartyLive, type Peer } from '@/lib/party-live';
-import type { PartyMember } from '@/lib/parties';
+import { endedMessage, type PartyMember } from '@/lib/parties';
 import { useSharing } from '@/lib/sharing';
 import { MAP_STYLE, memberColor, THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -249,7 +249,7 @@ export default function PartyMap() {
           <Animated.View entering={motion.settle(80)} className="w-full items-center gap-3 rounded-3xl bg-card p-6 shadow-xl shadow-black/10">
             <Text className="text-lg font-bold">This party has ended</Text>
             <Text className="text-center text-sm text-muted-foreground">
-              Location sharing stopped for everyone {timeAgo(party.endedAt)}.
+              {endedMessage(party.endedReason)} Location sharing stopped for everyone {timeAgo(party.endedAt)}.
             </Text>
             <Button className="mt-2 self-stretch" size="lg" variant="secondary" onPress={() => router.replace('/home')}>
               <Text>Back home</Text>

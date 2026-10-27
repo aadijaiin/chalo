@@ -33,3 +33,7 @@ This folder holds its config and SQL migrations.
   latest fix only (overwritten in place, deleted on leave/end), written by `share_location()` so a
   backgrounded phone can post over plain HTTP. Create/join refuse while you're live in another party
   unless the app passes `replace_current` after the user confirms.
+- `supabase/migrations/…_auto_end_and_quieter_sharing.sql`: parties end on their own after 24 h, or
+  after 2 h with nobody sharing (a `pg_cron` job runs `end_stale_parties()` every 5 min), and
+  `parties.ended_reason` records why. `share_location()` skips near-duplicate writes, since each
+  write is fanned out to the whole party over Realtime.

@@ -2,7 +2,7 @@ import { useParty, type PartyState } from '@/hooks/use-party';
 import { useAuth } from '@/lib/auth';
 import { haptics } from '@/lib/haptics';
 import { notify } from '@/lib/notify';
-import { parties, toLocation, type LocationRow, type PartyLocation } from '@/lib/parties';
+import { endedMessage, parties, toLocation, type LocationRow, type PartyLocation } from '@/lib/parties';
 import { useSharing } from '@/lib/sharing';
 import { supabase } from '@/lib/supabase';
 import * as React from 'react';
@@ -129,8 +129,11 @@ function useRosterAnnouncements(state: PartyState, userId: string | undefined, s
     known.current = ids;
 
     const live = !party.endedAt;
-    if (wasLive.current && !live && party.hostId !== userId) {
-      notify.info('The host ended this party', 'Location sharing has stopped.');
+    if (wasLive.current && !live && (party.hostId !== userId || party.endedReason !== 'host')) {
+      notify.info(
+        party.endedReason === 'host' ? 'The host ended this party' : `${party.name} has ended`,
+        `${party.endedReason === 'host' ? '' : endedMessage(party.endedReason) + ' '}Location sharing has stopped.`
+      );
     }
     if (wasLive.current && !live && sharing.target?.id === party.id) sharing.stop();
     wasLive.current = live;

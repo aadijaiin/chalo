@@ -10,7 +10,11 @@ export type Party = {
   hostId: string;
   createdAt: string;
   endedAt: string | null;
+  /** Why it ended: the host ended it, it hit the 24 h limit, or nobody shared for 2 h. */
+  endedReason: EndedReason | null;
 };
+
+export type EndedReason = 'host' | 'expired' | 'idle';
 
 export type PartyMember = {
   userId: string;
@@ -31,6 +35,7 @@ type PartyRow = {
   host_id: string;
   created_at: string;
   ended_at: string | null;
+  ended_reason: EndedReason | null;
 };
 
 type MemberRow = {
@@ -50,6 +55,7 @@ function toParty(row: PartyRow): Party {
     hostId: row.host_id,
     createdAt: row.created_at,
     endedAt: row.ended_at,
+    endedReason: row.ended_reason,
   };
 }
 
@@ -69,6 +75,12 @@ function toMember(row: MemberRow): PartyMember {
 
 export function normalizeCode(raw: string) {
   return raw.replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, CODE_LENGTH);
+}
+
+export function endedMessage(reason: EndedReason | null) {
+  if (reason === 'expired') return 'It ended automatically after 24 hours.';
+  if (reason === 'idle') return 'It ended automatically after 2 hours with nobody sharing.';
+  return 'The host ended it.';
 }
 
 export function inviteMessage(party: Party) {
