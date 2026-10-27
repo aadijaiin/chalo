@@ -136,13 +136,18 @@ export async function tripUpdate(
       ? updatePace(s.pace, (now - s.last.at) / 1000, s.last.remainingS - progress.remainingS)
       : s.pace;
     const remainingM = progress.offRouteM > OFF_ROUTE_M ? progress.remainingM + progress.offRouteM : progress.remainingM;
+    // Routes end on the nearest road, which can be well away from a big place's centre point
+    // (India Gate, a park), so reaching the end of the route counts as arriving too.
+    const arrived = remainingM < ARRIVED_M;
     s = {
       ...s,
       pace,
       offRouteFixes: routeChanged ? 0 : offRouteFixes,
       last: { at: now, remainingS: progress.remainingS, index: progress.index },
-      eta: { remainingM, etaS: Math.round(progress.remainingS * paceFactor(pace)), arrived: false },
-      ahead: routeAhead(s.route, pos, progress.index),
+      eta: arrived
+        ? { remainingM: 0, etaS: 0, arrived: true }
+        : { remainingM, etaS: Math.round(progress.remainingS * paceFactor(pace)), arrived: false },
+      ahead: arrived ? null : routeAhead(s.route, pos, progress.index),
     };
   } else {
     s = { ...s, eta: { remainingM: straightM * DETOUR, etaS: null, arrived: false }, ahead: null };
