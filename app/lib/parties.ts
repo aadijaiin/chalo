@@ -1,6 +1,6 @@
 import type { AvatarConfig, AvatarStyle } from '@/lib/avatar';
 import { supabase } from '@/lib/supabase';
-import type { Destination } from '@/lib/trip';
+import type { Destination, Stop } from '@/lib/trip';
 
 export const CODE_LENGTH = 6;
 
@@ -236,7 +236,7 @@ export const parties = {
     partyId: string,
     c: { latitude: number; longitude: number; accuracy: number | null; speed: number | null; heading: number | null },
     eta: { etaS: number | null; remainingM: number } | null
-  ): Promise<{ destination: Destination | null } | null> {
+  ): Promise<{ destination: Destination | null; stops?: Stop[] } | null> {
     const { data, error } = await supabase.rpc('share_location', {
       pid: partyId,
       lat: c.latitude,
@@ -248,7 +248,7 @@ export const parties = {
       remaining_m: eta ? Math.round(eta.remainingM) : null,
     });
     if (error) throw friendlyError(error);
-    return (data as { destination: Destination | null } | null) ?? null;
+    return (data as { destination: Destination | null; stops?: Stop[] } | null) ?? null;
   },
 
   /** Host only. Pass null to clear it. */

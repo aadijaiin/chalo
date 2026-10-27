@@ -5,6 +5,7 @@ import {
   paceFactor,
   progressAlong,
   routeAhead,
+  toLegEnd,
   updatePace,
   type LngLat,
   type Pace,
@@ -21,15 +22,25 @@ import * as React from 'react';
 
 export type Destination = { name: string; lat: number; lng: number };
 
+/** A stop pin on the way; every one of them is on everyone's route. */
+export type Stop = { id: string; name: string; lat: number; lng: number };
+
 export type TripEta = {
+  /** To the destination, through the stops still ahead. */
   remainingM: number;
   /** Null when we couldn't get a route and only know the straight-line distance. */
   etaS: number | null;
   arrived: boolean;
+  /** The next stop on your route, if any. */
+  next?: { id: string; name: string; remainingM: number; etaS: number | null } | null;
 };
 
 type TripState = {
   key: string;
+  /** The stops the current route goes through, in order; a change means re-routing. */
+  viaKey: string;
+  /** Stops you've already been to on this trip. */
+  passed: string[];
   /** Null when routing failed or there's no road route; we fall back to straight-line distance. */
   route: Route | null;
   pace: Pace;
@@ -49,8 +60,37 @@ const OFF_ROUTE_M = 120;
 const REROUTE_GAP_MS = 60_000;
 const RETRY_GAP_MS = 30_000;
 const NO_ROUTE_RETRY_MS = 10 * 60_000;
+// After the stops change, re-route right away, but don't hammer the server if that fails.
+const STOPS_RETRY_MS = 10_000;
 // Roads wind; use this when we only have the straight line.
 const DETOUR = 1.3;
+// Close enough to a stop to count as having been there.
+const PASSED_M = 150;
+// A stop farther from the destination than you (by this much) is behind you: skip it.
+const BEHIND_SLACK_M = 1_000;
+// OSRM's public server takes a limited number of waypoints.
+const MAX_STOPS = 8;
+
+/**
+ * The stops still ahead of you, in the order you'll reach them. Without a road route to
+ * order them by, this goes by distance to the destination: farthest first, and anything
+ * farther away than you are has been left behind. Good for the A-to-B trips chalo is for.
+ */
+export function stopsAhead(
+  stops: Stop[],
+  passed: string[],
+  pos: { latitude: number; longitude: number },
+  dest: { lat: number; lng: number }
+): Stop[] {
+  const toDest = (p: { lat: number; lng: number }) => distanceM({ latitude: p.lat, longitude: p.lng }, { latitude: dest.lat, longitude: dest.lng });
+  const mine = distanceM(pos, { latitude: dest.lat, longitude: dest.lng });
+  return stops
+    .filter((s) => !passed.includes(s.id) && toDest(s) < mine + BEHIND_SLACK_M)
+    .sort((a, b) => toDest(b) - toDest(a))
+    .slice(0, MAX_STOPS);
+}
+
+const viaKeyOf = (stops: Stop[]) => stops.map((s) => `${s.id}@${destinationKey(s)}`).join('|');
 
 let state: TripState | null = null;
 let loaded = false;
@@ -85,6 +125,7 @@ export function clearTrip() {
 /** Advances your trip with a new fix and returns the ETA to post, or null with no destination. */
 export async function tripUpdate(
   dest: Destination | null,
+  stops: Stop[],
   c: { latitude: number; longitude: number; accuracy: number | null },
   now = Date.now()
 ): Promise<TripEta | null> {
@@ -98,7 +139,28 @@ export async function tripUpdate(
   let s: TripState =
     prev?.key === key
       ? prev
-      : { key, route: null, pace: { actualS: 0, predictedS: 0 }, last: null, fetchedAt: 0, noRoute: false, offRouteFixes: 0, eta: null, ahead: null };
+      : {
+          key,
+          viaKey: '',
+          passed: [],
+          route: null,
+          pace: { actualS: 0, predictedS: 0 },
+          last: null,
+          fetchedAt: 0,
+          noRoute: false,
+          offRouteFixes: 0,
+          eta: null,
+          ahead: null,
+        };
+  // Older saved state predates stops.
+  s = { ...s, passed: s.passed ?? [], viaKey: s.viaKey ?? '' };
+
+  // Tick off any stop you've reached, then route through the rest.
+  const reached = stops.filter((st) => !s.passed.includes(st.id) && distanceM(c, { latitude: st.lat, longitude: st.lng }) < PASSED_M);
+  if (reached.length) s = { ...s, passed: [...s.passed, ...reached.map((st) => st.id)] };
+  const via = stopsAhead(stops, s.passed, c, dest);
+  const viaKey = viaKeyOf(via);
+  const viaChanged = viaKey !== s.viaKey;
 
   const straightM = distanceM(c, { latitude: dest.lat, longitude: dest.lng });
   if (straightM < ARRIVED_M) {
@@ -112,15 +174,17 @@ export async function tripUpdate(
   const offRouteFixes = offRoute ? s.offRouteFixes + 1 : 0;
 
   // Fetch the first route, retry a failed one, or re-route once you've clearly left it.
-  const due = !s.route
-    ? now - s.fetchedAt > (s.noRoute ? NO_ROUTE_RETRY_MS : RETRY_GAP_MS)
-    : offRouteFixes >= 2 && now - s.fetchedAt > REROUTE_GAP_MS;
+  const due = viaChanged
+    ? now - s.fetchedAt > STOPS_RETRY_MS
+    : !s.route
+      ? now - s.fetchedAt > (s.noRoute ? NO_ROUTE_RETRY_MS : RETRY_GAP_MS)
+      : offRouteFixes >= 2 && now - s.fetchedAt > REROUTE_GAP_MS;
   let routeChanged = false;
   if (due && !fetching) {
     fetching = true;
     try {
-      const route = await fetchRoute(pos, dest);
-      s = { ...s, route, noRoute: !route, fetchedAt: now, last: null };
+      const route = await fetchRoute(pos, dest, via);
+      s = { ...s, route, viaKey, noRoute: !route, fetchedAt: now, last: null };
       progress = route ? progressAlong(route, pos) : null;
       routeChanged = true;
     } catch (e) {
@@ -139,6 +203,12 @@ export async function tripUpdate(
     // Routes end on the nearest road, which can be well away from a big place's centre point
     // (India Gate, a park), so reaching the end of the route counts as arriving too.
     const arrived = remainingM < ARRIVED_M;
+    const factor = paceFactor(pace);
+    const leg = via.length && s.viaKey === viaKey ? toLegEnd(s.route, progress) : null;
+    const next =
+      leg && !arrived
+        ? { id: via[0].id, name: via[0].name, remainingM: leg.remainingM, etaS: Math.round(leg.remainingS * factor) }
+        : null;
     s = {
       ...s,
       pace,
@@ -146,11 +216,15 @@ export async function tripUpdate(
       last: { at: now, remainingS: progress.remainingS, index: progress.index },
       eta: arrived
         ? { remainingM: 0, etaS: 0, arrived: true }
-        : { remainingM, etaS: Math.round(progress.remainingS * paceFactor(pace)), arrived: false },
+        : { remainingM, etaS: Math.round(progress.remainingS * factor), arrived: false, next },
       ahead: arrived ? null : routeAhead(s.route, pos, progress.index),
     };
   } else {
-    s = { ...s, eta: { remainingM: straightM * DETOUR, etaS: null, arrived: false }, ahead: null };
+    const first = via[0];
+    const next = first
+      ? { id: first.id, name: first.name, remainingM: distanceM(c, { latitude: first.lat, longitude: first.lng }) * DETOUR, etaS: null }
+      : null;
+    s = { ...s, eta: { remainingM: straightM * DETOUR, etaS: null, arrived: false, next }, ahead: null };
   }
   save(s, routeChanged);
   return s.eta;

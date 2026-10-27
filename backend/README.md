@@ -40,3 +40,14 @@ This folder holds its config and SQL migrations.
 - `supabase/migrations/…_destination_and_eta.sql`: the host sets a party destination
   (`set_destination()`). Each phone routes itself there and posts `eta_s` / `remaining_m` with its
   location; `share_location()` returns the current destination so a locked phone notices changes.
+- `supabase/migrations/…_pings_and_push.sql`: `party_pings` (chai, fuel, food, wait up, SOS,
+  arrivals) and `push_tokens`. Triggers push pings, joins, arrivals and the party ending to every
+  other member through Expo's push service, straight from Postgres with `pg_net`.
+- `supabase/migrations/…_ping_status.sql`: pings become statuses you can end (`clear_ping()`);
+  cancelling an SOS tells everyone you're OK.
+- `supabase/migrations/…_custom_ping.sql`: a custom stop with your own message.
+- `supabase/migrations/…_party_pins.sql`: `party_pins`, shared stops, meetup points and notes on
+  the party map (`add_pin` / `update_pin` / `remove_pin`); adding a stop or meetup pushes to the party.
+- `supabase/migrations/…_stops_and_behind.sql`: every stop pin is a waypoint on everyone's route
+  (`share_location()` returns them with the destination), and a server-set `behind` status with a
+  push when someone falls 5 km behind the lead; it clears itself once they're within 3 km.

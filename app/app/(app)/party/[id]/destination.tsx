@@ -8,7 +8,8 @@ import { motion } from '@/lib/motion';
 import { notify } from '@/lib/notify';
 import { parties } from '@/lib/parties';
 import { usePartyLive } from '@/lib/party-live';
-import { nameForPoint, searchPlaces, type Place } from '@/lib/places';
+import { usePlaceSearch } from '@/hooks/use-place-search';
+import { nameForPoint, type Place } from '@/lib/places';
 import { MAP_STYLE, THEME } from '@/lib/theme';
 import { Camera, Map, type CameraRef } from '@maplibre/maplibre-react-native';
 import { router } from 'expo-router';
@@ -35,8 +36,6 @@ export default function DestinationPicker() {
   const me = location.status === 'ready' ? location.coords : null;
 
   const [query, setQuery] = React.useState('');
-  const [results, setResults] = React.useState<Place[]>([]);
-  const [searching, setSearching] = React.useState(false);
   const [focused, setFocused] = React.useState(false);
   const [pick, setPick] = React.useState<Spot | null>(current);
   const [naming, setNaming] = React.useState(false);
@@ -45,26 +44,7 @@ export default function DestinationPicker() {
   // A search result flies the map there; that move shouldn't rename the pick.
   const flyingToResult = React.useRef(false);
 
-  React.useEffect(() => {
-    const q = query.trim();
-    if (q.length < 2) {
-      setResults([]);
-      setSearching(false);
-      return;
-    }
-    setSearching(true);
-    const ctrl = new AbortController();
-    const t = setTimeout(() => {
-      searchPlaces(q, me, ctrl.signal)
-        .then(setResults)
-        .catch((e) => e.name !== 'AbortError' && setResults([]))
-        .finally(() => !ctrl.signal.aborted && setSearching(false));
-    }, 350);
-    return () => {
-      clearTimeout(t);
-      ctrl.abort();
-    };
-  }, [query]);
+  const { results, searching } = usePlaceSearch(query, me);
 
   function choose(place: Place) {
     haptics.select();

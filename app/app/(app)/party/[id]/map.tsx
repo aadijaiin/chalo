@@ -1,6 +1,11 @@
 import { AvatarView } from '@/components/avatar-view';
 import { LiveDot } from '@/components/live-dot';
 import { PeerMarker } from '@/components/map/peer-marker';
+import { PersonSheet } from '@/components/map/person-sheet';
+import { PinEditor, type PinDraft } from '@/components/map/pin-editor';
+import { PIN_COLORS, PinMarker } from '@/components/map/pin-marker';
+import { PinSheet } from '@/components/map/pin-sheet';
+import { PlanSheet } from '@/components/map/plan-sheet';
 import { PingSheet } from '@/components/map/ping-sheet';
 import { MyStatusBar, PingBadge, SosBanner } from '@/components/map/ping-status';
 import { SmoothMarker } from '@/components/map/smooth-marker';
@@ -11,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
+import { useRouteTo } from '@/hooks/use-route-to';
 import { useAuth } from '@/lib/auth';
 import { formatDistance, timeAgo, tripLabel } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
@@ -18,16 +24,32 @@ import { EASE_OUT, motion } from '@/lib/motion';
 import { distanceM, useLocation } from '@/lib/location';
 import { usePartyLive, type Peer } from '@/lib/party-live';
 import { endedMessage, type PartyMember } from '@/lib/parties';
-import { destinationKey } from '@/lib/routing';
-import { PING_META, type Ping, type PingKind } from '@/lib/pings';
+import { PIN_NAME_MAX, type Pin } from '@/lib/pins';
+import { destinationKey, pointAlong } from '@/lib/routing';
+import { pingLabel, type Ping, type PingKind } from '@/lib/pings';
 import { useSharing } from '@/lib/sharing';
 import { useMyTrip } from '@/lib/trip';
 import { MAP_STYLE, memberColor, THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
-import { Camera, GeoJSONSource, Layer, Map, Marker, type CameraRef } from '@maplibre/maplibre-react-native';
+import {
+  Camera,
+  GeoJSONSource,
+  Layer,
+  Map,
+  Marker,
+  type CameraRef,
+} from '@maplibre/maplibre-react-native';
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
-import { ChevronLeft, Flag, LocateFixed, Megaphone, Users } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  Flag,
+  ListOrdered,
+  LocateFixed,
+  MapPin,
+  Megaphone,
+  Users,
+} from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -51,18 +73,36 @@ export default function PartyMap() {
   const { colorScheme } = useColorScheme();
   const scheme = colorScheme ?? 'light';
   const { profile } = useAuth();
-  const { state, peers, connection, pings } = usePartyLive();
+  const { state, peers, connection, pings, pins } = usePartyLive();
   const [pinging, setPinging] = React.useState(false);
   const sharing = useSharing();
   const { location } = useLocation();
   const cameraRef = React.useRef<CameraRef>(null);
   const [styleLoaded, setStyleLoaded] = React.useState(false);
   const [selected, setSelected] = React.useState<string | null>(null);
+  // Whose (or which pin's) details are open, and whether we're routing you there.
+  const [person, setPerson] = React.useState<string | null>(null);
+  const [pinId, setPinId] = React.useState<string | null>(null);
+  const [routing, setRouting] = React.useState(false);
+  const [editing, setEditing] = React.useState<{ draft?: PinDraft; pin?: Pin } | null>(null);
+  const [planOpen, setPlanOpen] = React.useState(false);
   const framed = React.useRef(false);
   const framedWithFriends = React.useRef(false);
 
   const coords = location.status === 'ready' ? location.coords : null;
   const me: LngLat | null = coords ? [coords.longitude, coords.latitude] : null;
+
+  const personPeer = person ? peers[person] : undefined;
+  const openPin = pinId ? pins.find((p) => p.id === pinId) : undefined;
+  const routeTo = useRouteTo(
+    routing,
+    coords,
+    personPeer
+      ? { latitude: personPeer.lat, longitude: personPeer.lng }
+      : openPin
+        ? { latitude: openPin.lat, longitude: openPin.lng }
+        : null
+  );
 
   const dest = state.status === 'ready' ? state.party.destination : null;
   const myTrip = useMyTrip(dest ? destinationKey(dest) : null);
@@ -72,10 +112,15 @@ export default function PartyMap() {
     .map((m, i) => ({ member: m, color: memberColor(i), peer: peers[m.userId] }))
     .filter((o) => o.member.userId !== profile?.id)
     // Heading somewhere: whoever's closest to it comes first.
-    .sort((a, b) => (dest ? (a.peer?.remainingM ?? Infinity) - (b.peer?.remainingM ?? Infinity) : 0));
+    .sort((a, b) =>
+      dest ? (a.peer?.remainingM ?? Infinity) - (b.peer?.remainingM ?? Infinity) : 0
+    );
   const onMap = others.filter((o): o is typeof o & { peer: Peer } => Boolean(o.peer));
 
-  const points: LngLat[] = [...(me ? [me] : []), ...onMap.map((o) => [o.peer.lng, o.peer.lat] as LngLat)];
+  const points: LngLat[] = [
+    ...(me ? [me] : []),
+    ...onMap.map((o) => [o.peer.lng, o.peer.lat] as LngLat),
+  ];
 
   const fitAll = React.useCallback(
     (duration = 900) => {
@@ -87,10 +132,13 @@ export default function PartyMap() {
       }
       const lngs = points.map((p) => p[0]);
       const lats = points.map((p) => p[1]);
-      cameraRef.current?.fitBounds([Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)], {
-        padding: { top: insets.top + 120, bottom: insets.bottom + 200, left: 60, right: 60 },
-        duration,
-      });
+      cameraRef.current?.fitBounds(
+        [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)],
+        {
+          padding: { top: insets.top + 120, bottom: insets.bottom + 200, left: 60, right: 60 },
+          duration,
+        }
+      );
     },
     [JSON.stringify(points), insets.top, insets.bottom]
   );
@@ -110,19 +158,64 @@ export default function PartyMap() {
     haptics.select();
     setSelected(null);
     const pts: LngLat[] = [[dest.lng, dest.lat], ...(me ? [me] : [])];
-    if (pts.length === 1) return cameraRef.current?.flyTo({ center: pts[0], zoom: FOCUS_ZOOM, duration: 900 });
+    if (pts.length === 1)
+      return cameraRef.current?.flyTo({ center: pts[0], zoom: FOCUS_ZOOM, duration: 900 });
     const lngs = pts.map((p) => p[0]);
     const lats = pts.map((p) => p[1]);
-    cameraRef.current?.fitBounds([Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)], {
-      padding: { top: insets.top + 140, bottom: insets.bottom + 200, left: 60, right: 60 },
-      duration: 900,
-    });
+    cameraRef.current?.fitBounds(
+      [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)],
+      {
+        padding: { top: insets.top + 140, bottom: insets.bottom + 200, left: 60, right: 60 },
+        duration: 900,
+      }
+    );
   }
 
   function focus(id: string, lngLat: LngLat) {
     haptics.select();
     setSelected(id);
     cameraRef.current?.flyTo({ center: lngLat, zoom: FOCUS_ZOOM, duration: 900 });
+  }
+
+  function openPerson(id: string, lngLat: LngLat) {
+    focus(id, lngLat);
+    if (id !== person) setRouting(false);
+    setPinId(null);
+    setPerson(id);
+  }
+
+  function openPinSheet(pin: Pin) {
+    focus(`pin-${pin.id}`, [pin.lng, pin.lat]);
+    if (pin.id !== pinId) setRouting(false);
+    setPerson(null);
+    setPinId(pin.id);
+  }
+
+  function closeSheet() {
+    setPerson(null);
+    setPinId(null);
+    setRouting(false);
+    setSelected(null);
+  }
+
+  function toggleRoute(lngLat: LngLat) {
+    haptics.select();
+    const next = !routing;
+    setRouting(next);
+    if (!next || !me) return;
+    // Show both ends of the trip.
+    cameraRef.current?.fitBounds(
+      [
+        Math.min(me[0], lngLat[0]),
+        Math.min(me[1], lngLat[1]),
+        Math.max(me[0], lngLat[0]),
+        Math.max(me[1], lngLat[1]),
+      ],
+      {
+        padding: { top: insets.top + 140, bottom: insets.bottom + 380, left: 60, right: 60 },
+        duration: 900,
+      }
+    );
   }
 
   if (state.status !== 'ready') return <SplashLoader />;
@@ -132,6 +225,16 @@ export default function PartyMap() {
   const myStatus = profile && sharingHere ? pings[profile.id] : undefined;
   const sosFrom = others.filter((o) => pings[o.member.userId]?.kind === 'sos');
   const isHost = party.hostId === profile?.id;
+  const openMember = person ? others.find((o) => o.member.userId === person) : undefined;
+  const sheetOpen = Boolean(openMember || openPin);
+  const canPin = sharingHere && !party.endedAt;
+  const nameOf = (userId: string | null) => {
+    if (userId === profile?.id) return 'you';
+    const m = crew.find((x) => x.userId === userId);
+    return m ? firstName(m) : 'someone';
+  };
+  const routeColor =
+    openMember?.color ?? (openPin ? PIN_COLORS[openPin.kind] : THEME[scheme].primary);
 
   return (
     <View className="flex-1 bg-background">
@@ -142,16 +245,35 @@ export default function PartyMap() {
         logo={false}
         compass={false}
         attributionPosition={{ bottom: insets.bottom + 190, left: 12 }}
-        onPress={() => setSelected(null)}
+        onPress={() => {
+          // A tap on the map closes the details, unless you're being routed somewhere.
+          setSelected(null);
+          if (!routing) {
+            setPerson(null);
+            setPinId(null);
+          }
+        }}
+        onLongPress={(e) => {
+          if (!canPin) return;
+          haptics.tap();
+          const [lng, lat] = e.nativeEvent.lngLat;
+          setEditing({ draft: { lat, lng } });
+        }}
         onDidFinishLoadingStyle={() => setStyleLoaded(true)}>
         <Camera
           ref={cameraRef}
-          initialViewState={me ? { center: me, zoom: FOCUS_ZOOM } : { center: [78.9629, 22.5937], zoom: 3.5 }}
+          initialViewState={
+            me ? { center: me, zoom: FOCUS_ZOOM } : { center: [78.9629, 22.5937], zoom: 3.5 }
+          }
         />
         {myTrip?.ahead && myTrip.ahead.length > 1 ? (
           <GeoJSONSource
             id="my-route"
-            data={{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: myTrip.ahead } }}>
+            data={{
+              type: 'Feature',
+              properties: {},
+              geometry: { type: 'LineString', coordinates: myTrip.ahead },
+            }}>
             <Layer
               type="line"
               id="my-route-casing"
@@ -166,13 +288,52 @@ export default function PartyMap() {
             />
           </GeoJSONSource>
         ) : null}
+        {routeTo.status === 'ready' ? (
+          <GeoJSONSource
+            id="person-route"
+            data={{
+              type: 'Feature',
+              properties: {},
+              geometry: { type: 'LineString', coordinates: routeTo.line },
+            }}>
+            <Layer
+              type="line"
+              id="person-route-casing"
+              layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+              paint={{ 'line-color': THEME[scheme].card, 'line-width': 9, 'line-opacity': 0.9 }}
+            />
+            <Layer
+              type="line"
+              id="person-route-line"
+              layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+              paint={{
+                'line-color': routeColor,
+                'line-width': 5,
+                'line-dasharray': [1.5, 1],
+              }}
+            />
+          </GeoJSONSource>
+        ) : null}
+        {pins.map((pin) => (
+          <Marker
+            key={pin.id}
+            id={`pin-${pin.id}`}
+            lngLat={[pin.lng, pin.lat]}
+            anchor="bottom"
+            onPress={() => openPinSheet(pin)}>
+            <PinMarker kind={pin.kind} name={pin.name} selected={pin.id === pinId} />
+          </Marker>
+        ))}
         {dest ? (
           <Marker id="destination" lngLat={[dest.lng, dest.lat]} anchor="bottom">
             <View className="items-center">
               <View className="rounded-full bg-primary p-2 shadow-lg shadow-black/30">
                 <Icon as={Flag} size={16} className="text-primary-foreground" />
               </View>
-              <View className="-mt-[5px] h-3 w-3 rotate-45 bg-primary" style={{ borderBottomRightRadius: 2 }} />
+              <View
+                className="-mt-[5px] h-3 w-3 rotate-45 bg-primary"
+                style={{ borderBottomRightRadius: 2 }}
+              />
             </View>
           </Marker>
         ) : null}
@@ -182,7 +343,7 @@ export default function PartyMap() {
             id={`peer-${member.userId}`}
             lngLat={[peer.lng, peer.lat]}
             anchor="bottom"
-            onPress={() => focus(member.userId, [peer.lng, peer.lat])}>
+            onPress={() => openPerson(member.userId, [peer.lng, peer.lat])}>
             <PeerMarker
               avatar={member.avatar}
               name={firstName(member)}
@@ -201,7 +362,10 @@ export default function PartyMap() {
       </Map>
 
       {!styleLoaded ? (
-        <Animated.View exiting={FadeOut.duration(400)} style={StyleSheet.absoluteFill} className="bg-background">
+        <Animated.View
+          exiting={FadeOut.duration(400)}
+          style={StyleSheet.absoluteFill}
+          className="bg-background">
           <Skeleton className="flex-1 rounded-none opacity-60" />
         </Animated.View>
       ) : null}
@@ -223,8 +387,12 @@ export default function PartyMap() {
               {party.name}
             </Text>
             <Animated.View key={`${connection}-${liveCount}`} entering={FadeIn.duration(250)}>
-              <Text className="text-xs font-semibold text-muted-foreground">
-                {connection === 'live' ? `${liveCount} live` : connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}
+              <Text className="text-xs text-muted-foreground font-semibold">
+                {connection === 'live'
+                  ? `${liveCount} live`
+                  : connection === 'connecting'
+                    ? 'Connecting…'
+                    : 'Reconnecting…'}
               </Text>
             </Animated.View>
           </View>
@@ -234,7 +402,9 @@ export default function PartyMap() {
             entering={FadeInDown.duration(250)}
             exiting={FadeOut.duration(200)}
             className="self-center rounded-full bg-foreground/85 px-3.5 py-1.5">
-            <Text className="text-xs font-semibold text-background">Connection lost · positions may be stale</Text>
+            <Text className="text-xs text-background font-semibold">
+              Connection lost · positions may be stale
+            </Text>
           </Animated.View>
         ) : null}
         {sosFrom.map(({ member, peer }) => (
@@ -247,7 +417,10 @@ export default function PartyMap() {
           />
         ))}
         {dest ? (
-          <Animated.View entering={FadeInDown.duration(300)} exiting={FadeOut.duration(200)} className="self-start">
+          <Animated.View
+            entering={FadeInDown.duration(300)}
+            exiting={FadeOut.duration(200)}
+            className="self-start">
             <PressableScale
               onPress={showTrip}
               accessibilityLabel="Show route to destination"
@@ -266,105 +439,258 @@ export default function PartyMap() {
             </PressableScale>
           </Animated.View>
         ) : null}
-      </Animated.View>
-
-
-      <Animated.View
-        entering={FadeIn.delay(300)}
-        style={{ bottom: insets.bottom + 196 + (myStatus ? 64 : 0) }}
-        className="absolute right-4 gap-3">
-        {sharingHere && !party.endedAt ? (
-          <PressableScale
-            onPress={() => {
-              haptics.select();
-              setPinging(true);
-            }}
-            accessibilityLabel="Ping the crew"
-            className="h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg shadow-black/20">
-            <Icon as={Megaphone} size={20} className="text-primary-foreground" />
-          </PressableScale>
-        ) : null}
-        {onMap.length > 0 ? (
-          <Animated.View entering={FadeIn}>
+        {sharingHere && myTrip?.eta?.next ? (
+          <Animated.View
+            key={myTrip.eta.next.id}
+            entering={FadeInDown.duration(300)}
+            exiting={FadeOut.duration(200)}
+            className="self-start">
             <PressableScale
               onPress={() => {
-                haptics.select();
-                fitAll();
+                const stop = pins.find((p) => p.id === myTrip.eta?.next?.id);
+                if (stop) openPinSheet(stop);
               }}
-              accessibilityLabel="Show everyone"
-              className="h-12 w-12 items-center justify-center rounded-full bg-card shadow-lg shadow-black/20">
-              <Icon as={Users} size={20} className="text-primary" />
+              accessibilityLabel="Next stop"
+              className="max-w-full flex-row items-center gap-2 rounded-full bg-card py-1.5 pl-1.5 pr-3.5 shadow-lg shadow-black/20">
+              <View className="rounded-full p-1.5" style={{ backgroundColor: PIN_COLORS.stop }}>
+                <Icon as={MapPin} size={11} className="text-white" />
+              </View>
+              <Text className="text-xs text-muted-foreground">Next</Text>
+              <Text className="shrink text-xs font-bold" numberOfLines={1}>
+                {myTrip.eta.next.name}
+              </Text>
+              <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+                · {tripLabel(myTrip.eta.next)}
+              </Text>
             </PressableScale>
           </Animated.View>
         ) : null}
-        {me ? (
-          <PressableScale
-            onPress={() => focus(ME, me)}
-            accessibilityLabel="Center on me"
-            className="h-12 w-12 items-center justify-center rounded-full bg-card shadow-lg shadow-black/20">
-            <Icon as={LocateFixed} size={20} className="text-primary" />
-          </PressableScale>
-        ) : null}
       </Animated.View>
+
+      {!sheetOpen ? (
+        <Animated.View
+          entering={FadeIn.delay(300)}
+          exiting={FadeOut.duration(150)}
+          style={{ bottom: insets.bottom + 196 + (myStatus ? 64 : 0) }}
+          className="absolute right-4 gap-3">
+          {sharingHere && !party.endedAt ? (
+            <PressableScale
+              onPress={() => {
+                haptics.select();
+                setPinging(true);
+              }}
+              accessibilityLabel="Ping the crew"
+              className="h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg shadow-black/20">
+              <Icon as={Megaphone} size={20} className="text-primary-foreground" />
+            </PressableScale>
+          ) : null}
+          <PressableScale
+            onPress={() => {
+              haptics.select();
+              setPlanOpen(true);
+            }}
+            accessibilityLabel="The plan: destination and pins"
+            className="h-12 w-12 items-center justify-center rounded-full bg-card shadow-lg shadow-black/20">
+            <Icon as={ListOrdered} size={20} className="text-primary" />
+            {pins.length > 0 ? (
+              <View className="absolute -right-1 -top-1 min-w-5 items-center rounded-full bg-primary px-1.5">
+                <Text className="text-[11px] text-primary-foreground font-bold">{pins.length}</Text>
+              </View>
+            ) : null}
+          </PressableScale>
+          {onMap.length > 0 ? (
+            <Animated.View entering={FadeIn}>
+              <PressableScale
+                onPress={() => {
+                  haptics.select();
+                  fitAll();
+                }}
+                accessibilityLabel="Show everyone"
+                className="h-12 w-12 items-center justify-center rounded-full bg-card shadow-lg shadow-black/20">
+                <Icon as={Users} size={20} className="text-primary" />
+              </PressableScale>
+            </Animated.View>
+          ) : null}
+          {me ? (
+            <PressableScale
+              onPress={() => focus(ME, me)}
+              accessibilityLabel="Center on me"
+              className="h-12 w-12 items-center justify-center rounded-full bg-card shadow-lg shadow-black/20">
+              <Icon as={LocateFixed} size={20} className="text-primary" />
+            </PressableScale>
+          ) : null}
+        </Animated.View>
+      ) : null}
 
       <Animated.View
         entering={FadeInUp.duration(450).delay(100)}
         style={{ paddingBottom: insets.bottom + 12 }}
         className="absolute bottom-0 left-0 right-0 gap-2">
         {myStatus ? <MyStatusBar key={myStatus.id} ping={myStatus} /> : null}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 px-4 pt-2">
-          {profile ? (
-            <CrewCard
-              avatar={profile.avatar}
-              name="You"
-              color={THEME.light.primary}
-              live={sharingHere && Boolean(me)}
-              status={myStatus?.kind}
-              detail={
-                myStatus
-                  ? pingDetail(myStatus)
-                  : !sharingHere
-                  ? 'Not sharing'
-                  : !me
-                    ? 'Waiting for GPS'
-                    : dest
-                      ? (myTrip?.eta ? tripLabel(myTrip.eta)! : 'Finding your route…')
-                      : sharing.background
-                        ? 'Sharing · locked too'
-                        : 'Sharing live'
-              }
-              selected={selected === ME}
-              onPress={me ? () => focus(ME, me) : undefined}
-            />
-          ) : null}
-          {others.map(({ member, color, peer }, i) => (
-            <Animated.View key={member.userId} entering={FadeInUp.delay(80 * (i + 1))}>
+        {openMember ? (
+          <PersonSheet
+            key={openMember.member.userId}
+            member={openMember.member}
+            color={openMember.color}
+            peer={openMember.peer}
+            isHost={openMember.member.userId === party.hostId}
+            ping={pings[openMember.member.userId]}
+            me={coords}
+            hasDestination={Boolean(dest)}
+            route={routeTo}
+            onToggleRoute={() =>
+              openMember.peer && toggleRoute([openMember.peer.lng, openMember.peer.lat])
+            }
+            onCenter={() =>
+              openMember.peer &&
+              focus(openMember.member.userId, [openMember.peer.lng, openMember.peer.lat])
+            }
+            onMeetHalfway={
+              routeTo.status === 'ready' && canPin
+                ? () => {
+                    const [lng, lat] = pointAlong(routeTo.line, 0.5);
+                    setEditing({
+                      draft: {
+                        lat,
+                        lng,
+                        kind: 'meetup',
+                        name: `Halfway to ${firstName(openMember.member)}`,
+                      },
+                    });
+                  }
+                : undefined
+            }
+            onClose={closeSheet}
+          />
+        ) : openPin ? (
+          <PinSheet
+            key={openPin.id}
+            pin={openPin}
+            addedBy={nameOf(openPin.createdBy)}
+            canEdit={canPin && (openPin.createdBy === profile?.id || isHost)}
+            me={coords}
+            route={routeTo}
+            onToggleRoute={() => toggleRoute([openPin.lng, openPin.lat])}
+            onEdit={() => setEditing({ pin: openPin })}
+            onClose={closeSheet}
+          />
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="gap-3 px-4 pt-2">
+            {profile ? (
               <CrewCard
-                avatar={member.avatar}
-                name={firstName(member)}
-                color={color}
-                live={Boolean(peer?.online)}
-                status={pings[member.userId]?.kind}
-                detail={pings[member.userId] ? pingDetail(pings[member.userId]) : peerDetail(peer, coords, Boolean(dest))}
-                selected={selected === member.userId}
-                onPress={peer ? () => focus(member.userId, [peer.lng, peer.lat]) : undefined}
+                avatar={profile.avatar}
+                name="You"
+                color={THEME.light.primary}
+                live={sharingHere && Boolean(me)}
+                status={myStatus?.kind}
+                detail={
+                  myStatus
+                    ? pingDetail(myStatus)
+                    : !sharingHere
+                      ? 'Not sharing'
+                      : !me
+                        ? 'Waiting for GPS'
+                        : dest
+                          ? myTrip?.eta
+                            ? tripLabel(myTrip.eta)!
+                            : 'Finding your route…'
+                          : sharing.background
+                            ? 'Sharing · locked too'
+                            : 'Sharing live'
+                }
+                selected={selected === ME}
+                onPress={me ? () => focus(ME, me) : undefined}
               />
-            </Animated.View>
-          ))}
-        </ScrollView>
+            ) : null}
+            {others.map(({ member, color, peer }, i) => (
+              <Animated.View key={member.userId} entering={FadeInUp.delay(80 * (i + 1))}>
+                <CrewCard
+                  avatar={member.avatar}
+                  name={firstName(member)}
+                  color={color}
+                  live={Boolean(peer?.online)}
+                  status={pings[member.userId]?.kind}
+                  detail={
+                    pings[member.userId]
+                      ? pingDetail(pings[member.userId])
+                      : peerDetail(peer, coords, Boolean(dest))
+                  }
+                  selected={selected === member.userId}
+                  onPress={() =>
+                    peer
+                      ? openPerson(member.userId, [peer.lng, peer.lat])
+                      : setPerson(member.userId)
+                  }
+                />
+              </Animated.View>
+            ))}
+          </ScrollView>
+        )}
       </Animated.View>
       {pinging ? <PingSheet partyId={party.id} onClose={() => setPinging(false)} /> : null}
+      {planOpen ? (
+        <PlanSheet
+          destination={dest}
+          pins={pins}
+          me={coords}
+          addedBy={(p) => nameOf(p.createdBy)}
+          onPickDestination={() => {
+            setPlanOpen(false);
+            showTrip();
+          }}
+          onPickPin={(p) => {
+            setPlanOpen(false);
+            openPinSheet(p);
+          }}
+          canAdd={canPin}
+          onPickPlace={(place) => {
+            setPlanOpen(false);
+            haptics.select();
+            cameraRef.current?.flyTo({
+              center: [place.lng, place.lat],
+              zoom: FOCUS_ZOOM - 1,
+              duration: 900,
+            });
+            setEditing({
+              draft: { lat: place.lat, lng: place.lng, name: place.name.slice(0, PIN_NAME_MAX) },
+            });
+          }}
+          onClose={() => setPlanOpen(false)}
+        />
+      ) : null}
+      {editing ? (
+        <PinEditor
+          partyId={party.id}
+          draft={editing.draft}
+          existing={editing.pin}
+          onDone={(added) => {
+            setEditing(null);
+            if (added) openPinSheet(added);
+          }}
+          onClose={() => setEditing(null)}
+        />
+      ) : null}
       {party.endedAt ? (
         <Animated.View
           entering={motion.fade()}
           style={StyleSheet.absoluteFill}
           className="items-center justify-center bg-background/70 px-8">
-          <Animated.View entering={motion.settle(80)} className="w-full items-center gap-3 rounded-3xl bg-card p-6 shadow-xl shadow-black/10">
+          <Animated.View
+            entering={motion.settle(80)}
+            className="w-full items-center gap-3 rounded-3xl bg-card p-6 shadow-xl shadow-black/10">
             <Text className="text-lg font-bold">This party has ended</Text>
             <Text className="text-center text-sm text-muted-foreground">
-              {endedMessage(party.endedReason)} Location sharing stopped for everyone {timeAgo(party.endedAt)}.
+              {endedMessage(party.endedReason)} Location sharing stopped for everyone{' '}
+              {timeAgo(party.endedAt)}.
             </Text>
-            <Button className="mt-2 self-stretch" size="lg" variant="secondary" onPress={() => router.replace('/home')}>
+            <Button
+              className="mt-2 self-stretch"
+              size="lg"
+              variant="secondary"
+              onPress={() => router.replace('/home')}>
               <Text>Back home</Text>
             </Button>
           </Animated.View>
@@ -379,16 +705,22 @@ function firstName(m: PartyMember) {
 }
 
 function pingDetail(ping: Ping) {
-  const meta = PING_META[ping.kind];
-  return `${meta.label} · ${timeAgo(ping.at)}`;
+  return `${pingLabel(ping)} · ${timeAgo(ping.at)}`;
 }
 
-function peerDetail(peer: Peer | undefined, me: { latitude: number; longitude: number } | null, hasDestination: boolean) {
+function peerDetail(
+  peer: Peer | undefined,
+  me: { latitude: number; longitude: number } | null,
+  hasDestination: boolean
+) {
   if (!peer) return 'Not sharing yet';
   const trip = hasDestination ? tripLabel(peer) : null;
-  if (!peer.online) return trip ? `${trip} · ${timeAgo(peer.updatedAt)}` : `Seen ${timeAgo(peer.updatedAt)}`;
+  if (!peer.online)
+    return trip ? `${trip} · ${timeAgo(peer.updatedAt)}` : `Seen ${timeAgo(peer.updatedAt)}`;
   if (trip) return trip;
-  const away = me ? formatDistance(distanceM(me, { latitude: peer.lat, longitude: peer.lng })) : 'Live';
+  const away = me
+    ? formatDistance(distanceM(me, { latitude: peer.lat, longitude: peer.lng }))
+    : 'Live';
   const speed = peer.speed && peer.speed > 1 ? ` · ${Math.round(peer.speed * 3.6)} km/h` : '';
   return away + speed;
 }
@@ -426,7 +758,10 @@ function CrewCard({
         <BlurView intensity={60} tint={scheme} style={StyleSheet.absoluteFill} />
         <View className="absolute inset-0 bg-card/85" />
         <View
-          className={cn('absolute inset-0 rounded-3xl border-2', selected ? '' : 'border-border/60')}
+          className={cn(
+            'absolute inset-0 rounded-3xl border-2',
+            selected ? '' : 'border-border/60'
+          )}
           style={selected ? { borderColor: color } : undefined}
         />
         <View className="gap-3 p-3.5">
@@ -435,7 +770,11 @@ function CrewCard({
               <AvatarView avatar={avatar} size={38} />
             </View>
             {status ? (
-              <PingBadge kind={status} size={12} className={status === 'sos' ? '' : 'bg-primary/10'} />
+              <PingBadge
+                kind={status}
+                size={12}
+                className={status === 'sos' ? '' : 'bg-primary/10'}
+              />
             ) : (
               <LiveDot live={live} size={9} />
             )}

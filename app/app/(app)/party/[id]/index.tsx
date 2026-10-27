@@ -63,7 +63,9 @@ export default function PartyLobby() {
       <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-background px-8">
         <Text className="text-xl font-bold">Party not found</Text>
         <Text className="text-center text-sm text-muted-foreground">
-          {state.status === 'error' ? state.message : "It may have been removed, or you're not in it."}
+          {state.status === 'error'
+            ? state.message
+            : "It may have been removed, or you're not in it."}
         </Text>
         <Button variant="secondary" onPress={goHome}>
           <Text>Back home</Text>
@@ -94,7 +96,9 @@ export default function PartyLobby() {
         </Text>
       </View>
 
-      <ScrollView contentContainerClassName="gap-6 px-5 pb-6 pt-4" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerClassName="gap-6 px-5 pb-6 pt-4"
+        showsVerticalScrollIndicator={false}>
         <Animated.View entering={enter(0)}>
           <CodeCard party={party} ended={ended} />
         </Animated.View>
@@ -107,13 +111,17 @@ export default function PartyLobby() {
 
         {!ended && (party.destination || isHost) ? (
           <Animated.View entering={enter(1.5)} layout={LinearTransition}>
-            <DestinationCard party={party} isHost={isHost} mine={sharingHere ? (myTrip?.eta ?? null) : null} />
+            <DestinationCard
+              party={party}
+              isHost={isHost}
+              mine={sharingHere ? (myTrip?.eta ?? null) : null}
+            />
           </Animated.View>
         ) : null}
 
         <Animated.View entering={enter(2)} className="gap-3" layout={LinearTransition}>
           <View className="flex-row items-baseline justify-between">
-            <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <Text className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
               Crew · {active.length}
             </Text>
             {!ended ? (
@@ -132,7 +140,15 @@ export default function PartyLobby() {
                   isHost={m.userId === party.hostId}
                   isMe={isMe}
                   color={isMe ? THEME.light.primary : memberColor(i)}
-                  status={memberStatus(isMe, peers[m.userId], me, sharingHere, sharing.background, ended, party.destination ? (myTrip?.eta ?? null) : undefined)}
+                  status={memberStatus(
+                    isMe,
+                    peers[m.userId],
+                    me,
+                    sharingHere,
+                    sharing.background,
+                    ended,
+                    party.destination ? (myTrip?.eta ?? null) : undefined
+                  )}
                   divider={i > 0}
                 />
               );
@@ -163,7 +179,9 @@ export default function PartyLobby() {
           <>
             <Button
               size="lg"
-              onPress={() => router.push({ pathname: '/party/[id]/map', params: { id: party.id } })}>
+              onPress={() =>
+                router.push({ pathname: '/party/[id]/map', params: { id: party.id } })
+              }>
               <Icon as={MapIcon} size={18} className="text-primary-foreground" />
               <Text>Open live map</Text>
             </Button>
@@ -215,7 +233,9 @@ function CodeCard({ party, ended }: { party: Party; ended: boolean }) {
   return (
     <View className="overflow-hidden rounded-3xl">
       <LinearGradient
-        colors={ended ? ['hsl(25 6% 46%)', 'hsl(25 6% 36%)'] : [THEME.light.primary, 'hsl(18 78% 58%)']}
+        colors={
+          ended ? ['hsl(25 6% 46%)', 'hsl(25 6% 36%)'] : [THEME.light.primary, 'hsl(18 78% 58%)']
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -225,12 +245,18 @@ function CodeCard({ party, ended }: { party: Party; ended: boolean }) {
       <View className="gap-5 p-5">
         <View className="flex-row items-center gap-2">
           <LiveDot live={!ended} className="bg-white" />
-          <Text className="text-xs font-semibold uppercase tracking-widest text-white/90">
-            {ended ? `Ended ${timeAgo(party.endedAt!)}` : `Live · started ${timeAgo(party.createdAt)}`}
+          <Text className="text-xs uppercase tracking-widest text-white/90 font-semibold">
+            {ended
+              ? `Ended ${timeAgo(party.endedAt!)}`
+              : `Live · started ${timeAgo(party.createdAt)}`}
           </Text>
         </View>
 
-        <PressableScale onPress={ended ? undefined : copy} disabled={ended} scaleTo={0.98} className="gap-2">
+        <PressableScale
+          onPress={ended ? undefined : copy}
+          disabled={ended}
+          scaleTo={0.98}
+          className="gap-2">
           <View className="flex-row items-center justify-between">
             <Text className="text-sm text-white/85">Party code</Text>
             {!ended ? (
@@ -241,7 +267,7 @@ function CodeCard({ party, ended }: { party: Party; ended: boolean }) {
                   exiting={FadeOut.duration(150)}
                   className="flex-row items-center gap-1 rounded-full bg-white px-2.5 py-1">
                   <Icon as={Check} size={12} className="text-primary" />
-                  <Text className="text-xs font-bold text-primary">Copied</Text>
+                  <Text className="text-xs text-primary font-bold">Copied</Text>
                 </Animated.View>
               ) : (
                 <Animated.View key="hint" entering={FadeIn} className="flex-row items-center gap-1">
@@ -260,7 +286,7 @@ function CodeCard({ party, ended }: { party: Party; ended: boolean }) {
                   'h-14 w-[14.5%] items-center justify-center rounded-2xl',
                   copied ? 'bg-white/35' : 'bg-white/20'
                 )}>
-                <Text className="text-2xl font-extrabold text-white">{c}</Text>
+                <Text className="text-2xl text-white font-extrabold">{c}</Text>
               </Animated.View>
             ))}
           </View>
@@ -271,7 +297,7 @@ function CodeCard({ party, ended }: { party: Party; ended: boolean }) {
             onPress={share}
             className="flex-row items-center gap-2 self-start rounded-full bg-white px-4 py-2.5">
             <Icon as={Share2} size={16} className="text-primary" />
-            <Text className="text-sm font-bold text-primary">Share invite</Text>
+            <Text className="text-sm text-primary font-bold">Share invite</Text>
           </PressableScale>
         ) : null}
       </View>
@@ -345,7 +371,7 @@ function SharingStatus({ party, iAmIn }: { party: Party; iAmIn: boolean }) {
       entering={FadeIn}
       className="flex-row items-center gap-3 rounded-3xl border border-sage/30 bg-sage/10 px-4 py-3.5">
       <LiveDot />
-      <Text className="flex-1 text-xs font-medium text-foreground">
+      <Text className="flex-1 text-xs text-foreground font-medium">
         Sharing live, even with your phone locked. Leave the party to stop.
       </Text>
     </Animated.View>
@@ -353,7 +379,15 @@ function SharingStatus({ party, iAmIn }: { party: Party; iAmIn: boolean }) {
 }
 
 /** Where the party is headed and your ETA; the host taps it to pick or change the spot. */
-function DestinationCard({ party, isHost, mine }: { party: Party; isHost: boolean; mine: TripEta | null }) {
+function DestinationCard({
+  party,
+  isHost,
+  mine,
+}: {
+  party: Party;
+  isHost: boolean;
+  mine: TripEta | null;
+}) {
   const open = () => router.push({ pathname: '/party/[id]/destination', params: { id: party.id } });
   const dest = party.destination;
 
@@ -388,25 +422,37 @@ function DestinationCard({ party, isHost, mine }: { party: Party; isHost: boolea
         <Icon as={Flag} size={18} className="text-primary-foreground" />
       </View>
       <View className="flex-1 gap-0.5">
-        <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Headed to</Text>
+        <Text className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+          Headed to
+        </Text>
         <Text className="font-bold" numberOfLines={1}>
           {dest.name}
         </Text>
         {eta ? (
           <Animated.View key={eta} entering={FadeIn}>
             <Text className="text-xs text-muted-foreground">
-              {mine?.arrived ? "You're there" : `You · ${eta}${mine?.etaS ? ` · by ${arrivalClock(mine.etaS)}` : ''}`}
+              {mine?.arrived
+                ? "You're there"
+                : `You · ${eta}${mine?.etaS ? ` · by ${arrivalClock(mine.etaS)}` : ''}`}
             </Text>
+            {mine?.next ? (
+              <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+                Next stop: {mine.next.name} · {tripLabel(mine.next)}
+              </Text>
+            ) : null}
           </Animated.View>
         ) : null}
       </View>
-      {isHost ? <Text className="text-xs font-semibold text-primary">Change</Text> : null}
+      {isHost ? <Text className="text-xs text-primary font-semibold">Change</Text> : null}
     </PressableScale>
   );
 }
 
 function arrivalClock(etaS: number) {
-  return new Date(Date.now() + etaS * 1000).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return new Date(Date.now() + etaS * 1000).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 function StatusCard({
@@ -435,7 +481,11 @@ function StatusCard({
         tone === 'warn' ? 'border-primary/30 bg-primary/5' : 'border-border bg-card'
       )}>
       <View className={cn('rounded-2xl p-2.5', tone === 'warn' ? 'bg-primary/10' : 'bg-muted')}>
-        <Icon as={icon} size={18} className={tone === 'warn' ? 'text-primary' : 'text-muted-foreground'} />
+        <Icon
+          as={icon}
+          size={18}
+          className={tone === 'warn' ? 'text-primary' : 'text-muted-foreground'}
+        />
       </View>
       <View className="flex-1 gap-0.5">
         <Text className="text-sm font-bold">{title}</Text>
@@ -465,15 +515,26 @@ function memberStatus(
     if (!sharingHere) return { live: false, label: 'Not sharing' };
     if (!me) return { live: false, label: 'Waiting for GPS' };
     const trip = myTrip !== undefined ? (myTrip ? tripLabel(myTrip) : 'Finding your route…') : null;
-    return { live: true, label: trip ?? (background ? 'Sharing · works when locked' : 'Sharing while app is open') };
+    return {
+      live: true,
+      label: trip ?? (background ? 'Sharing · works when locked' : 'Sharing while app is open'),
+    };
   }
   if (!peer) return { live: false, label: 'Not sharing yet' };
   const trip = myTrip !== undefined ? tripLabel(peer) : null;
-  if (!peer.online) return { live: false, label: trip ? `${trip} · ${timeAgo(peer.updatedAt)}` : `Last update ${timeAgo(peer.updatedAt)}` };
+  if (!peer.online)
+    return {
+      live: false,
+      label: trip
+        ? `${trip} · ${timeAgo(peer.updatedAt)}`
+        : `Last update ${timeAgo(peer.updatedAt)}`,
+    };
   if (trip) return { live: true, label: trip };
   return {
     live: true,
-    label: me ? formatDistance(distanceM(me, { latitude: peer.lat, longitude: peer.lng })) : 'On the map',
+    label: me
+      ? formatDistance(distanceM(me, { latitude: peer.lat, longitude: peer.lng }))
+      : 'On the map',
   };
 }
 
@@ -509,7 +570,7 @@ function MemberRow({
       <View className="flex-1">
         <Text className="font-semibold" numberOfLines={1}>
           {member.fullName || member.username}
-          {isMe ? <Text className="font-normal text-muted-foreground"> (you)</Text> : null}
+          {isMe ? <Text className="text-muted-foreground font-normal"> (you)</Text> : null}
         </Text>
         <Text className="text-xs text-muted-foreground" numberOfLines={1}>
           @{member.username} · {status.label}
@@ -518,7 +579,7 @@ function MemberRow({
       {isHost ? (
         <View className="flex-row items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1">
           <Icon as={Crown} size={12} className="text-primary" />
-          <Text className="text-xs font-semibold text-primary">Host</Text>
+          <Text className="text-xs text-primary font-semibold">Host</Text>
         </View>
       ) : null}
     </Animated.View>

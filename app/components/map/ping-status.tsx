@@ -6,7 +6,7 @@ import { confirm } from '@/lib/confirm';
 import { timeAgo } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
 import { notify } from '@/lib/notify';
-import { PING_META, pings, type Ping, type PingKind } from '@/lib/pings';
+import { PING_META, pingLabel, pings, type Ping, type PingKind } from '@/lib/pings';
 import { cn } from '@/lib/utils';
 import { ShieldCheck } from 'lucide-react-native';
 import * as React from 'react';
@@ -71,7 +71,7 @@ export function MyStatusBar({ ping }: { ping: Ping }) {
       <PingBadge kind={ping.kind} size={16} className={sos ? 'bg-white/20' : 'bg-primary/10'} />
       <View className="flex-1">
         <Text className={cn('text-sm font-bold', sos && 'text-white')} numberOfLines={1}>
-          {sos ? 'Your SOS is on' : meta.label}
+          {sos ? 'Your SOS is on' : pingLabel(ping)}
         </Text>
         <Text className={cn('text-xs', sos ? 'text-white/80' : 'text-muted-foreground')} numberOfLines={1}>
           {sos ? 'Everyone was alerted' : 'Your crew sees this'} · {timeAgo(ping.at)}

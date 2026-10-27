@@ -4,7 +4,8 @@ import { haptics } from '@/lib/haptics';
 import { notify } from '@/lib/notify';
 import { endedMessage, parties, toLocation, type LocationRow, type PartyLocation } from '@/lib/parties';
 import { destinationKey } from '@/lib/routing';
-import { activeStatuses, PING_LOOKBACK_MS, PING_META, pings as pingsApi, toPing, type Ping, type PingRow } from '@/lib/pings';
+import { activeStatuses, PING_LOOKBACK_MS, PING_META, pingLabel, pings as pingsApi, toPing, type Ping, type PingRow } from '@/lib/pings';
+import { PIN_META, usePins, type Pin } from '@/lib/pins';
 import { setOpenParty } from '@/lib/push';
 import { useSharing } from '@/lib/sharing';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +25,8 @@ type PartyLiveValue = {
   connection: Connection;
   /** Each member's current status (an uncleared, unexpired ping), keyed by user id. */
   pings: Record<string, Ping>;
+  /** Shared stops, meetups and notes on the party map. */
+  pins: Pin[];
 };
 
 const PartyLiveContext = React.createContext<PartyLiveValue>({
@@ -31,6 +34,7 @@ const PartyLiveContext = React.createContext<PartyLiveValue>({
   peers: {},
   connection: 'off',
   pings: {},
+  pins: [],
 });
 
 
@@ -152,8 +156,27 @@ export function PartyLiveProvider({ partyId, children }: { partyId: string; chil
   }, [locations, activeIds.join(','), userId, now]);
 
   const pings = React.useMemo(() => activeStatuses(pingList, now), [pingList, now]);
+  const loadedPins = usePins(partyId);
+  const pins = React.useMemo(() => loadedPins ?? [], [loadedPins]);
+  usePinAnnouncements(loadedPins, state, userId);
 
-  const value = React.useMemo(() => ({ state, peers, connection, pings }), [state, peers, connection, pings]);
+  // Stops are on everyone's route: a change re-routes, so post now rather than at the next fix.
+  const stopsKey = pins
+    .filter((p) => p.kind === 'stop')
+    .map((p) => `${p.id}@${p.lat},${p.lng}`)
+    .sort()
+    .join('|');
+  const seenStops = React.useRef<string | undefined>(undefined);
+  React.useEffect(() => {
+    if (!loadedPins) return;
+    if (seenStops.current !== undefined && seenStops.current !== stopsKey && sharing.target?.id === partyId) sharing.nudge();
+    seenStops.current = stopsKey;
+  }, [stopsKey, loadedPins === null]);
+
+  const value = React.useMemo(
+    () => ({ state, peers, connection, pings, pins }),
+    [state, peers, connection, pings, pins]
+  );
   return <PartyLiveContext.Provider value={value}>{children}</PartyLiveContext.Provider>;
 }
 
@@ -170,7 +193,27 @@ function announcePing(ping: Ping, state: PartyState, userId: string | undefined)
   }
   haptics.success();
   const where = ping.kind === 'arrived' && state.party.destination ? ` at ${state.party.destination.name}` : '';
-  notify.info(meta.label, `${who} ${meta.says}${where}.`);
+  if (ping.kind === 'custom') notify.info(`${who} is stopping`, pingLabel(ping));
+  else if (ping.kind === 'behind') notify.info(`${who} fell behind`, `${pingLabel(ping)} the group.`);
+  else notify.info(meta.label, `${who} ${meta.says}${where}.`);
+}
+
+/** Toast when someone else adds a pin; the first load just sets the baseline. */
+function usePinAnnouncements(pins: Pin[] | null, state: PartyState, userId: string | undefined) {
+  const known = React.useRef<Set<string> | null>(null);
+  React.useEffect(() => {
+    if (!pins) return;
+    const ids = new Set(pins.map((p) => p.id));
+    if (known.current && state.status === 'ready') {
+      for (const p of pins) {
+        if (known.current.has(p.id) || p.createdBy === userId) continue;
+        const m = state.members.find((x) => x.userId === p.createdBy);
+        const who = m ? m.fullName.split(' ')[0] || m.username : 'Someone';
+        notify.info(`${who} added a ${PIN_META[p.kind].label.toLowerCase()}`, p.name);
+      }
+    }
+    known.current = ids;
+  }, [pins]);
 }
 
 /** Only an SOS ending is worth interrupting for; other statuses just disappear from the map. */

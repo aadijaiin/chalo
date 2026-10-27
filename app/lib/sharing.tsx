@@ -3,7 +3,7 @@ import { distanceM, useLocation } from '@/lib/location';
 import { parties, type Party } from '@/lib/parties';
 import { registerForPush } from '@/lib/push';
 import { destinationKey } from '@/lib/routing';
-import { clearTrip, tripUpdate, type Destination } from '@/lib/trip';
+import { clearTrip, tripUpdate, type Destination, type Stop } from '@/lib/trip';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
@@ -23,7 +23,8 @@ const TASK = 'chalo-party-location';
 const STORAGE_KEY = 'chalo.sharing';
 const MOTION_KEY = 'chalo.sharing.motion';
 
-type SharingTarget = Pick<Party, 'id' | 'name' | 'destination'>;
+// Stops come from the server with each post, so a locked phone keeps up with the plan.
+type SharingTarget = Pick<Party, 'id' | 'name' | 'destination'> & { stops?: Stop[] };
 
 // Posting: every post is fanned out to the whole party over Realtime, so only post when the
 // others would notice: you moved a bit since the last post, or it's time for a heartbeat that
@@ -85,14 +86,22 @@ async function readTarget(): Promise<SharingTarget | null> {
   const raw = await AsyncStorage.getItem(STORAGE_KEY).catch(() => null);
   if (!raw) return null;
   const t = JSON.parse(raw) as SharingTarget;
-  return { ...t, destination: t.destination ?? null };
+  return { ...t, destination: t.destination ?? null, stops: t.stops ?? [] };
 }
 
 function writeTarget(t: SharingTarget) {
-  return AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ id: t.id, name: t.name, destination: t.destination }));
+  return AsyncStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ id: t.id, name: t.name, destination: t.destination, stops: t.stops ?? [] })
+  );
 }
 
 const keyOf = (d: Destination | null) => (d ? destinationKey(d) : null);
+const stopsKeyOf = (stops: Stop[] = []) =>
+  stops
+    .map((s) => `${s.id}@${destinationKey(s)}`)
+    .sort()
+    .join('|');
 
 async function stopTask() {
   saveMotion(null);
@@ -111,17 +120,18 @@ async function post(c: Location.LocationObjectCoords, force = false): Promise<bo
   const m = await readMotion();
   const fix = toFix(c);
   if (!force && !shouldPost(m?.lastPost ?? null, fix)) return true;
-  const eta = await tripUpdate(target.destination, c).catch(() => null);
+  const eta = await tripUpdate(target.destination, target.stops ?? [], c).catch(() => null);
   const res = await parties.shareLocation(target.id, c, eta);
   const latest = await readMotion();
   saveMotion({ ...(latest ?? { mode: 'moving', anchor: fix }), lastPost: fix });
   if (!res) return false;
 
-  // The host set or changed the destination: remember it and post an ETA for the new one.
-  if (keyOf(res.destination) !== keyOf(target.destination)) {
-    await writeTarget({ ...target, destination: res.destination });
+  // The destination or the stops changed: remember them and post an ETA for the new plan.
+  const stops = res.stops ?? [];
+  if (keyOf(res.destination) !== keyOf(target.destination) || stopsKeyOf(stops) !== stopsKeyOf(target.stops)) {
+    await writeTarget({ ...target, destination: res.destination, stops });
     if (res.destination) return post(c, true);
-    await tripUpdate(null, c);
+    await tripUpdate(null, [], c);
   }
   return true;
 }
@@ -240,7 +250,7 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
 
   const begin = React.useCallback(
     async (party: SharingTarget, ask: boolean) => {
-      const next = { id: party.id, name: party.name, destination: party.destination };
+      const next = { id: party.id, name: party.name, destination: party.destination, stops: party.stops };
       if (party.id !== (await readTarget())?.id) clearTrip();
       await writeTarget(next);
       setTarget(next);
@@ -348,6 +358,13 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(id);
   }, [target?.id, postForeground]);
 
+  // Being in a party is when pings start to matter, so ask for notifications then. This also
+  // covers people who were already in one when push shipped, who never go through start().
+  // It runs after begin() has settled location, so the two prompts don't stack.
+  React.useEffect(() => {
+    if (target?.id) registerForPush(true);
+  }, [target?.id]);
+
   const value = React.useMemo(
     () => ({
       target,
@@ -355,8 +372,6 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
       backgroundAccess,
       start: async (party: SharingTarget) => {
         await begin(party, Platform.OS !== 'web');
-        // Joining a party is when pings start to matter, so ask then, once location is sorted.
-        registerForPush(true);
       },
       stop,
       requestBackground,
