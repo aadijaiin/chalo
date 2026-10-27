@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
+import { useFollowCamera, type FollowMode } from '@/hooks/use-follow-camera';
 import { useRouteTo } from '@/hooks/use-route-to';
 import { useAuth } from '@/lib/auth';
 import { formatDistance, timeAgo, tripLabel } from '@/lib/format';
@@ -48,6 +49,7 @@ import {
   LocateFixed,
   MapPin,
   Megaphone,
+  Navigation,
   Users,
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
@@ -86,11 +88,16 @@ export default function PartyMap() {
   const [routing, setRouting] = React.useState(false);
   const [editing, setEditing] = React.useState<{ draft?: PinDraft; pin?: Pin } | null>(null);
   const [planOpen, setPlanOpen] = React.useState(false);
+  // Off, keep you centred, or centred and turned to your direction of travel.
+  const [follow, setFollow] = React.useState<FollowMode>('off');
   const framed = React.useRef(false);
   const framedWithFriends = React.useRef(false);
 
   const coords = location.status === 'ready' ? location.coords : null;
   const me: LngLat | null = coords ? [coords.longitude, coords.latitude] : null;
+
+  // Keep you above the crew cards and below the header rather than dead centre.
+  useFollowCamera(cameraRef, follow, coords, { top: insets.top + 60, bottom: insets.bottom + 180 });
 
   const personPeer = person ? peers[person] : undefined;
   const openPin = pinId ? pins.find((p) => p.id === pinId) : undefined;
@@ -126,8 +133,15 @@ export default function PartyMap() {
     (duration = 900) => {
       if (points.length === 0) return;
       setSelected(null);
+      setFollow('off');
       if (points.length === 1) {
-        cameraRef.current?.flyTo({ center: points[0], zoom: FOCUS_ZOOM, duration });
+        cameraRef.current?.flyTo({
+          center: points[0],
+          zoom: FOCUS_ZOOM,
+          bearing: 0,
+          pitch: 0,
+          duration,
+        });
         return;
       }
       const lngs = points.map((p) => p[0]);
@@ -136,6 +150,8 @@ export default function PartyMap() {
         [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)],
         {
           padding: { top: insets.top + 120, bottom: insets.bottom + 200, left: 60, right: 60 },
+          bearing: 0,
+          pitch: 0,
           duration,
         }
       );
@@ -157,15 +173,24 @@ export default function PartyMap() {
     if (!dest) return;
     haptics.select();
     setSelected(null);
+    setFollow('off');
     const pts: LngLat[] = [[dest.lng, dest.lat], ...(me ? [me] : [])];
     if (pts.length === 1)
-      return cameraRef.current?.flyTo({ center: pts[0], zoom: FOCUS_ZOOM, duration: 900 });
+      return cameraRef.current?.flyTo({
+        center: pts[0],
+        zoom: FOCUS_ZOOM,
+        bearing: 0,
+        pitch: 0,
+        duration: 900,
+      });
     const lngs = pts.map((p) => p[0]);
     const lats = pts.map((p) => p[1]);
     cameraRef.current?.fitBounds(
       [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)],
       {
         padding: { top: insets.top + 140, bottom: insets.bottom + 200, left: 60, right: 60 },
+        bearing: 0,
+        pitch: 0,
         duration: 900,
       }
     );
@@ -174,7 +199,24 @@ export default function PartyMap() {
   function focus(id: string, lngLat: LngLat) {
     haptics.select();
     setSelected(id);
-    cameraRef.current?.flyTo({ center: lngLat, zoom: FOCUS_ZOOM, duration: 900 });
+    setFollow('off');
+    cameraRef.current?.flyTo({
+      center: lngLat,
+      zoom: FOCUS_ZOOM,
+      bearing: 0,
+      pitch: 0,
+      duration: 900,
+    });
+  }
+
+  /** The locate button: start following, then turn heading-up, then stop and face north. */
+  function cycleFollow() {
+    haptics.select();
+    setSelected(null);
+    const next: FollowMode = follow === 'off' ? 'follow' : follow === 'follow' ? 'heading' : 'off';
+    setFollow(next);
+    if (next === 'off' && me)
+      cameraRef.current?.easeTo({ center: me, bearing: 0, pitch: 0, duration: 400 });
   }
 
   function openPerson(id: string, lngLat: LngLat) {
@@ -203,6 +245,7 @@ export default function PartyMap() {
     const next = !routing;
     setRouting(next);
     if (!next || !me) return;
+    setFollow('off');
     // Show both ends of the trip.
     cameraRef.current?.fitBounds(
       [
@@ -243,8 +286,14 @@ export default function PartyMap() {
         mapStyle={MAP_STYLE[scheme]}
         androidView="texture"
         logo={false}
-        compass={false}
+        // Shows only while the map is turned away from north; tap it to face north again.
+        compass
+        compassPosition={{ top: insets.top + 64, right: 16 }}
         attributionPosition={{ bottom: insets.bottom + 190, left: 12 }}
+        onRegionWillChange={(e) => {
+          // Dragging or pinching the map means you want to look around, so stop following.
+          if (e.nativeEvent.userInteraction && follow !== 'off') setFollow('off');
+        }}
         onPress={() => {
           // A tap on the map closes the details, unless you're being routed somewhere.
           setSelected(null);
@@ -513,10 +562,23 @@ export default function PartyMap() {
           ) : null}
           {me ? (
             <PressableScale
-              onPress={() => focus(ME, me)}
-              accessibilityLabel="Center on me"
-              className="h-12 w-12 items-center justify-center rounded-full bg-card shadow-lg shadow-black/20">
-              <Icon as={LocateFixed} size={20} className="text-primary" />
+              onPress={cycleFollow}
+              accessibilityLabel={
+                follow === 'off'
+                  ? 'Follow me'
+                  : follow === 'follow'
+                    ? 'Turn map to my direction'
+                    : 'Stop following'
+              }
+              className={cn(
+                'h-12 w-12 items-center justify-center rounded-full shadow-lg shadow-black/20',
+                follow === 'off' ? 'bg-card' : 'bg-primary'
+              )}>
+              <Icon
+                as={follow === 'heading' ? Navigation : LocateFixed}
+                size={20}
+                className={follow === 'off' ? 'text-primary' : 'text-primary-foreground'}
+              />
             </PressableScale>
           ) : null}
         </Animated.View>
