@@ -37,3 +37,6 @@ This folder holds its config and SQL migrations.
   after 2 h with nobody sharing (a `pg_cron` job runs `end_stale_parties()` every 5 min), and
   `parties.ended_reason` records why. `share_location()` skips near-duplicate writes, since each
   write is fanned out to the whole party over Realtime.
+- `supabase/migrations/…_destination_and_eta.sql`: the host sets a party destination
+  (`set_destination()`). Each phone routes itself there and posts `eta_s` / `remaining_m` with its
+  location; `share_location()` returns the current destination so a locked phone notices changes.

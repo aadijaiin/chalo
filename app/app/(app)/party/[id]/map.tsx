@@ -10,19 +10,21 @@ import { Icon } from '@/components/ui/icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { useAuth } from '@/lib/auth';
-import { formatDistance, timeAgo } from '@/lib/format';
+import { formatDistance, timeAgo, tripLabel } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
 import { EASE_OUT, motion } from '@/lib/motion';
 import { distanceM, useLocation } from '@/lib/location';
 import { usePartyLive, type Peer } from '@/lib/party-live';
 import { endedMessage, type PartyMember } from '@/lib/parties';
+import { destinationKey } from '@/lib/routing';
 import { useSharing } from '@/lib/sharing';
+import { useMyTrip } from '@/lib/trip';
 import { MAP_STYLE, memberColor, THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
-import { Camera, Map, type CameraRef } from '@maplibre/maplibre-react-native';
+import { Camera, GeoJSONSource, Layer, Map, Marker, type CameraRef } from '@maplibre/maplibre-react-native';
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
-import { ChevronLeft, LocateFixed, Users } from 'lucide-react-native';
+import { ChevronLeft, Flag, LocateFixed, Users } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -58,10 +60,15 @@ export default function PartyMap() {
   const coords = location.status === 'ready' ? location.coords : null;
   const me: LngLat | null = coords ? [coords.longitude, coords.latitude] : null;
 
+  const dest = state.status === 'ready' ? state.party.destination : null;
+  const myTrip = useMyTrip(dest ? destinationKey(dest) : null);
+
   const crew = state.status === 'ready' ? state.members.filter((m) => !m.leftAt) : [];
   const others = crew
     .map((m, i) => ({ member: m, color: memberColor(i), peer: peers[m.userId] }))
-    .filter((o) => o.member.userId !== profile?.id);
+    .filter((o) => o.member.userId !== profile?.id)
+    // Heading somewhere: whoever's closest to it comes first.
+    .sort((a, b) => (dest ? (a.peer?.remainingM ?? Infinity) - (b.peer?.remainingM ?? Infinity) : 0));
   const onMap = others.filter((o): o is typeof o & { peer: Peer } => Boolean(o.peer));
 
   const points: LngLat[] = [...(me ? [me] : []), ...onMap.map((o) => [o.peer.lng, o.peer.lat] as LngLat)];
@@ -94,6 +101,20 @@ export default function PartyMap() {
     }
   }, [styleLoaded, points.length]);
 
+  function showTrip() {
+    if (!dest) return;
+    haptics.select();
+    setSelected(null);
+    const pts: LngLat[] = [[dest.lng, dest.lat], ...(me ? [me] : [])];
+    if (pts.length === 1) return cameraRef.current?.flyTo({ center: pts[0], zoom: FOCUS_ZOOM, duration: 900 });
+    const lngs = pts.map((p) => p[0]);
+    const lats = pts.map((p) => p[1]);
+    cameraRef.current?.fitBounds([Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)], {
+      padding: { top: insets.top + 140, bottom: insets.bottom + 200, left: 60, right: 60 },
+      duration: 900,
+    });
+  }
+
   function focus(id: string, lngLat: LngLat) {
     haptics.select();
     setSelected(id);
@@ -120,6 +141,34 @@ export default function PartyMap() {
           ref={cameraRef}
           initialViewState={me ? { center: me, zoom: FOCUS_ZOOM } : { center: [78.9629, 22.5937], zoom: 3.5 }}
         />
+        {myTrip?.ahead && myTrip.ahead.length > 1 ? (
+          <GeoJSONSource
+            id="my-route"
+            data={{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: myTrip.ahead } }}>
+            <Layer
+              type="line"
+              id="my-route-casing"
+              layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+              paint={{ 'line-color': THEME[scheme].card, 'line-width': 9, 'line-opacity': 0.9 }}
+            />
+            <Layer
+              type="line"
+              id="my-route-line"
+              layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+              paint={{ 'line-color': THEME[scheme].primary, 'line-width': 5 }}
+            />
+          </GeoJSONSource>
+        ) : null}
+        {dest ? (
+          <Marker id="destination" lngLat={[dest.lng, dest.lat]} anchor="bottom">
+            <View className="items-center">
+              <View className="rounded-full bg-primary p-2 shadow-lg shadow-black/30">
+                <Icon as={Flag} size={16} className="text-primary-foreground" />
+              </View>
+              <View className="-mt-[5px] h-3 w-3 rotate-45 bg-primary" style={{ borderBottomRightRadius: 2 }} />
+            </View>
+          </Marker>
+        ) : null}
         {onMap.map(({ member, color, peer }) => (
           <SmoothMarker
             key={member.userId}
@@ -180,6 +229,26 @@ export default function PartyMap() {
             <Text className="text-xs font-semibold text-background">Connection lost · positions may be stale</Text>
           </Animated.View>
         ) : null}
+        {dest ? (
+          <Animated.View entering={FadeInDown.duration(300)} exiting={FadeOut.duration(200)} className="self-start">
+            <PressableScale
+              onPress={showTrip}
+              accessibilityLabel="Show route to destination"
+              className="max-w-full flex-row items-center gap-2 rounded-full bg-card py-2 pl-2 pr-4 shadow-lg shadow-black/20">
+              <View className="rounded-full bg-primary p-1.5">
+                <Icon as={Flag} size={12} className="text-primary-foreground" />
+              </View>
+              <Text className="shrink text-xs font-bold" numberOfLines={1}>
+                {dest.name}
+              </Text>
+              {sharingHere && myTrip?.eta ? (
+                <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+                  · {myTrip.eta.arrived ? "you're there" : tripLabel(myTrip.eta)}
+                </Text>
+              ) : null}
+            </PressableScale>
+          </Animated.View>
+        ) : null}
       </Animated.View>
 
 
@@ -221,7 +290,17 @@ export default function PartyMap() {
               name="You"
               color={THEME.light.primary}
               live={sharingHere && Boolean(me)}
-              detail={!sharingHere ? 'Not sharing' : me ? (sharing.background ? 'Sharing · locked too' : 'Sharing live') : 'Waiting for GPS'}
+              detail={
+                !sharingHere
+                  ? 'Not sharing'
+                  : !me
+                    ? 'Waiting for GPS'
+                    : dest
+                      ? (myTrip?.eta ? tripLabel(myTrip.eta)! : 'Finding your route…')
+                      : sharing.background
+                        ? 'Sharing · locked too'
+                        : 'Sharing live'
+              }
               selected={selected === ME}
               onPress={me ? () => focus(ME, me) : undefined}
             />
@@ -233,7 +312,7 @@ export default function PartyMap() {
                 name={firstName(member)}
                 color={color}
                 live={Boolean(peer?.online)}
-                detail={peerDetail(peer, coords)}
+                detail={peerDetail(peer, coords, Boolean(dest))}
                 selected={selected === member.userId}
                 onPress={peer ? () => focus(member.userId, [peer.lng, peer.lat]) : undefined}
               />
@@ -265,9 +344,11 @@ function firstName(m: PartyMember) {
   return m.fullName.split(' ')[0] || m.username;
 }
 
-function peerDetail(peer: Peer | undefined, me: { latitude: number; longitude: number } | null) {
+function peerDetail(peer: Peer | undefined, me: { latitude: number; longitude: number } | null, hasDestination: boolean) {
   if (!peer) return 'Not sharing yet';
-  if (!peer.online) return `Seen ${timeAgo(peer.updatedAt)}`;
+  const trip = hasDestination ? tripLabel(peer) : null;
+  if (!peer.online) return trip ? `${trip} · ${timeAgo(peer.updatedAt)}` : `Seen ${timeAgo(peer.updatedAt)}`;
+  if (trip) return trip;
   const away = me ? formatDistance(distanceM(me, { latitude: peer.lat, longitude: peer.lng })) : 'Live';
   const speed = peer.speed && peer.speed > 1 ? ` · ${Math.round(peer.speed * 3.6)} km/h` : '';
   return away + speed;

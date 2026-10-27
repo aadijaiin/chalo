@@ -7,13 +7,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { usePartyActions } from '@/hooks/use-party-actions';
 import { useAuth } from '@/lib/auth';
-import { formatDistance, timeAgo } from '@/lib/format';
+import { formatDistance, timeAgo, tripLabel } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
 import { distanceM, useLocation } from '@/lib/location';
 import { motion } from '@/lib/motion';
 import { inviteMessage, type Party, type PartyMember } from '@/lib/parties';
 import { usePartyLive, type Peer } from '@/lib/party-live';
+import { destinationKey } from '@/lib/routing';
 import { useSharing } from '@/lib/sharing';
+import { useMyTrip, type TripEta } from '@/lib/trip';
 import { memberColor, THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import * as Clipboard from 'expo-clipboard';
@@ -23,7 +25,9 @@ import {
   Check,
   ChevronLeft,
   Copy,
+  ChevronRight,
   Crown,
+  Flag,
   LogOut,
   Map as MapIcon,
   MapPinned,
@@ -49,6 +53,8 @@ export default function PartyLobby() {
   const sharing = useSharing();
   const { location } = useLocation();
   const me = location.status === 'ready' ? location.coords : null;
+  const dest = state.status === 'ready' ? state.party.destination : null;
+  const myTrip = useMyTrip(dest ? destinationKey(dest) : null);
 
   if (state.status === 'loading') return <LobbySkeleton />;
 
@@ -99,6 +105,12 @@ export default function PartyLobby() {
           </Animated.View>
         ) : null}
 
+        {!ended && (party.destination || isHost) ? (
+          <Animated.View entering={enter(1.5)} layout={LinearTransition}>
+            <DestinationCard party={party} isHost={isHost} mine={sharingHere ? (myTrip?.eta ?? null) : null} />
+          </Animated.View>
+        ) : null}
+
         <Animated.View entering={enter(2)} className="gap-3" layout={LinearTransition}>
           <View className="flex-row items-baseline justify-between">
             <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -120,7 +132,7 @@ export default function PartyLobby() {
                   isHost={m.userId === party.hostId}
                   isMe={isMe}
                   color={isMe ? THEME.light.primary : memberColor(i)}
-                  status={memberStatus(isMe, peers[m.userId], me, sharingHere, sharing.background, ended)}
+                  status={memberStatus(isMe, peers[m.userId], me, sharingHere, sharing.background, ended, party.destination ? (myTrip?.eta ?? null) : undefined)}
                   divider={i > 0}
                 />
               );
@@ -340,6 +352,63 @@ function SharingStatus({ party, iAmIn }: { party: Party; iAmIn: boolean }) {
   );
 }
 
+/** Where the party is headed and your ETA; the host taps it to pick or change the spot. */
+function DestinationCard({ party, isHost, mine }: { party: Party; isHost: boolean; mine: TripEta | null }) {
+  const open = () => router.push({ pathname: '/party/[id]/destination', params: { id: party.id } });
+  const dest = party.destination;
+
+  if (!dest) {
+    return (
+      <PressableScale
+        onPress={open}
+        scaleTo={0.98}
+        className="flex-row items-center gap-3 rounded-3xl border border-dashed border-primary/40 p-4">
+        <View className="rounded-2xl bg-primary/10 p-2.5">
+          <Icon as={Flag} size={18} className="text-primary" />
+        </View>
+        <View className="flex-1 gap-0.5">
+          <Text className="text-sm font-bold">Where to?</Text>
+          <Text className="text-xs leading-4 text-muted-foreground">
+            Set a destination and everyone sees their route and ETA.
+          </Text>
+        </View>
+        <Icon as={ChevronRight} size={18} className="text-muted-foreground" />
+      </PressableScale>
+    );
+  }
+
+  const eta = mine ? tripLabel(mine) : null;
+  return (
+    <PressableScale
+      onPress={isHost ? open : undefined}
+      disabled={!isHost}
+      scaleTo={0.98}
+      className="flex-row items-center gap-3 rounded-3xl border border-border bg-card p-4">
+      <View className="rounded-2xl bg-primary p-2.5">
+        <Icon as={Flag} size={18} className="text-primary-foreground" />
+      </View>
+      <View className="flex-1 gap-0.5">
+        <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Headed to</Text>
+        <Text className="font-bold" numberOfLines={1}>
+          {dest.name}
+        </Text>
+        {eta ? (
+          <Animated.View key={eta} entering={FadeIn}>
+            <Text className="text-xs text-muted-foreground">
+              {mine?.arrived ? "You're there" : `You · ${eta}${mine?.etaS ? ` · by ${arrivalClock(mine.etaS)}` : ''}`}
+            </Text>
+          </Animated.View>
+        ) : null}
+      </View>
+      {isHost ? <Text className="text-xs font-semibold text-primary">Change</Text> : null}
+    </PressableScale>
+  );
+}
+
+function arrivalClock(etaS: number) {
+  return new Date(Date.now() + etaS * 1000).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
 function StatusCard({
   tone,
   icon,
@@ -387,16 +456,21 @@ function memberStatus(
   me: { latitude: number; longitude: number } | null,
   sharingHere: boolean,
   background: boolean,
-  ended: boolean
+  ended: boolean,
+  /** Your own trip when the party has a destination; undefined when it doesn't. */
+  myTrip?: TripEta | null
 ): MemberStatus {
   if (ended) return { live: false, label: 'Party ended' };
   if (isMe) {
     if (!sharingHere) return { live: false, label: 'Not sharing' };
     if (!me) return { live: false, label: 'Waiting for GPS' };
-    return { live: true, label: background ? 'Sharing · works when locked' : 'Sharing while app is open' };
+    const trip = myTrip !== undefined ? (myTrip ? tripLabel(myTrip) : 'Finding your route…') : null;
+    return { live: true, label: trip ?? (background ? 'Sharing · works when locked' : 'Sharing while app is open') };
   }
   if (!peer) return { live: false, label: 'Not sharing yet' };
-  if (!peer.online) return { live: false, label: `Last update ${timeAgo(peer.updatedAt)}` };
+  const trip = myTrip !== undefined ? tripLabel(peer) : null;
+  if (!peer.online) return { live: false, label: trip ? `${trip} · ${timeAgo(peer.updatedAt)}` : `Last update ${timeAgo(peer.updatedAt)}` };
+  if (trip) return { live: true, label: trip };
   return {
     live: true,
     label: me ? formatDistance(distanceM(me, { latitude: peer.lat, longitude: peer.lng })) : 'On the map',

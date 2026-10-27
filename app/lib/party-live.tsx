@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/auth';
 import { haptics } from '@/lib/haptics';
 import { notify } from '@/lib/notify';
 import { endedMessage, parties, toLocation, type LocationRow, type PartyLocation } from '@/lib/parties';
+import { destinationKey } from '@/lib/routing';
 import { useSharing } from '@/lib/sharing';
 import { supabase } from '@/lib/supabase';
 import * as React from 'react';
@@ -88,6 +89,16 @@ export function PartyLiveProvider({ partyId, children }: { partyId: string; chil
   }, []);
 
   useRosterAnnouncements(state, userId, sharing);
+
+  // A new destination: post now so everyone's ETA shows up without waiting for the next fix.
+  const party = state.status === 'ready' ? state.party : null;
+  const destKey = party?.destination ? destinationKey(party.destination) : null;
+  const seenDest = React.useRef<string | null | undefined>(undefined);
+  React.useEffect(() => {
+    if (!party) return;
+    if (seenDest.current !== undefined && seenDest.current !== destKey && sharing.target?.id === party.id) sharing.nudge();
+    seenDest.current = destKey;
+  }, [destKey, party?.id]);
 
   const activeIds = state.status === 'ready' ? state.members.filter((m) => !m.leftAt).map((m) => m.userId) : [];
   const peers = React.useMemo(() => {

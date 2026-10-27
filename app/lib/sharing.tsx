@@ -1,6 +1,8 @@
 import { useAuth } from '@/lib/auth';
 import { distanceM, useLocation } from '@/lib/location';
 import { parties, type Party } from '@/lib/parties';
+import { destinationKey } from '@/lib/routing';
+import { clearTrip, tripUpdate, type Destination } from '@/lib/trip';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
@@ -20,7 +22,7 @@ const TASK = 'chalo-party-location';
 const STORAGE_KEY = 'chalo.sharing';
 const MOTION_KEY = 'chalo.sharing.motion';
 
-type SharingTarget = Pick<Party, 'id' | 'name'>;
+type SharingTarget = Pick<Party, 'id' | 'name' | 'destination'>;
 
 // Posting: every post is fanned out to the whole party over Realtime, so only post when the
 // others would notice: you moved a bit since the last post, or it's time for a heartbeat that
@@ -80,8 +82,16 @@ function nextMode(m: Motion, fix: Fix): Pick<Motion, 'mode' | 'anchor'> {
 
 async function readTarget(): Promise<SharingTarget | null> {
   const raw = await AsyncStorage.getItem(STORAGE_KEY).catch(() => null);
-  return raw ? (JSON.parse(raw) as SharingTarget) : null;
+  if (!raw) return null;
+  const t = JSON.parse(raw) as SharingTarget;
+  return { ...t, destination: t.destination ?? null };
 }
+
+function writeTarget(t: SharingTarget) {
+  return AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ id: t.id, name: t.name, destination: t.destination }));
+}
+
+const keyOf = (d: Destination | null) => (d ? destinationKey(d) : null);
 
 async function stopTask() {
   saveMotion(null);
@@ -90,15 +100,29 @@ async function stopTask() {
   }
 }
 
-/** Posts if it's worth it; returns false once you're no longer live in the party. */
-async function post(target: SharingTarget, c: Location.LocationObjectCoords, force = false) {
+/**
+ * Posts your position (and ETA, when the party has a destination) if it's worth it.
+ * Returns false once you're no longer live in the party.
+ */
+async function post(c: Location.LocationObjectCoords, force = false): Promise<boolean> {
+  const target = await readTarget();
+  if (!target) return true;
   const m = await readMotion();
   const fix = toFix(c);
   if (!force && !shouldPost(m?.lastPost ?? null, fix)) return true;
-  const stillLive = await parties.shareLocation(target.id, c);
+  const eta = await tripUpdate(target.destination, c).catch(() => null);
+  const res = await parties.shareLocation(target.id, c, eta);
   const latest = await readMotion();
   saveMotion({ ...(latest ?? { mode: 'moving', anchor: fix }), lastPost: fix });
-  return stillLive;
+  if (!res) return false;
+
+  // The host set or changed the destination: remember it and post an ETA for the new one.
+  if (keyOf(res.destination) !== keyOf(target.destination)) {
+    await writeTarget({ ...target, destination: res.destination });
+    if (res.destination) return post(c, true);
+    await tripUpdate(null, c);
+  }
+  return true;
 }
 
 // Runs in the background (and foreground) whenever the OS delivers new fixes.
@@ -125,7 +149,7 @@ TaskManager.defineTask<{ locations: Location.LocationObject[] }>(TASK, async ({ 
   saveMotion({ ...m, ...next, bare });
 
   try {
-    if (!(await post(target, latest.coords))) {
+    if (!(await post(latest.coords))) {
       await AsyncStorage.removeItem(STORAGE_KEY);
       await stopTask();
     }
@@ -184,6 +208,8 @@ type SharingValue = {
   requestBackground: () => Promise<void>;
   /** Re-checks the server for your live party; call after create/join/leave/end. */
   refresh: () => Promise<void>;
+  /** Posts right away, e.g. so a new destination gets your ETA without waiting for the next fix. */
+  nudge: () => void;
 };
 
 const SharingContext = React.createContext<SharingValue>({
@@ -194,6 +220,7 @@ const SharingContext = React.createContext<SharingValue>({
   stop: async () => {},
   requestBackground: async () => {},
   refresh: async () => {},
+  nudge: () => {},
 });
 
 export function SharingProvider({ children }: { children: React.ReactNode }) {
@@ -212,8 +239,10 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
 
   const begin = React.useCallback(
     async (party: SharingTarget, ask: boolean) => {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ id: party.id, name: party.name }));
-      setTarget({ id: party.id, name: party.name });
+      const next = { id: party.id, name: party.name, destination: party.destination };
+      if (party.id !== (await readTarget())?.id) clearTrip();
+      await writeTarget(next);
+      setTarget(next);
       let perm = await Location.getBackgroundPermissionsAsync().catch(() => null);
       if (ask && perm?.status === 'undetermined' && perm.canAskAgain) {
         // Android needs foreground access first; it's normally granted already.
@@ -228,6 +257,7 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
 
   const stop = React.useCallback(async () => {
     await AsyncStorage.removeItem(STORAGE_KEY);
+    clearTrip();
     await stopTask();
     setTarget(null);
     await syncTaskState();
@@ -290,11 +320,21 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
   const postForeground = React.useCallback(async () => {
     const c = coordsRef.current;
     if (!target || !c || AppState.currentState !== 'active') return;
-    const stillLive = await post(target, c).catch((e: Error) => {
+    const stillLive = await post(c).catch((e: Error) => {
       console.warn('[sharing] post failed:', e.message);
       return true;
     });
     if (!stillLive) stop();
+  }, [target?.id, stop]);
+
+  const nudge = React.useCallback(() => {
+    const c = coordsRef.current;
+    if (!target || !c) return;
+    post(c, true)
+      .then((stillLive) => {
+        if (!stillLive) stop();
+      })
+      .catch((e: Error) => console.warn('[sharing] post failed:', e.message));
   }, [target?.id, stop]);
 
   React.useEffect(() => {
@@ -316,8 +356,9 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
       stop,
       requestBackground,
       refresh,
+      nudge,
     }),
-    [target, background, backgroundAccess, begin, stop, requestBackground, refresh]
+    [target, background, backgroundAccess, begin, stop, requestBackground, refresh, nudge]
   );
 
   return <SharingContext.Provider value={value}>{children}</SharingContext.Provider>;

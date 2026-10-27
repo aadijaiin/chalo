@@ -1,5 +1,6 @@
 import type { AvatarConfig, AvatarStyle } from '@/lib/avatar';
 import { supabase } from '@/lib/supabase';
+import type { Destination } from '@/lib/trip';
 
 export const CODE_LENGTH = 6;
 
@@ -12,6 +13,8 @@ export type Party = {
   endedAt: string | null;
   /** Why it ended: the host ended it, it hit the 24 h limit, or nobody shared for 2 h. */
   endedReason: EndedReason | null;
+  /** Where the party is headed, set by the host. */
+  destination: Destination | null;
 };
 
 export type EndedReason = 'host' | 'expired' | 'idle';
@@ -36,6 +39,9 @@ type PartyRow = {
   created_at: string;
   ended_at: string | null;
   ended_reason: EndedReason | null;
+  destination_name: string | null;
+  destination_lat: number | null;
+  destination_lng: number | null;
 };
 
 type MemberRow = {
@@ -56,6 +62,10 @@ function toParty(row: PartyRow): Party {
     createdAt: row.created_at,
     endedAt: row.ended_at,
     endedReason: row.ended_reason,
+    destination:
+      row.destination_name != null && row.destination_lat != null && row.destination_lng != null
+        ? { name: row.destination_name, lat: row.destination_lat, lng: row.destination_lng }
+        : null,
   };
 }
 
@@ -94,6 +104,9 @@ export type PartyLocation = {
   accuracy: number | null;
   speed: number | null;
   heading: number | null;
+  /** Their own estimate to the destination, as of updatedAt. Null with no destination or route yet. */
+  etaS: number | null;
+  remainingM: number | null;
   updatedAt: number;
 };
 
@@ -105,6 +118,8 @@ export type LocationRow = {
   accuracy: number | null;
   speed: number | null;
   heading: number | null;
+  eta_s: number | null;
+  remaining_m: number | null;
   updated_at: string;
 };
 
@@ -116,6 +131,8 @@ export function toLocation(row: LocationRow): PartyLocation {
     accuracy: row.accuracy,
     speed: row.speed,
     heading: row.heading,
+    etaS: row.eta_s ?? null,
+    remainingM: row.remaining_m ?? null,
     updatedAt: new Date(row.updated_at).getTime(),
   };
 }
@@ -211,11 +228,15 @@ export const parties = {
     return data.map(toLocation);
   },
 
-  /** Returns false when you're no longer live in this party, so the caller should stop sharing. */
+  /**
+   * Returns null when you're no longer live in this party, so the caller should stop sharing;
+   * otherwise the party's current destination, which may have changed since you last looked.
+   */
   async shareLocation(
     partyId: string,
-    c: { latitude: number; longitude: number; accuracy: number | null; speed: number | null; heading: number | null }
-  ) {
+    c: { latitude: number; longitude: number; accuracy: number | null; speed: number | null; heading: number | null },
+    eta: { etaS: number | null; remainingM: number } | null
+  ): Promise<{ destination: Destination | null } | null> {
     const { data, error } = await supabase.rpc('share_location', {
       pid: partyId,
       lat: c.latitude,
@@ -223,9 +244,25 @@ export const parties = {
       accuracy: c.accuracy,
       speed: c.speed != null && c.speed >= 0 ? c.speed : null,
       heading: c.heading != null && c.heading >= 0 ? c.heading : null,
+      eta_s: eta?.etaS ?? null,
+      remaining_m: eta ? Math.round(eta.remainingM) : null,
     });
     if (error) throw friendlyError(error);
-    return data as boolean;
+    return (data as { destination: Destination | null } | null) ?? null;
+  },
+
+  /** Host only. Pass null to clear it. */
+  async setDestination(partyId: string, place: Destination | null) {
+    const { data, error } = await supabase
+      .rpc('set_destination', {
+        pid: partyId,
+        dest_name: place?.name ?? null,
+        dest_lat: place?.lat ?? null,
+        dest_lng: place?.lng ?? null,
+      })
+      .single<PartyRow>();
+    if (error) throw friendlyError(error);
+    return toParty(data);
   },
 
   /** Every party the user has been in, newest first. RLS limits rows to those. */
