@@ -1,3 +1,4 @@
+import {Logo} from '@/components/site/Logo';
 import OpenInApp from './OpenInApp';
 
 const CODE_LENGTH = 6;
@@ -27,10 +28,11 @@ export default async function InvitePage({params}) {
 	const valid = code.length === CODE_LENGTH;
 
 	return (
-		<main className="min-h-screen flex items-center justify-center px-4 py-16 bg-background">
-			<div className="w-full max-w-sm rounded-3xl bg-card p-8 shadow-xl shadow-black/5 text-center flex flex-col gap-6">
+		<main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-16">
+			<Logo />
+			<div className="flex w-full max-w-sm flex-col gap-6 rounded-3xl border border-border bg-card p-8 text-center shadow-xl shadow-black/5">
 				<div className="flex flex-col gap-2">
-					<p className="text-xs font-semibold uppercase tracking-widest text-[#e2725b]">
+					<p className="text-xs font-semibold uppercase tracking-widest text-primary">
 						You&apos;re invited
 					</p>
 					<h1 className="text-2xl font-extrabold text-foreground">Join the party on chalo</h1>
@@ -45,7 +47,7 @@ export default async function InvitePage({params}) {
 							{code.split('').map((c, i) => (
 								<span
 									key={i}
-									className="flex h-14 w-full items-center justify-center rounded-2xl bg-[#e2725b] text-2xl font-extrabold text-white"
+									className="flex h-14 w-full items-center justify-center rounded-2xl bg-primary text-2xl font-extrabold text-primary-foreground"
 								>
 									{c}
 								</span>

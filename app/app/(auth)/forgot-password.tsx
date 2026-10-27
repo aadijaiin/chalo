@@ -5,7 +5,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { haptics } from '@/lib/haptics';
 import { motion } from '@/lib/motion';
-import { supabase } from '@/lib/supabase';
+import { SITE_URL, supabase } from '@/lib/supabase';
 import { forgotSchema, type ForgotValues } from '@/lib/validators';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
@@ -25,7 +25,11 @@ export default function ForgotPassword() {
   } = useForm<ForgotValues>({ resolver: zodResolver(forgotSchema), defaultValues: { email: '' } });
 
   const onSubmit = handleSubmit(async ({ email }) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    // The email link opens the website's reset page, which works on any device.
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email,
+      SITE_URL ? { redirectTo: `${SITE_URL}/reset-password` } : undefined
+    );
     if (error) {
       notify.error("Couldn't send the link", error.message);
       return;

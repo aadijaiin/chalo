@@ -1,6 +1,6 @@
 import type { AvatarConfig, AvatarStyle } from '@/lib/avatar';
 import type { BatteryReading } from '@/lib/battery';
-import { supabase } from '@/lib/supabase';
+import { SITE_URL, supabase } from '@/lib/supabase';
 import type { Destination, Stop } from '@/lib/trip';
 
 export const CODE_LENGTH = 6;
@@ -96,10 +96,8 @@ export function endedMessage(reason: EndedReason | null) {
 
 // The web page at /j/<code> opens the app, or shows the code to people who don't have it yet.
 // chalo:// links aren't tappable in most chat apps, so they're only the fallback until it's set.
-const INVITE_BASE = process.env.EXPO_PUBLIC_INVITE_URL?.replace(/\/+$/, '');
-
 export function inviteLink(code: string) {
-  return INVITE_BASE ? `${INVITE_BASE}/j/${code}` : `chalo://join/${code}`;
+  return SITE_URL ? `${SITE_URL}/j/${code}` : `chalo://join/${code}`;
 }
 
 export function inviteMessage(party: Party) {

@@ -23,14 +23,14 @@ export default function OpenInApp({code}) {
 		<div className="flex flex-col gap-3">
 			<a
 				href={appUrl}
-				className="rounded-2xl bg-[#e2725b] px-4 py-3.5 font-bold text-white transition-opacity hover:opacity-90"
+				className="rounded-2xl bg-primary px-4 py-3.5 font-bold text-primary-foreground shadow-lg shadow-primary/30 transition-opacity hover:opacity-90"
 			>
 				Open in chalo
 			</a>
 			<button
 				type="button"
 				onClick={copy}
-				className="rounded-2xl border border-black/10 dark:border-white/15 px-4 py-3 text-sm font-semibold text-foreground"
+				className="rounded-2xl border border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
 			>
 				{copied ? 'Copied' : 'Copy code'}
 			</button>
