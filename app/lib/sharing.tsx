@@ -1,5 +1,6 @@
 import { useAuth } from '@/lib/auth';
 import { distanceM, useLocation } from '@/lib/location';
+import { readBattery } from '@/lib/battery';
 import { parties, type Party } from '@/lib/parties';
 import { registerForPush } from '@/lib/push';
 import { destinationKey } from '@/lib/routing';
@@ -121,7 +122,7 @@ async function post(c: Location.LocationObjectCoords, force = false): Promise<bo
   const fix = toFix(c);
   if (!force && !shouldPost(m?.lastPost ?? null, fix)) return true;
   const eta = await tripUpdate(target.destination, target.stops ?? [], c).catch(() => null);
-  const res = await parties.shareLocation(target.id, c, eta);
+  const res = await parties.shareLocation(target.id, c, eta, await readBattery());
   const latest = await readMotion();
   saveMotion({ ...(latest ?? { mode: 'moving', anchor: fix }), lastPost: fix });
   if (!res) return false;

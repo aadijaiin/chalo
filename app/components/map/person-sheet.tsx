@@ -12,7 +12,18 @@ import { motion } from '@/lib/motion';
 import type { PartyMember } from '@/lib/parties';
 import type { Peer } from '@/lib/party-live';
 import { pingLabel, type Ping } from '@/lib/pings';
-import { Crown, Handshake, LocateFixed, Navigation, X } from 'lucide-react-native';
+import {
+  BatteryCharging,
+  BatteryFull,
+  BatteryLow,
+  BatteryMedium,
+  Crown,
+  Handshake,
+  LocateFixed,
+  Navigation,
+  SignalZero,
+  X,
+} from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -52,6 +63,9 @@ export function PersonSheet({
   const kmh = peer?.speed != null ? Math.round(peer.speed * 3.6) : null;
   const trip = hasDestination && peer ? tripLabel(peer) : null;
   const routing = route.status !== 'off';
+  const lowBattery = peer?.battery != null && peer.battery < 0.15 && !peer.charging;
+  // Silence while driving is usually a dead zone, not someone ignoring the group.
+  const noSignal = Boolean(peer && !peer.online && (peer.speed ?? 0) > 3);
 
   return (
     <Animated.View
@@ -84,6 +98,23 @@ export function PersonSheet({
                   ? `live, updated ${timeAgo(peer.updatedAt)}`
                   : `last seen ${timeAgo(peer.updatedAt)}`}
             </Text>
+            {peer?.battery != null ? (
+              <View className="flex-row items-center gap-0.5">
+                <Icon
+                  as={batteryIcon(peer.battery, peer.charging)}
+                  size={13}
+                  className={lowBattery ? 'text-destructive' : 'text-muted-foreground'}
+                />
+                <Text
+                  className={
+                    lowBattery
+                      ? 'text-xs text-destructive font-semibold'
+                      : 'text-xs text-muted-foreground'
+                  }>
+                  {Math.round(peer.battery * 100)}%
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
         <PressableScale
@@ -93,6 +124,17 @@ export function PersonSheet({
           <Icon as={X} size={18} />
         </PressableScale>
       </View>
+
+      {lowBattery || noSignal ? (
+        <View className="flex-row items-center gap-2.5 rounded-2xl bg-destructive/10 px-3 py-2.5">
+          <Icon as={lowBattery ? BatteryLow : SignalZero} size={16} className="text-destructive" />
+          <Text className="flex-1 text-sm" numberOfLines={2}>
+            {lowBattery
+              ? `${first}'s phone is at ${Math.round(peer!.battery! * 100)}%. It may die soon.`
+              : `${first} was moving when they went quiet, so they're probably out of signal.`}
+          </Text>
+        </View>
+      ) : null}
 
       {ping ? (
         <View className="flex-row items-center gap-2.5 rounded-2xl bg-primary/5 px-3 py-2.5">
@@ -193,4 +235,11 @@ function Stat({ label, value }: { label: string; value: string }) {
       </Text>
     </View>
   );
+}
+
+function batteryIcon(level: number, charging: boolean | null) {
+  if (charging) return BatteryCharging;
+  if (level < 0.15) return BatteryLow;
+  if (level < 0.6) return BatteryMedium;
+  return BatteryFull;
 }

@@ -1,4 +1,5 @@
 import type { AvatarConfig, AvatarStyle } from '@/lib/avatar';
+import type { BatteryReading } from '@/lib/battery';
 import { supabase } from '@/lib/supabase';
 import type { Destination, Stop } from '@/lib/trip';
 
@@ -112,6 +113,9 @@ export type PartyLocation = {
   accuracy: number | null;
   speed: number | null;
   heading: number | null;
+  /** 0 to 1; null from builds that don't send it. */
+  battery: number | null;
+  charging: boolean | null;
   /** Their own estimate to the destination, as of updatedAt. Null with no destination or route yet. */
   etaS: number | null;
   remainingM: number | null;
@@ -126,6 +130,8 @@ export type LocationRow = {
   accuracy: number | null;
   speed: number | null;
   heading: number | null;
+  battery?: number | null;
+  charging?: boolean | null;
   eta_s: number | null;
   remaining_m: number | null;
   updated_at: string;
@@ -139,6 +145,8 @@ export function toLocation(row: LocationRow): PartyLocation {
     accuracy: row.accuracy,
     speed: row.speed,
     heading: row.heading,
+    battery: row.battery ?? null,
+    charging: row.charging ?? null,
     etaS: row.eta_s ?? null,
     remainingM: row.remaining_m ?? null,
     updatedAt: new Date(row.updated_at).getTime(),
@@ -243,7 +251,8 @@ export const parties = {
   async shareLocation(
     partyId: string,
     c: { latitude: number; longitude: number; accuracy: number | null; speed: number | null; heading: number | null },
-    eta: { etaS: number | null; remainingM: number } | null
+    eta: { etaS: number | null; remainingM: number } | null,
+    battery?: BatteryReading | null
   ): Promise<{ destination: Destination | null; stops?: Stop[] } | null> {
     const { data, error } = await supabase.rpc('share_location', {
       pid: partyId,
@@ -254,6 +263,8 @@ export const parties = {
       heading: c.heading != null && c.heading >= 0 ? c.heading : null,
       eta_s: eta?.etaS ?? null,
       remaining_m: eta ? Math.round(eta.remainingM) : null,
+      // Only builds with the battery module send these, so older builds keep matching older servers.
+      ...(battery ? { battery: Math.round(battery.level * 100) / 100, charging: battery.charging } : {}),
     });
     if (error) throw friendlyError(error);
     return (data as { destination: Destination | null; stops?: Stop[] } | null) ?? null;
