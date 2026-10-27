@@ -93,8 +93,16 @@ export function endedMessage(reason: EndedReason | null) {
   return 'The host ended it.';
 }
 
+// The web page at /j/<code> opens the app, or shows the code to people who don't have it yet.
+// chalo:// links aren't tappable in most chat apps, so they're only the fallback until it's set.
+const INVITE_BASE = process.env.EXPO_PUBLIC_INVITE_URL?.replace(/\/+$/, '');
+
+export function inviteLink(code: string) {
+  return INVITE_BASE ? `${INVITE_BASE}/j/${code}` : `chalo://join/${code}`;
+}
+
 export function inviteMessage(party: Party) {
-  return `Join my chalo party "${party.name}" 🚗\nCode: ${party.code}\nchalo://join/${party.code}`;
+  return `Join my chalo party "${party.name}"\nCode: ${party.code}\n${inviteLink(party.code)}`;
 }
 
 export type PartyLocation = {
