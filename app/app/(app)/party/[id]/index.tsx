@@ -18,6 +18,7 @@ import {
   inviteMessage,
   lookoutMessage,
   parties,
+  watchMessage,
   type Party,
   type PartyMember,
 } from '@/lib/parties';
@@ -39,6 +40,8 @@ import {
   Eye,
   EyeOff,
   Flag,
+  Globe,
+  Link2Off,
   LogOut,
   Map as MapIcon,
   MapPinned,
@@ -138,7 +141,12 @@ export default function PartyLobby() {
 
         {!ended && !(isLookout && iAmIn) ? (
           <Animated.View entering={enter(1)} layout={LinearTransition}>
-            <SharingStatus party={party} iAmIn={iAmIn} wasLookout={isLookout} />
+            <SharingStatus
+              party={party}
+              iAmIn={iAmIn}
+              wasLookout={isLookout}
+              removed={Boolean(mine?.removed)}
+            />
           </Animated.View>
         ) : null}
 
@@ -182,15 +190,21 @@ export default function PartyLobby() {
                     isHost={m.userId === party.hostId}
                     isMe={isMe}
                     color={isMe ? THEME.light.primary : memberColor(i)}
-                    status={memberStatus(
-                      isMe,
-                      peers[m.userId],
-                      me,
-                      sharingHere,
-                      sharing.background,
-                      ended,
-                      party.destination ? (myTrip?.eta ?? null) : undefined
-                    )}
+                    status={
+                      isLookout && m.hiddenFromLookouts && !ended
+                        ? { live: false, label: 'Hidden from lookouts' }
+                        : !iAmIn && !ended && m.userId !== profile?.id
+                          ? { live: false, label: 'Only visible to people in the party' }
+                          : memberStatus(
+                              isMe,
+                              peers[m.userId],
+                              me,
+                              sharingHere,
+                              sharing.background,
+                              ended,
+                              party.destination ? (myTrip?.eta ?? null) : undefined
+                            )
+                    }
                     divider={i > 0}
                   />
                 );
@@ -233,8 +247,11 @@ export default function PartyLobby() {
                 </View>
               </LayoutAnimationConfig>
             ) : null}
-            {!ended && iAmIn && !isLookout ? (
-              <AddLookout party={party} first={lookouts.length === 0} />
+            {!ended && iAmIn && !isLookout && mine ? (
+              <>
+                <AddLookout party={party} first={lookouts.length === 0} isHost={isHost} />
+                <LookoutVisibility party={party} hidden={mine.hiddenFromLookouts} />
+              </>
             ) : null}
           </Animated.View>
         ) : null}
@@ -422,30 +439,137 @@ function LookoutHero({ party }: { party: Party }) {
 }
 
 /** Lets family follow along: they see the crew, and the crew can see they're watching. */
-function AddLookout({ party, first }: { party: Party; first: boolean }) {
-  async function share() {
+function AddLookout({ party, first, isHost }: { party: Party; first: boolean; isHost: boolean }) {
+  const [busy, setBusy] = React.useState<'web' | 'off' | null>(null);
+
+  async function shareApp() {
     haptics.tap();
     try {
       await Share.share({ message: lookoutMessage(party) });
     } catch {}
   }
 
+  async function shareWeb() {
+    haptics.tap();
+    setBusy('web');
+    try {
+      const token = await parties.createWatchLink(party.id);
+      await Share.share({ message: watchMessage(party, token) });
+    } catch (e) {
+      notify.error("Couldn't make a watch link", (e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function turnOff() {
+    const ok = await confirm({
+      icon: Link2Off,
+      title: 'Turn off the web link?',
+      message:
+        'Anyone following in a browser stops seeing the crew. You can make a new link later.',
+      confirmLabel: 'Turn off',
+      destructive: true,
+    });
+    if (!ok) return;
+    setBusy('off');
+    try {
+      await parties.revokeWatchLink(party.id);
+      notify.success('Web link turned off');
+    } catch (e) {
+      notify.error("Couldn't turn it off", (e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
-    <PressableScale
-      onPress={share}
-      scaleTo={0.98}
-      className="flex-row items-center gap-3 rounded-3xl border border-dashed border-border p-4">
-      <View className="rounded-2xl bg-primary/10 p-2.5">
-        <Icon as={Eye} size={18} className="text-primary" />
+    <View className="gap-3 rounded-3xl border border-dashed border-border p-4">
+      <View className="flex-row items-center gap-3">
+        <View className="rounded-2xl bg-primary/10 p-2.5">
+          <Icon as={Eye} size={18} className="text-primary" />
+        </View>
+        <View className="flex-1 gap-0.5">
+          <Text className="text-sm font-bold">
+            {first ? 'Add a lookout' : 'Add another lookout'}
+          </Text>
+          <Text className="text-xs leading-4 text-muted-foreground">
+            Let family follow the trip from home. They see the crew; their location isn't shared.
+          </Text>
+        </View>
+      </View>
+      <View className="flex-row gap-2">
+        <Button size="sm" variant="secondary" onPress={shareApp} className="flex-1 rounded-full">
+          <Icon as={Share2} size={14} />
+          <Text>In the app</Text>
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          loading={busy === 'web'}
+          onPress={shareWeb}
+          className="flex-1 rounded-full">
+          <Icon as={Globe} size={14} />
+          <Text>Web link</Text>
+        </Button>
+      </View>
+      {party.watchToken ? (
+        <View className="flex-row items-center gap-2">
+          <LiveDot size={7} />
+          <Text className="flex-1 text-xs text-muted-foreground">
+            A web link is on: anyone with it can watch until the party ends.
+          </Text>
+          {isHost ? (
+            <Button size="sm" variant="ghost" loading={busy === 'off'} onPress={turnOff}>
+              <Text className="text-destructive">Turn off</Text>
+            </Button>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/** Your own say in being watched: hide yourself from lookouts and they won't see you at all. */
+function LookoutVisibility({ party, hidden }: { party: Party; hidden: boolean }) {
+  const [busy, setBusy] = React.useState(false);
+
+  async function toggle() {
+    haptics.select();
+    setBusy(true);
+    try {
+      await parties.setHiddenFromLookouts(party.id, !hidden);
+    } catch (e) {
+      notify.error("Couldn't change that", (e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-card p-4">
+      <View className="rounded-2xl bg-muted p-2.5">
+        <Icon as={hidden ? EyeOff : Eye} size={18} className="text-muted-foreground" />
       </View>
       <View className="flex-1 gap-0.5">
-        <Text className="text-sm font-bold">{first ? 'Add a lookout' : 'Add another lookout'}</Text>
+        <Text className="text-sm font-bold">
+          {hidden ? "Lookouts can't see you" : 'Lookouts can see you'}
+        </Text>
         <Text className="text-xs leading-4 text-muted-foreground">
-          Let family follow the trip from home. They see the crew; their location isn't shared.
+          {hidden
+            ? 'Your crew still can. Lookouts and web links don’t get your position or alerts.'
+            : 'Hide yourself if you’d rather only the crew saw where you are.'}
         </Text>
       </View>
-      <Icon as={Share2} size={16} className="text-primary" />
-    </PressableScale>
+      <Button
+        size="sm"
+        variant="outline"
+        loading={busy}
+        onPress={toggle}
+        className="rounded-full px-4">
+        <Text>{hidden ? 'Show me' : 'Hide me'}</Text>
+      </Button>
+    </View>
   );
 }
 
@@ -521,10 +645,12 @@ function SharingStatus({
   party,
   iAmIn,
   wasLookout,
+  removed,
 }: {
   party: Party;
   iAmIn: boolean;
   wasLookout: boolean;
+  removed: boolean;
 }) {
   const sharing = useSharing();
   const actions = usePartyActions();
@@ -537,6 +663,17 @@ function SharingStatus({
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!iAmIn && removed) {
+    return (
+      <StatusCard
+        tone="muted"
+        icon={EyeOff}
+        title="The host removed you"
+        body="You can't see this party any more."
+      />
+    );
   }
 
   if (!iAmIn && wasLookout) {
@@ -701,9 +838,9 @@ function StatusCard({
   icon: typeof MapPinned;
   title: string;
   body: string;
-  action: string;
-  busy: boolean;
-  onAction: () => void;
+  action?: string;
+  busy?: boolean;
+  onAction?: () => void;
 }) {
   return (
     <Animated.View
@@ -724,9 +861,11 @@ function StatusCard({
         <Text className="text-sm font-bold">{title}</Text>
         <Text className="text-xs leading-4 text-muted-foreground">{body}</Text>
       </View>
-      <Button size="sm" loading={busy} onPress={onAction} className="rounded-full px-4">
-        <Text>{action}</Text>
-      </Button>
+      {action ? (
+        <Button size="sm" loading={busy} onPress={onAction} className="rounded-full px-4">
+          <Text>{action}</Text>
+        </Button>
+      ) : null}
     </Animated.View>
   );
 }

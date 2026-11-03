@@ -16,6 +16,8 @@ export type Party = {
   endedReason: EndedReason | null;
   /** Where the party is headed, set by the host. */
   destination: Destination | null;
+  /** Token for the web watch link (/w/<token>), while one is on. */
+  watchToken: string | null;
 };
 
 export type EndedReason = 'host' | 'expired' | 'idle';
@@ -29,12 +31,20 @@ export type PartyMember = {
   fullName: string;
   avatar: AvatarConfig;
   role: MemberRole;
+  /** Taken off the party by the host; they can't rejoin it. */
+  removed: boolean;
+  /** Crew who chose not to be seen by lookouts. */
+  hiddenFromLookouts: boolean;
   joinedAt: string;
   leftAt: string | null;
 };
 
 /** A party from the user's history, with who's in it for the avatar stack. */
-export type PartySummary = Party & { members: PartyMember[]; leftAt: string | null; role: MemberRole };
+export type PartySummary = Party & {
+  members: PartyMember[];
+  leftAt: string | null;
+  role: MemberRole;
+};
 
 type PartyRow = {
   id: string;
@@ -47,17 +57,26 @@ type PartyRow = {
   destination_name: string | null;
   destination_lat: number | null;
   destination_lng: number | null;
+  watch_token?: string | null;
 };
 
 type MemberRow = {
   user_id: string;
   role?: MemberRole;
+  removed?: boolean;
+  hidden_from_lookouts?: boolean;
   joined_at: string;
   left_at: string | null;
-  profiles: { username: string; full_name: string; avatar_style: string; avatar_seed: string } | null;
+  profiles: {
+    username: string;
+    full_name: string;
+    avatar_style: string;
+    avatar_seed: string;
+  } | null;
 };
 
-const MEMBER_COLUMNS = 'user_id, role, joined_at, left_at, profiles(username, full_name, avatar_style, avatar_seed)';
+const MEMBER_COLUMNS =
+  'user_id, role, removed, hidden_from_lookouts, joined_at, left_at, profiles(username, full_name, avatar_style, avatar_seed)';
 
 function toParty(row: PartyRow): Party {
   return {
@@ -72,6 +91,7 @@ function toParty(row: PartyRow): Party {
       row.destination_name != null && row.destination_lat != null && row.destination_lng != null
         ? { name: row.destination_name, lat: row.destination_lat, lng: row.destination_lng }
         : null,
+    watchToken: row.watch_token ?? null,
   };
 }
 
@@ -85,13 +105,18 @@ function toMember(row: MemberRow): PartyMember {
       seed: row.profiles?.avatar_seed ?? row.user_id,
     },
     role: row.role ?? 'crew',
+    removed: row.removed ?? false,
+    hiddenFromLookouts: row.hidden_from_lookouts ?? false,
     joinedAt: row.joined_at,
     leftAt: row.left_at,
   };
 }
 
 export function normalizeCode(raw: string) {
-  return raw.replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, CODE_LENGTH);
+  return raw
+    .replace(/[^a-z0-9]/gi, '')
+    .toUpperCase()
+    .slice(0, CODE_LENGTH);
 }
 
 export function endedMessage(reason: EndedReason | null) {
@@ -112,6 +137,22 @@ export function inviteMessage(party: Party) {
 
 export function lookoutLink(code: string) {
   return SITE_URL ? `${SITE_URL}/j/${code}?as=lookout` : `chalo://join/${code}?as=lookout`;
+}
+
+/** A browser link that shows the crew live, for family without the app. */
+export function watchLink(token: string) {
+  return `${SITE_URL}/w/${token}`;
+}
+
+export function watchMessage(party: Party, token: string) {
+  return (
+    `Follow our trip "${party.name}" live in your browser, no app needed. It stops when the trip ends.\n` +
+    watchLink(token)
+  );
+}
+
+export function recapLink(token: string) {
+  return `${SITE_URL}/r/${token}`;
 }
 
 export function lookoutMessage(party: Party) {
@@ -183,11 +224,19 @@ type RpcError = { message: string; details?: string | null; hint?: string | null
 /** Turns RPC errors into something a person can act on. */
 function friendlyError(error: RpcError) {
   if (error.message.includes('in_another_party')) {
-    return new PartyConflictError(error.details ?? 'another party', error.hint === 'host' ? 'host' : 'member');
+    return new PartyConflictError(
+      error.details ?? 'another party',
+      error.hint === 'host' ? 'host' : 'member'
+    );
   }
-  if (error.message.includes('party_not_found')) return new Error("No live party with that code. Check it with the host.");
-  if (error.message.includes('host_cannot_watch')) return new Error("You're hosting this party, so you're in the crew.");
-  if (error.message.includes('Could not find the function')) return new Error('Parties aren\'t set up on the server yet.');
+  if (error.message.includes('party_not_found'))
+    return new Error('No live party with that code. Check it with the host.');
+  if (error.message.includes('removed_from_party'))
+    return new Error('The host removed you from this party.');
+  if (error.message.includes('host_cannot_watch'))
+    return new Error("You're hosting this party, so you're in the crew.");
+  if (error.message.includes('Could not find the function'))
+    return new Error("Parties aren't set up on the server yet.");
   return new Error(error.message);
 }
 
@@ -219,6 +268,32 @@ export const parties = {
     if (error) throw friendlyError(error);
   },
 
+  /** Crew only: whether lookouts can see you in this party. */
+  async setHiddenFromLookouts(partyId: string, hidden: boolean) {
+    const { error } = await supabase.rpc('set_hidden_from_lookouts', { pid: partyId, hidden });
+    if (error) throw friendlyError(error);
+  },
+
+  /** Turns on the party's web watch link (or returns the one that's on) and gives its token. */
+  async createWatchLink(partyId: string) {
+    const { data, error } = await supabase.rpc('create_watch_link', { pid: partyId });
+    if (error) throw friendlyError(error);
+    return data as string;
+  },
+
+  /** Host only. */
+  async revokeWatchLink(partyId: string) {
+    const { error } = await supabase.rpc('revoke_watch_link', { pid: partyId });
+    if (error) throw friendlyError(error);
+  },
+
+  /** A stats-only recap card link for an ended party; returns its token. */
+  async shareRecap(partyId: string) {
+    const { data, error } = await supabase.rpc('share_recap', { pid: partyId });
+    if (error) throw friendlyError(error);
+    return data as string;
+  },
+
   /** Host only. */
   async removeLookout(partyId: string, userId: string) {
     const { error } = await supabase.rpc('remove_lookout', { pid: partyId, uid: userId });
@@ -231,7 +306,11 @@ export const parties = {
   },
 
   async get(partyId: string) {
-    const { data, error } = await supabase.from('parties').select('*').eq('id', partyId).maybeSingle<PartyRow>();
+    const { data, error } = await supabase
+      .from('parties')
+      .select('*')
+      .eq('id', partyId)
+      .maybeSingle<PartyRow>();
     if (error) throw friendlyError(error);
     return data ? toParty(data) : null;
   },
@@ -294,7 +373,13 @@ export const parties = {
    */
   async shareLocation(
     partyId: string,
-    c: { latitude: number; longitude: number; accuracy: number | null; speed: number | null; heading: number | null },
+    c: {
+      latitude: number;
+      longitude: number;
+      accuracy: number | null;
+      speed: number | null;
+      heading: number | null;
+    },
     eta: { etaS: number | null; remainingM: number } | null,
     battery?: BatteryReading | null
   ): Promise<{ destination: Destination | null; stops?: Stop[] } | null> {
@@ -308,7 +393,9 @@ export const parties = {
       eta_s: eta?.etaS ?? null,
       remaining_m: eta ? Math.round(eta.remainingM) : null,
       // Only builds with the battery module send these, so older builds keep matching older servers.
-      ...(battery ? { battery: Math.round(battery.level * 100) / 100, charging: battery.charging } : {}),
+      ...(battery
+        ? { battery: Math.round(battery.level * 100) / 100, charging: battery.charging }
+        : {}),
     });
     if (error) throw friendlyError(error);
     return (data as { destination: Destination | null; stops?: Stop[] } | null) ?? null;

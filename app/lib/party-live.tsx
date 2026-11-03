@@ -145,7 +145,15 @@ export function PartyLiveProvider({ partyId, children }: { partyId: string; chil
     seenDest.current = destKey;
   }, [destKey, party?.id]);
 
-  const activeIds = state.status === 'ready' ? state.members.filter((m) => !m.leftAt).map((m) => m.userId) : [];
+  // A lookout doesn't keep positions of anyone who hides from lookouts: the server stops sending
+  // them, and this drops the last one already on screen.
+  const active = state.status === 'ready' ? state.members.filter((m) => !m.leftAt) : [];
+  const iWatch = active.some((m) => m.userId === userId && m.role === 'lookout');
+  // Same once you've left or been removed: the feed has stopped, so don't show where people were.
+  const iAmIn = active.some((m) => m.userId === userId);
+  const activeIds = iAmIn
+    ? active.filter((m) => !(iWatch && m.hiddenFromLookouts)).map((m) => m.userId)
+    : [];
   const peers = React.useMemo(() => {
     const out: Record<string, Peer> = {};
     for (const id of activeIds) {

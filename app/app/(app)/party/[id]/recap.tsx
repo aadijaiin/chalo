@@ -6,10 +6,11 @@ import { Text } from '@/components/ui/text';
 import { useAuth } from '@/lib/auth';
 import { formatDuration, formatKm } from '@/lib/format';
 import { motion } from '@/lib/motion';
-import type { PartyMember } from '@/lib/parties';
+import { parties, recapLink, type PartyMember } from '@/lib/parties';
 import { usePartyLive } from '@/lib/party-live';
 import { useRecap, type MemberRecap, type Recap } from '@/lib/recap';
 import type { LngLat } from '@/lib/routing';
+import { SITE_URL } from '@/lib/supabase';
 import { MAP_STYLE, memberColor, THEME } from '@/lib/theme';
 import { Camera, GeoJSONSource, Layer, Map, type CameraRef } from '@maplibre/maplibre-react-native';
 import { router } from 'expo-router';
@@ -71,13 +72,22 @@ export default function TripRecap() {
       });
     const span =
       r.startedAt && r.endedAt ? ` in ${formatDuration((r.endedAt - r.startedAt) / 1000)}` : '';
+    // Once it's over, the message carries a link to a stats card that previews nicely in chats.
+    // The text alone still works if that fails (offline, or the trip is still on).
+    const card =
+      party.endedAt && SITE_URL
+        ? await parties
+            .shareRecap(party.id)
+            .then(recapLink)
+            .catch(() => null)
+        : null;
     await Share.share({
       message: [
         `${party.name}${party.destination ? ` → ${party.destination.name}` : ''}`,
         `${formatKm(r.totalM)} together${span}`,
         ...lines,
         '',
-        'Tracked with chalo',
+        card ?? 'Tracked with chalo',
       ].join('\n'),
     }).catch(() => {});
   }

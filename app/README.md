@@ -59,6 +59,21 @@ hooks/               use-live-location, use-party
 lib/                 supabase client, auth, theme, avatars, parties API, party-live (Realtime presence)
 ```
 
+## Push notifications on iPhone
+
+The app config already asks for the push entitlement (`aps-environment`), so any fresh build
+(`eas build`, or `npx expo prebuild` before `npm run ios`) includes it. What iOS still needs is an
+Apple Developer Program membership and an APNs key, which EAS can create and store for you:
+
+```bash
+npx eas-cli credentials -p ios     # sign in with your Apple account, then "Push Notifications: set up"
+npm run build:ios                  # or: npx eas-cli build --profile development --platform ios
+```
+
+Until then iPhones still get pings, SOS and arrivals as in-app toasts while chalo is open, but
+not as notifications. The simulator logs `no valid "aps-environment" entitlement` when the local
+`ios/` folder predates the setting; `npx expo prebuild -p ios` refreshes it.
+
 ## Testing a party with two people
 
 Run the iOS simulator next to your phone and sign in as a second account:

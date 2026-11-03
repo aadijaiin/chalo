@@ -708,7 +708,9 @@ export default function PartyMap() {
                   detail={
                     pings[member.userId]
                       ? pingDetail(pings[member.userId])
-                      : peerDetail(peer, isLookout ? null : coords, Boolean(dest))
+                      : isLookout && member.hiddenFromLookouts
+                        ? 'Hidden from lookouts'
+                        : peerDetail(peer, isLookout ? null : coords, Boolean(dest))
                   }
                   selected={selected === member.userId}
                   onPress={() =>
