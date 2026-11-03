@@ -18,8 +18,32 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://myttnygnayvbytzjwiir.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_xAjQXdMxsmAAT2abf248FQ_i4VGDXnw",
+        "EXPO_PUBLIC_SITE_URL": "https://chalo.aadijain.dev"
       }
     },
-    "production": {}
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://myttnygnayvbytzjwiir.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_xAjQXdMxsmAAT2abf248FQ_i4VGDXnw",
+        "EXPO_PUBLIC_SITE_URL": "https://chalo.aadijain.dev"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
   }
 }

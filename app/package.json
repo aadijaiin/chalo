@@ -9,7 +9,9 @@
     "build:android": "eas build --profile development --platform android",
     "build:ios": "eas build --profile development --platform ios",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf .expo node_modules"
+    "clean": "rm -rf .expo node_modules",
+    "build:play": "eas build --profile production --platform android",
+    "submit:play": "eas submit --profile production --platform android --latest"
   },
   "dependencies": {
     "@dicebear/collection": "^9.4.2",
