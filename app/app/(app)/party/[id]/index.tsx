@@ -12,7 +12,15 @@ import { formatDistance, timeAgo, tripLabel } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
 import { distanceM, useLocation } from '@/lib/location';
 import { motion } from '@/lib/motion';
-import { inviteMessage, type Party, type PartyMember } from '@/lib/parties';
+import { confirm } from '@/lib/confirm';
+import { notify } from '@/lib/notify';
+import {
+  inviteMessage,
+  lookoutMessage,
+  parties,
+  type Party,
+  type PartyMember,
+} from '@/lib/parties';
 import { usePartyLive, type Peer } from '@/lib/party-live';
 import { destinationKey } from '@/lib/routing';
 import { useSharing } from '@/lib/sharing';
@@ -28,6 +36,8 @@ import {
   ChevronRight,
   Copy,
   Crown,
+  Eye,
+  EyeOff,
   Flag,
   LogOut,
   Map as MapIcon,
@@ -36,6 +46,7 @@ import {
   Share2,
   ShieldAlert,
   UserPlus,
+  X,
 } from 'lucide-react-native';
 import * as React from 'react';
 import { ScrollView, Share, StyleSheet, View } from 'react-native';
@@ -78,9 +89,13 @@ export default function PartyLobby() {
 
   const { party, members } = state;
   const active = members.filter((m) => !m.leftAt);
+  const crew = active.filter((m) => m.role === 'crew');
+  const lookouts = active.filter((m) => m.role === 'lookout');
   const isHost = party.hostId === profile?.id;
   const ended = Boolean(party.endedAt);
-  const iAmIn = active.some((m) => m.userId === profile?.id);
+  const mine = members.find((m) => m.userId === profile?.id);
+  const iAmIn = Boolean(mine && !mine.leftAt);
+  const isLookout = mine?.role === 'lookout';
   const sharingHere = sharing.target?.id === party.id;
   const liveCount = Object.values(peers).filter((p) => p.online).length + (sharingHere ? 1 : 0);
 
@@ -108,12 +123,16 @@ export default function PartyLobby() {
         contentContainerClassName="gap-6 px-5 pb-6 pt-4"
         showsVerticalScrollIndicator={false}>
         <Animated.View entering={enter(0)}>
-          <CodeCard party={party} ended={ended} />
+          {isLookout && iAmIn && !ended ? (
+            <LookoutHero party={party} />
+          ) : (
+            <CodeCard party={party} ended={ended} />
+          )}
         </Animated.View>
 
-        {!ended ? (
+        {!ended && !(isLookout && iAmIn) ? (
           <Animated.View entering={enter(1)} layout={LinearTransition}>
-            <SharingStatus party={party} iAmIn={iAmIn} />
+            <SharingStatus party={party} iAmIn={iAmIn} wasLookout={isLookout} />
           </Animated.View>
         ) : null}
 
@@ -136,7 +155,7 @@ export default function PartyLobby() {
         <Animated.View entering={enter(2)} className="gap-3" layout={LinearTransition}>
           <View className="flex-row items-baseline justify-between">
             <Text className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-              Crew · {active.length}
+              Crew · {crew.length}
             </Text>
             {!ended ? (
               <Animated.View key={liveCount} entering={FadeIn}>
@@ -145,7 +164,7 @@ export default function PartyLobby() {
             ) : null}
           </View>
           <View className="overflow-hidden rounded-3xl border border-border bg-card">
-            {active.map((m, i) => {
+            {crew.map((m, i) => {
               const isMe = m.userId === profile?.id;
               return (
                 <MemberRow
@@ -168,7 +187,7 @@ export default function PartyLobby() {
               );
             })}
           </View>
-          {active.length === 1 && !ended ? (
+          {crew.length === 1 && !isLookout && !ended ? (
             <Animated.View
               entering={FadeInDown.delay(400)}
               exiting={FadeOut}
@@ -182,6 +201,29 @@ export default function PartyLobby() {
             </Animated.View>
           ) : null}
         </Animated.View>
+
+        {lookouts.length > 0 || (!ended && iAmIn && !isLookout) ? (
+          <Animated.View entering={enter(3)} className="gap-3" layout={LinearTransition}>
+            <Text className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+              Lookouts · {lookouts.length}
+            </Text>
+            {lookouts.length > 0 ? (
+              <View className="overflow-hidden rounded-3xl border border-border bg-card">
+                {lookouts.map((m, i) => (
+                  <LookoutRow
+                    key={m.userId}
+                    party={party}
+                    member={m}
+                    isMe={m.userId === profile?.id}
+                    canRemove={isHost && !ended}
+                    divider={i > 0}
+                  />
+                ))}
+              </View>
+            ) : null}
+            {!ended && iAmIn && !isLookout ? <AddLookout party={party} first={lookouts.length === 0} /> : null}
+          </Animated.View>
+        ) : null}
       </ScrollView>
 
       <View className="gap-3 px-5 pb-2">
@@ -211,7 +253,11 @@ export default function PartyLobby() {
               <Icon as={MapIcon} size={18} className="text-primary-foreground" />
               <Text>Open live map</Text>
             </Button>
-            <ExitButton party={party} isHost={isHost} />
+            {isLookout ? (
+              <StopWatchingButton party={party} />
+            ) : (
+              <ExitButton party={party} isHost={isHost} />
+            )}
           </>
         )}
       </View>
@@ -331,8 +377,133 @@ function CodeCard({ party, ended }: { party: Party; ended: boolean }) {
   );
 }
 
+/** Takes the place of the code card for lookouts: what they can see, and that nobody sees them. */
+function LookoutHero({ party }: { party: Party }) {
+  return (
+    <View className="overflow-hidden rounded-3xl border border-border bg-card">
+      <View className="absolute -right-10 -top-10 h-44 w-44 rounded-full border-[18px] border-primary/10" />
+      <View className="gap-4 p-5">
+        <View className="flex-row items-center gap-2">
+          <LiveDot />
+          <Text className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+            Live · started {timeAgo(party.createdAt)}
+          </Text>
+        </View>
+        <View className="flex-row items-center gap-3">
+          <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+            <Icon as={Eye} size={22} className="text-primary" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-xl font-extrabold">You're a lookout</Text>
+            <Text className="text-sm text-muted-foreground">Following {party.name}</Text>
+          </View>
+        </View>
+        <Text className="text-sm leading-5 text-muted-foreground">
+          You see the crew live on the map and hear about SOS, arrivals and anyone falling behind.
+          Your own location isn't shared with them.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/** Lets family follow along: they see the crew, and the crew can see they're watching. */
+function AddLookout({ party, first }: { party: Party; first: boolean }) {
+  async function share() {
+    haptics.tap();
+    try {
+      await Share.share({ message: lookoutMessage(party) });
+    } catch {}
+  }
+
+  return (
+    <PressableScale
+      onPress={share}
+      scaleTo={0.98}
+      className="flex-row items-center gap-3 rounded-3xl border border-dashed border-border p-4">
+      <View className="rounded-2xl bg-primary/10 p-2.5">
+        <Icon as={Eye} size={18} className="text-primary" />
+      </View>
+      <View className="flex-1 gap-0.5">
+        <Text className="text-sm font-bold">{first ? 'Add a lookout' : 'Add another lookout'}</Text>
+        <Text className="text-xs leading-4 text-muted-foreground">
+          Let family follow the trip from home. They see the crew; their location isn't shared.
+        </Text>
+      </View>
+      <Icon as={Share2} size={16} className="text-primary" />
+    </PressableScale>
+  );
+}
+
+function LookoutRow({
+  party,
+  member,
+  isMe,
+  canRemove,
+  divider,
+}: {
+  party: Party;
+  member: PartyMember;
+  isMe: boolean;
+  canRemove: boolean;
+  divider: boolean;
+}) {
+  const name = member.fullName || member.username;
+
+  async function remove() {
+    const ok = await confirm({
+      icon: EyeOff,
+      title: `Remove ${name.split(' ')[0]}?`,
+      message: 'They stop seeing the crew right away. They’d need the code to watch again.',
+      confirmLabel: 'Remove lookout',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await parties.removeLookout(party.id, member.userId);
+      notify.success('Lookout removed', name);
+    } catch (e) {
+      notify.error("Couldn't remove them", (e as Error).message);
+    }
+  }
+
+  return (
+    <Animated.View
+      entering={FadeInDown.duration(350)}
+      exiting={FadeOut.duration(200)}
+      layout={LinearTransition}
+      className={cn('flex-row items-center gap-3 p-4', divider && 'border-t border-border')}>
+      <View>
+        <View className="rounded-full border-2 border-dashed border-muted-foreground/40 p-[2px]">
+          <AvatarView avatar={member.avatar} size={38} />
+        </View>
+        <View className="absolute -bottom-1 -right-1 rounded-full border-2 border-card bg-muted p-1">
+          <Icon as={Eye} size={10} className="text-muted-foreground" />
+        </View>
+      </View>
+      <View className="flex-1">
+        <Text className="font-semibold" numberOfLines={1}>
+          {name}
+          {isMe ? <Text className="text-muted-foreground font-normal"> (you)</Text> : null}
+        </Text>
+        <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+          @{member.username} · watching, not sharing
+        </Text>
+      </View>
+      {canRemove ? (
+        <PressableScale
+          onPress={remove}
+          accessibilityLabel={`Remove ${name} as a lookout`}
+          className="h-8 w-8 items-center justify-center rounded-full bg-muted">
+          <Icon as={X} size={14} className="text-muted-foreground" />
+        </PressableScale>
+      ) : null}
+    </Animated.View>
+  );
+}
+
 /** Tells you whether your position is reaching the party, and fixes it in one tap when it isn't. */
-function SharingStatus({ party, iAmIn }: { party: Party; iAmIn: boolean }) {
+function SharingStatus({ party, iAmIn, wasLookout }: { party: Party; iAmIn: boolean; wasLookout: boolean }) {
   const sharing = useSharing();
   const actions = usePartyActions();
   const [busy, setBusy] = React.useState(false);
@@ -344,6 +515,20 @@ function SharingStatus({ party, iAmIn }: { party: Party; iAmIn: boolean }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!iAmIn && wasLookout) {
+    return (
+      <StatusCard
+        tone="muted"
+        icon={EyeOff}
+        title="You're not watching any more"
+        body="Follow the crew again while the party is live. Your location stays private."
+        action="Watch"
+        busy={busy}
+        onAction={() => run(() => actions.join(party.code, { asLookout: true }))}
+      />
+    );
   }
 
   if (!iAmIn) {
@@ -609,6 +794,25 @@ function MemberRow({
         </View>
       ) : null}
     </Animated.View>
+  );
+}
+
+function StopWatchingButton({ party }: { party: Party }) {
+  const actions = usePartyActions();
+  const [busy, setBusy] = React.useState(false);
+
+  async function stop() {
+    setBusy(true);
+    const done = await actions.stopWatching(party);
+    if (done) goHome();
+    else setBusy(false);
+  }
+
+  return (
+    <Button size="lg" variant="outline" loading={busy} onPress={stop}>
+      <Icon as={EyeOff} size={18} className="text-destructive" />
+      <Text className="text-destructive">Stop watching</Text>
+    </Button>
   );
 }
 

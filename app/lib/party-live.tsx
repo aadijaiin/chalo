@@ -234,18 +234,23 @@ function useRosterAnnouncements(state: PartyState, userId: string | undefined, s
     if (state.status !== 'ready') return;
     const { party, members } = state;
     const active = members.filter((m) => !m.leftAt);
-    const ids = new Set(active.map((m) => m.userId));
+    const crewCount = active.filter((m) => m.role === 'crew').length;
+    // Keyed by role too, so switching between crew and lookout reads as news.
+    const ids = new Set(active.map((m) => `${m.userId}:${m.role}`));
+    const name = (m: (typeof members)[number]) => m.fullName.split(' ')[0] || m.username;
 
     if (known.current) {
       for (const m of active) {
-        if (!known.current.has(m.userId) && m.userId !== userId) {
-          haptics.success();
-          notify.info(`${m.fullName.split(' ')[0] || m.username} joined`, `Now ${active.length} in ${party.name}.`);
-        }
+        if (known.current.has(`${m.userId}:${m.role}`) || m.userId === userId) continue;
+        haptics.success();
+        if (m.role === 'lookout') notify.info(`${name(m)} is watching`, "They can see the crew. Their location isn't shared.");
+        else notify.info(`${name(m)} joined`, `Now ${crewCount} in ${party.name}.`);
       }
-      for (const id of known.current) {
+      for (const key of known.current) {
+        const [id, role] = key.split(':');
         const m = members.find((x) => x.userId === id);
-        if (!ids.has(id) && m && id !== userId) notify.info(`${m.fullName.split(' ')[0] || m.username} left the party`);
+        if (ids.has(key) || !m || id === userId || active.some((x) => x.userId === id)) continue;
+        notify.info(role === 'lookout' ? `${name(m)} stopped watching` : `${name(m)} left the party`);
       }
     }
     known.current = ids;

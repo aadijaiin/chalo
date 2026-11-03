@@ -34,7 +34,7 @@ export default function TripRecap() {
   // Same colours as the live map: you in the brand colour, everyone else in join order.
   const colorOf = React.useMemo(() => {
     const out: Record<string, string> = {};
-    members.filter((m) => !m.leftAt).forEach((m, i) => (out[m.userId] = memberColor(i)));
+    members.filter((m) => !m.leftAt && m.role === 'crew').forEach((m, i) => (out[m.userId] = memberColor(i)));
     members.forEach((m, i) => (out[m.userId] ??= memberColor(i)));
     if (profile) out[profile.id] = THEME[scheme].primary;
     return out;

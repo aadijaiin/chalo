@@ -2,7 +2,7 @@ import { confirm } from '@/lib/confirm';
 import { notify } from '@/lib/notify';
 import { PartyConflictError, parties, type Party } from '@/lib/parties';
 import { useSharing } from '@/lib/sharing';
-import { LogOut, Repeat } from 'lucide-react-native';
+import { EyeOff, LogOut, Repeat } from 'lucide-react-native';
 import * as React from 'react';
 
 /** Create, join, leave and end, with the one-live-party rule and location sharing wired in. */
@@ -42,14 +42,41 @@ export function usePartyActions() {
     [withConflictCheck, sharing.start]
   );
 
+  /** A lookout follows the party without sharing, so the one-live-party rule doesn't apply. */
   const join = React.useCallback(
-    async (code: string) => {
+    async (code: string, opts: { asLookout?: boolean } = {}) => {
+      if (opts.asLookout) {
+        const party = await parties.join(code, false, true);
+        // Switching from crew to lookout in the same party: your position comes off the map.
+        if (sharing.target?.id === party.id) await sharing.stop();
+        return party;
+      }
       const party = await withConflictCheck('join', (replace) => parties.join(code, replace));
       if (party) await sharing.start(party);
       return party;
     },
-    [withConflictCheck, sharing.start]
+    [withConflictCheck, sharing.start, sharing.stop, sharing.target?.id]
   );
+
+  /** Lookouts just stop watching; nothing of theirs was being shared. */
+  const stopWatching = React.useCallback(async (party: Party) => {
+    const ok = await confirm({
+      icon: EyeOff,
+      title: `Stop watching ${party.name}?`,
+      message: 'You won’t see the crew or get their alerts any more. You can follow again with the same link while it’s live.',
+      confirmLabel: 'Stop watching',
+      destructive: true,
+    });
+    if (!ok) return false;
+    try {
+      await parties.leave(party.id);
+      notify.success('Stopped watching', party.name);
+      return true;
+    } catch (e) {
+      notify.error("Couldn't stop watching", (e as Error).message);
+      return false;
+    }
+  }, []);
 
   /** Asks first; resolves true once you're out. */
   const exit = React.useCallback(
@@ -78,5 +105,5 @@ export function usePartyActions() {
     [sharing.stop]
   );
 
-  return { create, join, exit };
+  return { create, join, exit, stopWatching };
 }

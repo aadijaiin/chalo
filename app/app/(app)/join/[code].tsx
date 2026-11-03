@@ -4,14 +4,17 @@ import { usePartyActions } from '@/hooks/use-party-actions';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
 
-/** Target of invite links (chalo://join/ABC234): joins, then hands off to the lobby. */
+/**
+ * Target of invite links (chalo://join/ABC234): joins, then hands off to the lobby.
+ * Lookout links (chalo://join/ABC234?as=lookout) follow the party without sharing.
+ */
 export default function JoinFromLink() {
-  const { code } = useLocalSearchParams<{ code: string }>();
+  const { code, as } = useLocalSearchParams<{ code: string; as?: string }>();
   const actions = usePartyActions();
 
   React.useEffect(() => {
     actions
-      .join(code)
+      .join(code, { asLookout: as === 'lookout' })
       .then((party) =>
         party ? router.replace({ pathname: '/party/[id]', params: { id: party.id } }) : router.replace('/home')
       )
@@ -19,7 +22,7 @@ export default function JoinFromLink() {
         notify.error("Couldn't join", e.message);
         router.replace('/home');
       });
-  }, [code]);
+  }, [code, as]);
 
   return <SplashLoader />;
 }

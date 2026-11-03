@@ -72,8 +72,9 @@ export function RecentParties({ userId }: { userId: string }) {
 
 function PartyRow({ party, divider }: { party: PartySummary; divider: boolean }) {
   const live = !party.endedAt && !party.leftAt;
-  const crew = party.members.filter((m) => !m.leftAt);
-  const status = party.endedAt ? 'Ended' : party.leftAt ? 'You left' : 'Live';
+  const crew = party.members.filter((m) => !m.leftAt && m.role === 'crew');
+  const watching = party.role === 'lookout';
+  const status = party.endedAt ? 'Ended' : party.leftAt ? (watching ? 'Stopped watching' : 'You left') : watching ? 'Watching' : 'Live';
 
   return (
     <PressableScale

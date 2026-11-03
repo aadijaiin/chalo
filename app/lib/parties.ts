@@ -20,17 +20,21 @@ export type Party = {
 
 export type EndedReason = 'host' | 'expired' | 'idle';
 
+/** Crew share their location; lookouts follow along on the map without sharing theirs. */
+export type MemberRole = 'crew' | 'lookout';
+
 export type PartyMember = {
   userId: string;
   username: string;
   fullName: string;
   avatar: AvatarConfig;
+  role: MemberRole;
   joinedAt: string;
   leftAt: string | null;
 };
 
 /** A party from the user's history, with who's in it for the avatar stack. */
-export type PartySummary = Party & { members: PartyMember[]; leftAt: string | null };
+export type PartySummary = Party & { members: PartyMember[]; leftAt: string | null; role: MemberRole };
 
 type PartyRow = {
   id: string;
@@ -47,12 +51,13 @@ type PartyRow = {
 
 type MemberRow = {
   user_id: string;
+  role?: MemberRole;
   joined_at: string;
   left_at: string | null;
   profiles: { username: string; full_name: string; avatar_style: string; avatar_seed: string } | null;
 };
 
-const MEMBER_COLUMNS = 'user_id, joined_at, left_at, profiles(username, full_name, avatar_style, avatar_seed)';
+const MEMBER_COLUMNS = 'user_id, role, joined_at, left_at, profiles(username, full_name, avatar_style, avatar_seed)';
 
 function toParty(row: PartyRow): Party {
   return {
@@ -79,6 +84,7 @@ function toMember(row: MemberRow): PartyMember {
       style: (row.profiles?.avatar_style as AvatarStyle) ?? 'adventurer',
       seed: row.profiles?.avatar_seed ?? row.user_id,
     },
+    role: row.role ?? 'crew',
     joinedAt: row.joined_at,
     leftAt: row.left_at,
   };
@@ -102,6 +108,17 @@ export function inviteLink(code: string) {
 
 export function inviteMessage(party: Party) {
   return `Join my chalo party "${party.name}"\nCode: ${party.code}\n${inviteLink(party.code)}`;
+}
+
+export function lookoutLink(code: string) {
+  return SITE_URL ? `${SITE_URL}/j/${code}?as=lookout` : `chalo://join/${code}?as=lookout`;
+}
+
+export function lookoutMessage(party: Party) {
+  return (
+    `Follow our trip "${party.name}" live on chalo. You'll see where we are; your own location isn't shared.\n` +
+    `${lookoutLink(party.code)}`
+  );
 }
 
 export type PartyLocation = {
@@ -169,6 +186,7 @@ function friendlyError(error: RpcError) {
     return new PartyConflictError(error.details ?? 'another party', error.hint === 'host' ? 'host' : 'member');
   }
   if (error.message.includes('party_not_found')) return new Error("No live party with that code. Check it with the host.");
+  if (error.message.includes('host_cannot_watch')) return new Error("You're hosting this party, so you're in the crew.");
   if (error.message.includes('Could not find the function')) return new Error('Parties aren\'t set up on the server yet.');
   return new Error(error.message);
 }
@@ -182,9 +200,15 @@ export const parties = {
     return toParty(data);
   },
 
-  async join(code: string, replaceCurrent = false) {
+  /** As a lookout you follow the party without sharing your location. */
+  async join(code: string, replaceCurrent = false, asLookout = false) {
     const { data, error } = await supabase
-      .rpc('join_party', { party_code: normalizeCode(code), replace_current: replaceCurrent })
+      .rpc('join_party', {
+        party_code: normalizeCode(code),
+        replace_current: replaceCurrent,
+        // Only sent when it's set, so joining as crew still works against an older server.
+        ...(asLookout ? { as_lookout: true } : {}),
+      })
       .single<PartyRow>();
     if (error) throw friendlyError(error);
     return toParty(data);
@@ -192,6 +216,12 @@ export const parties = {
 
   async leave(partyId: string) {
     const { error } = await supabase.rpc('leave_party', { pid: partyId });
+    if (error) throw friendlyError(error);
+  },
+
+  /** Host only. */
+  async removeLookout(partyId: string, userId: string) {
+    const { error } = await supabase.rpc('remove_lookout', { pid: partyId, uid: userId });
     if (error) throw friendlyError(error);
   },
 
@@ -217,12 +247,13 @@ export const parties = {
     return data.map(toMember);
   },
 
-  /** The live party you're currently in, if any. */
+  /** The live party you're in as crew (the one you share with), if any. */
   async current(userId: string) {
     const { data, error } = await supabase
       .from('party_members')
       .select('joined_at, parties!inner(*)')
       .eq('user_id', userId)
+      .eq('role', 'crew')
       .is('left_at', null)
       .is('parties.ended_at', null)
       .order('joined_at', { ascending: false })
@@ -230,6 +261,21 @@ export const parties = {
       .returns<{ parties: PartyRow }[]>();
     if (error) throw friendlyError(error);
     return data[0] ? toParty(data[0].parties) : null;
+  },
+
+  /** Live parties you're following as a lookout, newest first. */
+  async watching(userId: string) {
+    const { data, error } = await supabase
+      .from('party_members')
+      .select('joined_at, parties!inner(*)')
+      .eq('user_id', userId)
+      .eq('role', 'lookout')
+      .is('left_at', null)
+      .is('parties.ended_at', null)
+      .order('joined_at', { ascending: false })
+      .returns<{ parties: PartyRow }[]>();
+    if (error) throw friendlyError(error);
+    return data.map((row) => toParty(row.parties));
   },
 
   async locations(partyId: string) {
@@ -293,10 +339,12 @@ export const parties = {
     if (error) throw friendlyError(error);
     return data.map((row) => {
       const members = row.party_members.map(toMember);
+      const mine = members.find((m) => m.userId === userId);
       return {
         ...toParty(row),
         members,
-        leftAt: members.find((m) => m.userId === userId)?.leftAt ?? null,
+        leftAt: mine?.leftAt ?? null,
+        role: mine?.role ?? 'crew',
       };
     });
   },

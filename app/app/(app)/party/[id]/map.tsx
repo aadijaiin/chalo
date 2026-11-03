@@ -46,6 +46,7 @@ import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import {
   ChevronLeft,
+  Eye,
   Flag,
   ListOrdered,
   LocateFixed,
@@ -117,7 +118,10 @@ export default function PartyMap() {
   const dest = state.status === 'ready' ? state.party.destination : null;
   const myTrip = useMyTrip(dest ? destinationKey(dest) : null);
 
-  const crew = state.status === 'ready' ? state.members.filter((m) => !m.leftAt) : [];
+  const active = state.status === 'ready' ? state.members.filter((m) => !m.leftAt) : [];
+  const crew = active.filter((m) => m.role === 'crew');
+  // Lookouts follow the crew from wherever they are; they're not part of the picture.
+  const isLookout = active.some((m) => m.userId === profile?.id && m.role === 'lookout');
   const others = crew
     .map((m, i) => ({ member: m, color: memberColor(i), peer: peers[m.userId] }))
     .filter((o) => o.member.userId !== profile?.id)
@@ -128,7 +132,7 @@ export default function PartyMap() {
   const onMap = others.filter((o): o is typeof o & { peer: Peer } => Boolean(o.peer));
 
   const points: LngLat[] = [
-    ...(me ? [me] : []),
+    ...(me && !isLookout ? [me] : []),
     ...onMap.map((o) => [o.peer.lng, o.peer.lat] as LngLat),
   ];
 
@@ -273,12 +277,12 @@ export default function PartyMap() {
   const isHost = party.hostId === profile?.id;
   const openMember = person ? others.find((o) => o.member.userId === person) : undefined;
   const sheetOpen = Boolean(openMember || openPin);
-  // Everyone (at least two of you) has reached the destination.
+  // The whole crew (at least two of you, or one with you watching) has reached the destination.
   const allHere =
     Boolean(dest) &&
     !party.endedAt &&
     others.length > 0 &&
-    Boolean(myTrip?.eta?.arrived) &&
+    (isLookout || Boolean(myTrip?.eta?.arrived)) &&
     others.every((o) => o.peer?.remainingM === 0);
   const canPin = sharingHere && !party.endedAt;
   const nameOf = (userId: string | null) => {
@@ -456,6 +460,15 @@ export default function PartyMap() {
             </Animated.View>
           </View>
         </View>
+        {isLookout ? (
+          <Animated.View
+            entering={FadeInDown.duration(250)}
+            className="flex-row items-center gap-1.5 self-start rounded-full bg-card px-3 py-1.5 shadow-lg shadow-black/20">
+            <Icon as={Eye} size={12} className="text-primary" />
+            <Text className="text-xs font-semibold">Lookout</Text>
+            <Text className="text-xs text-muted-foreground">· the crew can't see you</Text>
+          </Animated.View>
+        ) : null}
         {connection === 'off' ? (
           <Animated.View
             entering={FadeInDown.duration(250)}
@@ -652,7 +665,7 @@ export default function PartyMap() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerClassName="gap-3 px-4 pt-2">
-            {profile ? (
+            {profile && !isLookout ? (
               <CrewCard
                 avatar={profile.avatar}
                 name="You"
@@ -689,7 +702,7 @@ export default function PartyMap() {
                   detail={
                     pings[member.userId]
                       ? pingDetail(pings[member.userId])
-                      : peerDetail(peer, coords, Boolean(dest))
+                      : peerDetail(peer, isLookout ? null : coords, Boolean(dest))
                   }
                   selected={selected === member.userId}
                   onPress={() =>

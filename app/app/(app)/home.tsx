@@ -4,6 +4,7 @@ import { JoinCodeCard } from '@/components/dashboard/join-code-card';
 import { LiveLocationCard } from '@/components/dashboard/live-location-card';
 import { RecentParties } from '@/components/dashboard/recent-parties';
 import { StartPartyCard } from '@/components/dashboard/start-party-card';
+import { WatchingCards } from '@/components/dashboard/watching-card';
 import { KeyboardScrollView } from '@/components/keyboard-scroll-view';
 import { PressableScale } from '@/components/pressable-scale';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -34,9 +35,9 @@ export default function Home() {
 
   const actions = usePartyActions();
 
-  async function join(code: string) {
+  async function join(code: string, asLookout: boolean) {
     try {
-      const party = await actions.join(code);
+      const party = await actions.join(code, { asLookout });
       if (!party) return 'cancelled';
       router.push({ pathname: '/party/[id]', params: { id: party.id } });
       return 'joined';
@@ -75,6 +76,7 @@ export default function Home() {
         </Animated.View>
 
         <ActivePartyCard />
+        {profile ? <WatchingCards userId={profile.id} /> : null}
 
         <Animated.View entering={enter(1)} layout={LinearTransition}>
           <StartPartyCard onPress={() => router.push('/party/new')} />
