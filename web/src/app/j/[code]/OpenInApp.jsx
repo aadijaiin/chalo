@@ -3,8 +3,8 @@
 import {useEffect, useState} from 'react';
 
 /** Tries the app right away; if it isn't installed, the page stays put with the code to copy. */
-export default function OpenInApp({code}) {
-	const appUrl = `chalo://join/${code}`;
+export default function OpenInApp({code, lookout = false}) {
+	const appUrl = `chalo://join/${code}${lookout ? '?as=lookout' : ''}`;
 	const [copied, setCopied] = useState(false);
 
 	useEffect(() => {
@@ -25,7 +25,7 @@ export default function OpenInApp({code}) {
 				href={appUrl}
 				className="rounded-2xl bg-primary px-4 py-3.5 font-bold text-primary-foreground shadow-lg shadow-primary/30 transition-opacity hover:opacity-90"
 			>
-				Open in chalo
+				{lookout ? 'Watch in chalo' : 'Open in chalo'}
 			</a>
 			<button
 				type="button"
@@ -35,7 +35,9 @@ export default function OpenInApp({code}) {
 				{copied ? 'Copied' : 'Copy code'}
 			</button>
 			<p className="text-xs text-muted-foreground">
-				Nothing happened? Install chalo, then tap the link again, or enter the code on the home screen.
+				{lookout
+					? 'Nothing happened? Install chalo, then tap the link again, or enter the code on the home screen and choose “Just watch”.'
+					: 'Nothing happened? Install chalo, then tap the link again, or enter the code on the home screen.'}
 			</p>
 		</div>
 	);

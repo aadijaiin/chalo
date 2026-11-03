@@ -25,7 +25,8 @@ export default function PrivacyPage() {
 					<strong>Your location, only while you&apos;re in a party:</strong> position, accuracy, speed and
 					direction, plus your distance and ETA to the party&apos;s destination. If you allow
 					&ldquo;all the time&rdquo; location, this continues while your phone is locked, until you leave
-					the party or it ends. Outside a party, your location stays on your phone.
+					the party or it ends. Outside a party, your location stays on your phone. If you join a party
+					as a <strong>lookout</strong>, your location isn&apos;t shared at all.
 				</li>
 				<li>
 					<strong>A route trail for the trip recap:</strong> a point roughly every 100 metres while
@@ -48,8 +49,14 @@ export default function PrivacyPage() {
 			<h2>Who can see it</h2>
 			<ul>
 				<li>
-					Only the members of a party can see that party&apos;s locations, trails, pings and pins. Anyone
-					with the party code can join while the party is live, so share it only with people you trust.
+					Only the people currently in a party, including any lookouts following it, can see that
+					party&apos;s live locations and trails while it&apos;s on; trails stay visible to past members
+					for the trip recap. Anyone with the party code can join while the party is live, so share it
+					only with people you trust.
+				</li>
+				<li>
+					Everyone in a party can see who is watching as a lookout, and the host can remove a lookout
+					at any time.
 				</li>
 				<li>Your name, username and avatar are visible to people in parties with you.</li>
 				<li>We don&apos;t sell your data, show ads, or share your location with anyone else.</li>

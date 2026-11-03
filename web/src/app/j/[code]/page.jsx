@@ -10,8 +10,18 @@ function clean(raw) {
 		.slice(0, CODE_LENGTH);
 }
 
-export async function generateMetadata({params}) {
+export async function generateMetadata({params, searchParams}) {
 	const code = clean((await params).code);
+	if ((await searchParams).as === 'lookout') {
+		return {
+			title: 'Follow our trip on chalo',
+			description: 'See the crew live on one map. Your own location stays private.',
+			openGraph: {
+				title: 'Follow our trip on chalo',
+				description: 'Tap to watch the crew live on the map. Your location isn’t shared.',
+			},
+		};
+	}
 	return {
 		title: `Join my party on chalo · ${code}`,
 		description: 'Tap to join the party and see everyone on one live map.',
@@ -22,10 +32,14 @@ export async function generateMetadata({params}) {
 	};
 }
 
-/** Where invite links land: opens the app straight into the party, or shows the code to type in. */
-export default async function InvitePage({params}) {
+/**
+ * Where invite links land: opens the app straight into the party, or shows the code to type in.
+ * Lookout links (?as=lookout) invite someone to follow along without sharing their location.
+ */
+export default async function InvitePage({params, searchParams}) {
 	const code = clean((await params).code);
 	const valid = code.length === CODE_LENGTH;
+	const lookout = (await searchParams).as === 'lookout';
 
 	return (
 		<main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-16">
@@ -33,11 +47,15 @@ export default async function InvitePage({params}) {
 			<div className="flex w-full max-w-sm flex-col gap-6 rounded-3xl border border-border bg-card p-8 text-center shadow-xl shadow-black/5">
 				<div className="flex flex-col gap-2">
 					<p className="text-xs font-semibold uppercase tracking-widest text-primary">
-						You&apos;re invited
+						{lookout ? 'Be a lookout' : 'You’re invited'}
 					</p>
-					<h1 className="text-2xl font-extrabold text-foreground">Join the party on chalo</h1>
+					<h1 className="text-2xl font-extrabold text-foreground">
+						{lookout ? 'Follow the trip on chalo' : 'Join the party on chalo'}
+					</h1>
 					<p className="text-sm text-muted-foreground">
-						Everyone in the party shows up on one live map, so nobody gets lost on the way.
+						{lookout
+							? 'See the whole crew live on one map, and hear about arrivals and SOS. Your own location isn’t shared with anyone.'
+							: 'Everyone in the party shows up on one live map, so nobody gets lost on the way.'}
 					</p>
 				</div>
 
@@ -53,7 +71,7 @@ export default async function InvitePage({params}) {
 								</span>
 							))}
 						</div>
-						<OpenInApp code={code} />
+						<OpenInApp code={code} lookout={lookout} />
 					</>
 				) : (
 					<p className="text-sm text-muted-foreground">

@@ -1,6 +1,8 @@
 import {
 	BatteryMedium,
 	Coffee,
+	Eye,
+	EyeOff,
 	Flag,
 	MapPin,
 	Route,
@@ -59,6 +61,11 @@ const FEATURES = [
 		body: 'See each person’s battery, and chalo tells you when someone has probably just lost signal.',
 	},
 	{
+		icon: Eye,
+		title: 'Lookouts for the folks at home',
+		body: 'Parents can follow the trip live without joining it. They see the crew; nobody sees them.',
+	},
+	{
 		icon: Route,
 		title: 'A recap of the trip',
 		body: 'When the party ends: everyone’s route on one map, kilometres covered, top speed and stops made.',
@@ -71,9 +78,28 @@ const STEPS = [
 	{title: 'Chalo', body: 'Everyone’s on the map until the party ends. Then sharing stops for all.'},
 ];
 
+const LOOKOUT_POINTS = [
+	{
+		icon: Eye,
+		title: 'The whole crew, live',
+		body: 'Everyone’s position, their route and ETA to the destination, updating as they drive.',
+	},
+	{
+		icon: Siren,
+		title: 'Only the alerts that matter',
+		body: 'SOS, arrivals and anyone falling behind. None of the chai-stop chatter.',
+	},
+	{
+		icon: EyeOff,
+		title: 'Nothing of theirs is shared',
+		body: 'A lookout never posts a location. The crew always sees who’s watching, and the host can remove a lookout.',
+	},
+];
+
 const PROMISES = [
 	'Your location is only shared with a party you’ve joined, and only while you’re in it.',
 	'Leave or end the party and sharing stops right away. Parties also end by themselves after 24 hours.',
+	'Lookouts never share their location, and everyone in the party can see who’s watching.',
 	'Route trails for the trip recap are deleted after 30 days.',
 	'No ads, and we don’t sell your data.',
 ];
@@ -134,7 +160,7 @@ export default function Home() {
 							<StoreButtons />
 						</div>
 						<div className="flex justify-center lg:justify-end">
-							<Phone src="/screens/map.webp" alt="The chalo live map with the crew and their ETAs" className="w-64 sm:w-72" priority />
+							<Phone src="/screens/map.webp" alt="The chalo live map with the crew and their ETAs" className="w-72 sm:w-80" priority />
 						</div>
 					</div>
 				</section>
@@ -163,9 +189,9 @@ export default function Home() {
 
 				<section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
 					<div className="grid items-center gap-14 lg:grid-cols-2">
-						<div className="flex justify-center gap-4">
-							<Phone src="/screens/lobby.webp" alt="A party lobby with the destination, ETA and the crew" className="w-44 sm:w-56" />
-							<Phone src="/screens/recap.webp" alt="A trip recap with everyone's route" className="mt-12 w-44 sm:w-56" />
+						<div className="flex justify-center gap-3 sm:gap-5">
+							<Phone src="/screens/lobby.webp" alt="A party lobby with the destination, ETA and the crew" className="w-[46%] max-w-72" />
+							<Phone src="/screens/recap.webp" alt="A trip recap with everyone's route" className="mt-12 w-[46%] max-w-72" />
 						</div>
 						<div>
 							<h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Up and running in a minute</h2>
@@ -182,6 +208,53 @@ export default function Home() {
 									</li>
 								))}
 							</ol>
+						</div>
+					</div>
+				</section>
+
+				<section id="lookouts" className="scroll-mt-16 border-t border-border/60 bg-primary/5">
+					<div className="mx-auto grid max-w-6xl items-center gap-14 px-4 py-20 sm:px-6 lg:grid-cols-[1.1fr_0.9fr]">
+						<div>
+							<span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
+								<Eye className="size-3.5" />
+								New · Lookouts
+							</span>
+							<h2 className="mt-5 text-3xl font-extrabold tracking-tight sm:text-4xl">
+								Let the folks at home follow along
+							</h2>
+							<p className="mt-3 max-w-xl text-lg text-muted-foreground">
+								Add your parents as lookouts and they can watch the trip live, without being on it. It
+								only goes one way: they see the crew, and nobody sees them.
+							</p>
+							<ul className="mt-8 flex flex-col gap-5">
+								{LOOKOUT_POINTS.map(({icon: Icon, title, body}) => (
+									<li key={title} className="flex gap-4">
+										<span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card shadow-sm">
+											<Icon className="size-5 text-primary" />
+										</span>
+										<div>
+											<h3 className="font-bold">{title}</h3>
+											<p className="text-[15px] leading-relaxed text-muted-foreground">{body}</p>
+										</div>
+									</li>
+								))}
+							</ul>
+							<p className="mt-8 text-sm text-muted-foreground">
+								In the party lobby, tap <strong className="text-foreground">Add a lookout</strong> and send
+								the link. On their end it&apos;s one tap.
+							</p>
+						</div>
+						<div className="relative flex justify-center lg:justify-end">
+							<Phone src="/screens/lookout.webp" alt="A lookout following the crew on the live map" className="w-64 sm:w-80" />
+							<div className="absolute bottom-10 left-0 flex max-w-64 items-center gap-3 rounded-2xl border border-border bg-card/95 p-3 shadow-xl shadow-black/10 backdrop-blur sm:left-4 lg:-left-6">
+								<span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+									<Eye className="size-4 text-primary" />
+								</span>
+								<div className="text-left">
+									<p className="text-sm font-bold leading-tight">Mom is watching Goa trip</p>
+									<p className="text-xs text-muted-foreground">Her location isn&apos;t shared.</p>
+								</div>
+							</div>
 						</div>
 					</div>
 				</section>
@@ -203,7 +276,7 @@ export default function Home() {
 						</div>
 						<ul className="grid gap-3 sm:grid-cols-2">
 							{PROMISES.map((p) => (
-								<li key={p} className="rounded-3xl bg-card p-5 text-[15px] leading-relaxed">
+								<li key={p} className="rounded-3xl bg-card p-5 text-[15px] leading-relaxed sm:last:odd:col-span-2">
 									{p}
 								</li>
 							))}
