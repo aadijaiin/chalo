@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { channelName, supabase } from '@/lib/supabase';
 import { MapPin, StickyNote, Users, type LucideIcon } from 'lucide-react-native';
 import * as React from 'react';
 
@@ -115,7 +115,7 @@ export function usePins(partyId: string) {
         .catch((e) => console.warn('[pins] loading failed:', e.message));
 
     const channel = supabase
-      .channel(`party-pins:${partyId}`)
+      .channel(channelName(`party-pins:${partyId}`))
       .on<PinRow>(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'party_pins', filter: `party_id=eq.${partyId}` },

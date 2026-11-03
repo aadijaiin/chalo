@@ -156,14 +156,20 @@ export default function PartyMap() {
       cameraRef.current?.fitBounds(
         [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)],
         {
-          padding: { top: insets.top + 120, bottom: insets.bottom + 200, left: 60, right: 60 },
+          // Clear of the header and its chips, the crew cards, and the button column on the right.
+          padding: {
+            top: insets.top + 110 + (dest ? 44 : 0) + (isLookout ? 40 : 0),
+            bottom: insets.bottom + 200,
+            left: 56,
+            right: 100,
+          },
           bearing: 0,
           pitch: 0,
           duration,
         }
       );
     },
-    [JSON.stringify(points), insets.top, insets.bottom]
+    [JSON.stringify(points), insets.top, insets.bottom, Boolean(dest), isLookout]
   );
 
   // Frame everyone once: as soon as we have ourselves, and again when the first friend shows up.

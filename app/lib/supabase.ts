@@ -30,3 +30,13 @@ if (Platform.OS !== 'web') {
     else supabase.auth.stopAutoRefresh();
   });
 }
+
+/**
+ * A Realtime channel name unique to this subscription. supabase-js hands back the existing
+ * channel for a name that's already in use, so two screens for the same party (an invite link
+ * or a notification opening a party that's already open) would share one, and adding listeners
+ * to an already-subscribed channel throws.
+ */
+export function channelName(base: string) {
+  return `${base}:${Math.random().toString(36).slice(2, 10)}`;
+}

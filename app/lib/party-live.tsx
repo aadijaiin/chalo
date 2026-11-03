@@ -8,7 +8,7 @@ import { activeStatuses, PING_LOOKBACK_MS, PING_META, pingLabel, pings as pingsA
 import { PIN_META, usePins, type Pin } from '@/lib/pins';
 import { setOpenParty } from '@/lib/push';
 import { useSharing } from '@/lib/sharing';
-import { supabase } from '@/lib/supabase';
+import { channelName, supabase } from '@/lib/supabase';
 import * as React from 'react';
 
 export type Peer = PartyLocation & {
@@ -73,7 +73,7 @@ export function PartyLiveProvider({ partyId, children }: { partyId: string; chil
     };
 
     const channel = supabase
-      .channel(`party-locations:${partyId}`)
+      .channel(channelName(`party-locations:${partyId}`))
       .on<LocationRow>(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'party_locations', filter: `party_id=eq.${partyId}` },

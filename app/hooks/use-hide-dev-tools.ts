@@ -8,13 +8,18 @@ import * as React from 'react';
 export function useHideDevTools() {
   React.useEffect(() => {
     if (!__DEV__) return;
-    let devMenu: { setToolsButtonVisible?: (visible: boolean) => void } | null = null;
+    let devMenu: { setToolsButtonVisible?: (visible: boolean) => Promise<void> | void } | null = null;
     try {
       devMenu = require('expo-dev-client');
     } catch {
       return;
     }
-    devMenu?.setToolsButtonVisible?.(false);
-    return () => devMenu?.setToolsButtonVisible?.(true);
+    // Rejects while the dev menu is still starting up (e.g. right after a reload); it's cosmetic.
+    const setVisible = (visible: boolean) =>
+      Promise.resolve(devMenu?.setToolsButtonVisible?.(visible)).catch(() => {});
+    setVisible(false);
+    return () => {
+      setVisible(true);
+    };
   }, []);
 }

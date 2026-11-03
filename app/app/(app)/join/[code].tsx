@@ -16,7 +16,8 @@ export default function JoinFromLink() {
     actions
       .join(code, { asLookout: as === 'lookout' })
       .then((party) =>
-        party ? router.replace({ pathname: '/party/[id]', params: { id: party.id } }) : router.replace('/home')
+        // Back to the party if its screens are already open underneath, rather than a second copy.
+        party ? router.dismissTo({ pathname: '/party/[id]', params: { id: party.id } }) : router.replace('/home')
       )
       .catch((e: Error) => {
         notify.error("Couldn't join", e.message);

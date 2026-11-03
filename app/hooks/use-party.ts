@@ -1,5 +1,5 @@
 import { parties, type Party, type PartyMember } from '@/lib/parties';
-import { supabase } from '@/lib/supabase';
+import { channelName, supabase } from '@/lib/supabase';
 import * as React from 'react';
 
 export type PartyState =
@@ -25,7 +25,7 @@ export function useParty(partyId: string) {
     load();
     // Change payloads don't carry joined profile data, so any change just triggers a refetch.
     const channel = supabase
-      .channel(`party-lobby:${partyId}`)
+      .channel(channelName(`party-lobby:${partyId}`))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'party_members', filter: `party_id=eq.${partyId}` }, load)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'parties', filter: `id=eq.${partyId}` }, load)
       .subscribe();
