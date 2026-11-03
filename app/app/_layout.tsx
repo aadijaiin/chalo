@@ -2,6 +2,7 @@ import '@/global.css';
 
 import { AuthProvider } from '@/lib/auth';
 import { ConfirmHost } from '@/lib/confirm';
+import { installErrorReporting, reportError } from '@/lib/errors';
 // Registers the background location task at startup, before the OS can deliver fixes to it.
 import '@/lib/sharing';
 import { NAV_THEME } from '@/lib/theme';
@@ -15,7 +16,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { PortalHost } from '@rn-primitives/portal';
-import { Stack } from 'expo-router';
+import { ErrorBoundary as RouterErrorBoundary, Stack, type ErrorBoundaryProps } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -26,10 +27,13 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+installErrorReporting();
+
+/** Expo Router's error screen, after reporting what broke. */
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  React.useEffect(() => reportError(props.error, true), [props.error]);
+  return <RouterErrorBoundary {...props} />;
+}
 
 SplashScreen.preventAutoHideAsync();
 

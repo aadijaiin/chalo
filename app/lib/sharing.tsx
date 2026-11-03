@@ -1,4 +1,5 @@
 import { useAuth } from '@/lib/auth';
+import { confirm } from '@/lib/confirm';
 import { distanceM, useLocation } from '@/lib/location';
 import { readBattery } from '@/lib/battery';
 import { parties, type Party } from '@/lib/parties';
@@ -8,8 +9,27 @@ import { clearTrip, tripUpdate, type Destination, type Stop } from '@/lib/trip';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import { MapPinned } from 'lucide-react-native';
 import * as React from 'react';
 import { AppState, Linking, Platform } from 'react-native';
+
+/**
+ * Google Play requires this prominent disclosure, in the app, before asking for background
+ * location: what's collected, what for, and that it happens when the app is closed or not in use.
+ * Declining keeps sharing on while chalo is open.
+ */
+function discloseBackgroundLocation() {
+  return confirm({
+    icon: MapPinned,
+    title: 'Keep sharing when your phone is locked?',
+    message:
+      'chalo collects your location data to show you live on your party’s map, even when the app is closed or not in use. ' +
+      'It’s shared only with the party you’re in, and stops when you leave the party or it ends. ' +
+      'On the next screen, choose “Allow all the time”.',
+    confirmLabel: 'Continue',
+    cancelLabel: 'Only while open',
+  });
+}
 
 /**
  * Location sharing for the one live party you're in.
@@ -256,7 +276,7 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
       await writeTarget(next);
       setTarget(next);
       let perm = await Location.getBackgroundPermissionsAsync().catch(() => null);
-      if (ask && perm?.status === 'undetermined' && perm.canAskAgain) {
+      if (ask && perm?.status === 'undetermined' && perm.canAskAgain && (await discloseBackgroundLocation())) {
         // Android needs foreground access first; it's normally granted already.
         await Location.requestForegroundPermissionsAsync();
         perm = await Location.requestBackgroundPermissionsAsync().catch(() => null);
@@ -300,6 +320,7 @@ export function SharingProvider({ children }: { children: React.ReactNode }) {
 
   const requestBackground = React.useCallback(async () => {
     const perm = await Location.getBackgroundPermissionsAsync();
+    if (perm.status !== 'granted' && !(await discloseBackgroundLocation())) return;
     if (perm.status !== 'granted' && !perm.canAskAgain) {
       await Linking.openSettings();
       return;
