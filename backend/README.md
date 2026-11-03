@@ -55,3 +55,9 @@ This folder holds its config and SQL migrations.
   after 30 days), battery level on locations, and fell-behind measured against your starting gap.
 - `supabase/migrations/…_delete_account.sql`: `delete_my_account()` for in-app account deletion.
   Hosted parties pass to the longest-standing member first, so others keep their history.
+- `supabase/migrations/…_lookouts.sql`: lookouts, a `role` on `party_members` for one-way sharing.
+  A lookout (say, a parent) follows the crew on the map but never shares their own position, can't
+  ping or pin, and only gets the pushes that matter from afar (SOS, arrivals, fell-behind, the end).
+  The crew is told when someone starts watching, and the host can remove a lookout
+  (`remove_lookout()`). Watching doesn't count against the one-live-party rule. Live positions are
+  now visible only to people still in the party; trails open up to past members once it ends.
