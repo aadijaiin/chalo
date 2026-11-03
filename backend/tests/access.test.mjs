@@ -79,12 +79,27 @@ describe('party privacy', () => {
     await rpc('join_party', { party_code: party.code, as_lookout: true }, lookout);
     await share(host, party.id, 18.9, 73.1);
     await share(crew, party.id, 18.95, 73.05);
+    await rpc('send_ping', { pid: party.id, kind: 'chai' }, crew);
+    await rpc('add_pin', { pid: party.id, pin_kind: 'stop', pin_name: 'Chai', pin_lat: 18.9, pin_lng: 73.2 }, crew);
   });
 
   after(async () => {
     for (const user of [host, crew, lookout, outsider]) {
       if (user) await rpc('delete_my_account', {}, user).catch(() => {});
     }
+  });
+
+  test('a lookout sees nothing until the host approves them', async () => {
+    const pings = () => select(`party_pings?party_id=eq.${party.id}&select=id`, lookout);
+    const pins = () => select(`party_pins?party_id=eq.${party.id}&select=id`, lookout);
+    assert.equal((await visibleLocations(lookout, party.id)).size, 0);
+    assert.equal((await pings()).length, 0);
+    assert.equal((await pins()).length, 0);
+
+    await rejects(rpc('approve_lookout', { pid: party.id, uid: lookout.id }, crew), /Only the host/);
+    await rpc('approve_lookout', { pid: party.id, uid: lookout.id }, host);
+    assert.equal((await pings()).length, 1);
+    assert.equal((await pins()).length, 1);
   });
 
   test('crew and lookouts see the crew; outsiders see nothing', async () => {
@@ -108,8 +123,9 @@ describe('party privacy', () => {
     assert.ok(!(await visibleLocations(lookout, party.id)).has(crew.id));
     assert.ok((await visibleLocations(host, party.id)).has(crew.id));
 
-    await rejects(rpc('create_watch_link', { pid: party.id }, lookout), /not_in_party/);
-    const token = await rpc('create_watch_link', { pid: party.id }, crew);
+    await rejects(rpc('create_watch_link', { pid: party.id }, lookout), /Only the host/);
+    await rejects(rpc('create_watch_link', { pid: party.id }, crew), /Only the host/);
+    const token = await rpc('create_watch_link', { pid: party.id }, host);
     const watched = await rpc('watch_party', { token });
     assert.equal(watched.crew.length, 1, 'only the host; the hidden crew member is left out');
     assert.ok(!('userId' in watched.crew[0]), 'no account ids on a public link');
@@ -119,7 +135,7 @@ describe('party privacy', () => {
   });
 
   test('only the host can turn off a watch link, and then it shows nothing', async () => {
-    const token = await rpc('create_watch_link', { pid: party.id }, crew);
+    const token = await rpc('create_watch_link', { pid: party.id }, host);
     await rejects(rpc('revoke_watch_link', { pid: party.id }, crew), /Only the host/);
     await rpc('revoke_watch_link', { pid: party.id }, host);
     assert.equal(await rpc('watch_party', { token }), null);
@@ -151,5 +167,12 @@ describe('party privacy', () => {
     assert.equal(card.name, `Access test ${RUN}`);
     assert.ok(card.crew.every((m) => !('lat' in m) && !('lng' in m)), 'no positions on the card');
     assert.equal(await rpc('recap_card', { token: 'nope' }), null);
+  });
+
+  test('anyone can report an app error, signed in or not', async () => {
+    await rpc('report_error', { message: `access test ${RUN}`, platform: 'test' });
+    await rpc('report_error', { message: `access test ${RUN}`, platform: 'test' }, crew);
+    // Nobody can read the reports back through the API.
+    assert.equal((await select('app_errors?select=id', crew)).length, 0);
   });
 });

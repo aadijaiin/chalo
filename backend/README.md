@@ -66,6 +66,12 @@ This folder holds its config and SQL migrations.
   "almost there" push 5 km out; **watch links** (`create_watch_link()`, `watch_party()`) let
   family follow a live party in a browser at `/w/<token>`; **recap cards** (`share_recap()`,
   `recap_card()`) are stats-only summaries at `/r/<token>`. Both link readers are callable signed out.
+- `supabase/migrations/…_lookout_approval_alerts_errors.sql`: the host approves each lookout
+  (`approve_lookout()`); until then they see nothing and get no alerts, and the host is pushed the
+  request. Only the host makes watch links, which now carry each person's SOS / arrived /
+  fell-behind alert. Recap cards leave out anyone hidden from lookouts. `app_errors` collects crash
+  and error reports from the app through `report_error()` (no read access through the API; look
+  in *Table Editor*), kept for 30 days.
 
 ## Tests
 
