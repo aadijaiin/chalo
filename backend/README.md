@@ -61,3 +61,20 @@ This folder holds its config and SQL migrations.
   The crew is told when someone starts watching, and the host can remove a lookout
   (`remove_lookout()`). Watching doesn't count against the one-live-party rule. Live positions are
   now visible only to people still in the party; trails open up to past members once it ends.
+- `supabase/migrations/…_lookout_controls_and_links.sql`: a removed lookout can't rejoin; anyone
+  in the crew can hide themselves from lookouts (`set_hidden_from_lookouts()`); lookouts get an
+  "almost there" push 5 km out; **watch links** (`create_watch_link()`, `watch_party()`) let
+  family follow a live party in a browser at `/w/<token>`; **recap cards** (`share_recap()`,
+  `recap_card()`) are stats-only summaries at `/r/<token>`. Both link readers are callable signed out.
+
+## Tests
+
+`tests/access.test.mjs` checks the privacy rules (who can see whose position, what lookouts and
+links can see, removal, leaving, recap cards) against the linked project, through the same API
+the app uses. It creates throwaway accounts and deletes them afterwards. Run it after applying
+migrations:
+
+```bash
+node --test backend/tests/*.test.mjs   # reads the project URL and key from app/.env
+```
+
