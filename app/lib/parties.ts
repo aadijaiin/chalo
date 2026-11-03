@@ -35,6 +35,8 @@ export type PartyMember = {
   removed: boolean;
   /** Crew who chose not to be seen by lookouts. */
   hiddenFromLookouts: boolean;
+  /** False for a lookout still waiting for the host to let them watch. */
+  approved: boolean;
   joinedAt: string;
   leftAt: string | null;
 };
@@ -65,6 +67,7 @@ type MemberRow = {
   role?: MemberRole;
   removed?: boolean;
   hidden_from_lookouts?: boolean;
+  approved?: boolean;
   joined_at: string;
   left_at: string | null;
   profiles: {
@@ -76,7 +79,7 @@ type MemberRow = {
 };
 
 const MEMBER_COLUMNS =
-  'user_id, role, removed, hidden_from_lookouts, joined_at, left_at, profiles(username, full_name, avatar_style, avatar_seed)';
+  'user_id, role, removed, hidden_from_lookouts, approved, joined_at, left_at, profiles(username, full_name, avatar_style, avatar_seed)';
 
 function toParty(row: PartyRow): Party {
   return {
@@ -107,6 +110,7 @@ function toMember(row: MemberRow): PartyMember {
     role: row.role ?? 'crew',
     removed: row.removed ?? false,
     hiddenFromLookouts: row.hidden_from_lookouts ?? false,
+    approved: row.approved ?? true,
     joinedAt: row.joined_at,
     leftAt: row.left_at,
   };
@@ -294,7 +298,13 @@ export const parties = {
     return data as string;
   },
 
-  /** Host only. */
+  /** Host only: let a lookout who asked start watching. */
+  async approveLookout(partyId: string, userId: string) {
+    const { error } = await supabase.rpc('approve_lookout', { pid: partyId, uid: userId });
+    if (error) throw friendlyError(error);
+  },
+
+  /** Host only; also how the host declines a request. */
   async removeLookout(partyId: string, userId: string) {
     const { error } = await supabase.rpc('remove_lookout', { pid: partyId, uid: userId });
     if (error) throw friendlyError(error);
@@ -346,15 +356,15 @@ export const parties = {
   async watching(userId: string) {
     const { data, error } = await supabase
       .from('party_members')
-      .select('joined_at, parties!inner(*)')
+      .select('joined_at, approved, parties!inner(*)')
       .eq('user_id', userId)
       .eq('role', 'lookout')
       .is('left_at', null)
       .is('parties.ended_at', null)
       .order('joined_at', { ascending: false })
-      .returns<{ parties: PartyRow }[]>();
+      .returns<{ approved: boolean; parties: PartyRow }[]>();
     if (error) throw friendlyError(error);
-    return data.map((row) => toParty(row.parties));
+    return data.map((row) => ({ ...toParty(row.parties), approved: row.approved }));
   },
 
   async locations(partyId: string) {

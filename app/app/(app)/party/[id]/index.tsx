@@ -41,6 +41,7 @@ import {
   EyeOff,
   Flag,
   Globe,
+  Hourglass,
   Link2Off,
   LogOut,
   Map as MapIcon,
@@ -105,6 +106,8 @@ export default function PartyLobby() {
   const mine = members.find((m) => m.userId === profile?.id);
   const iAmIn = Boolean(mine && !mine.leftAt);
   const isLookout = mine?.role === 'lookout';
+  // Asked to watch, and the host hasn't said yes yet.
+  const pending = isLookout && iAmIn && !mine?.approved;
   const sharingHere = sharing.target?.id === party.id;
   const liveCount = Object.values(peers).filter((p) => p.online).length + (sharingHere ? 1 : 0);
 
@@ -133,7 +136,7 @@ export default function PartyLobby() {
         showsVerticalScrollIndicator={false}>
         <Animated.View entering={enter(0)}>
           {isLookout && iAmIn && !ended ? (
-            <LookoutHero party={party} />
+            <LookoutHero party={party} pending={pending} />
           ) : (
             <CodeCard party={party} ended={ended} />
           )}
@@ -276,16 +279,18 @@ export default function PartyLobby() {
           </>
         ) : (
           <>
-            <Button
-              size="lg"
-              onPress={() =>
-                router.push({ pathname: '/party/[id]/map', params: { id: party.id } })
-              }>
-              <Icon as={MapIcon} size={18} className="text-primary-foreground" />
-              <Text>Open live map</Text>
-            </Button>
+            {pending ? null : (
+              <Button
+                size="lg"
+                onPress={() =>
+                  router.push({ pathname: '/party/[id]/map', params: { id: party.id } })
+                }>
+                <Icon as={MapIcon} size={18} className="text-primary-foreground" />
+                <Text>Open live map</Text>
+              </Button>
+            )}
             {isLookout ? (
-              <StopWatchingButton party={party} />
+              <StopWatchingButton party={party} pending={pending} />
             ) : (
               <ExitButton party={party} isHost={isHost} />
             )}
@@ -409,7 +414,7 @@ function CodeCard({ party, ended }: { party: Party; ended: boolean }) {
 }
 
 /** Takes the place of the code card for lookouts: what they can see, and that nobody sees them. */
-function LookoutHero({ party }: { party: Party }) {
+function LookoutHero({ party, pending }: { party: Party; pending: boolean }) {
   return (
     <View className="overflow-hidden rounded-3xl border border-border bg-card">
       <View className="absolute -right-10 -top-10 h-44 w-44 rounded-full border-[18px] border-primary/10" />
@@ -422,16 +427,21 @@ function LookoutHero({ party }: { party: Party }) {
         </View>
         <View className="flex-row items-center gap-3">
           <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-            <Icon as={Eye} size={22} className="text-primary" />
+            <Icon as={pending ? Hourglass : Eye} size={22} className="text-primary" />
           </View>
           <View className="flex-1">
-            <Text className="text-xl font-extrabold">You're a lookout</Text>
-            <Text className="text-sm text-muted-foreground">Following {party.name}</Text>
+            <Text className="text-xl font-extrabold">
+              {pending ? 'Waiting for the host' : "You're a lookout"}
+            </Text>
+            <Text className="text-sm text-muted-foreground">
+              {pending ? `You asked to follow ${party.name}` : `Following ${party.name}`}
+            </Text>
           </View>
         </View>
         <Text className="text-sm leading-5 text-muted-foreground">
-          You see the crew live on the map and hear about SOS, arrivals and anyone falling behind.
-          Your own location isn't shared with them.
+          {pending
+            ? "The host decides who can watch. Once they let you in you'll see the crew live on the map. Your own location isn't shared."
+            : "You see the crew live on the map and hear about SOS, arrivals and anyone falling behind. Your own location isn't shared with them."}
         </Text>
       </View>
     </View>
@@ -503,16 +513,23 @@ function AddLookout({ party, first, isHost }: { party: Party; first: boolean; is
           <Icon as={Share2} size={14} />
           <Text>In the app</Text>
         </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          loading={busy === 'web'}
-          onPress={shareWeb}
-          className="flex-1 rounded-full">
-          <Icon as={Globe} size={14} />
-          <Text>Web link</Text>
-        </Button>
+        {isHost ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            loading={busy === 'web'}
+            onPress={shareWeb}
+            className="flex-1 rounded-full">
+            <Icon as={Globe} size={14} />
+            <Text>Web link</Text>
+          </Button>
+        ) : null}
       </View>
+      {!isHost ? (
+        <Text className="text-xs text-muted-foreground">
+          The host lets each lookout in, and can make a web link for family without the app.
+        </Text>
+      ) : null}
       {party.watchToken ? (
         <View className="flex-row items-center gap-2">
           <LiveDot size={7} />
@@ -588,20 +605,37 @@ function LookoutRow({
 }) {
   const name = member.fullName || member.username;
 
+  const pending = !member.approved;
+  const [busy, setBusy] = React.useState(false);
+
   async function remove() {
     const ok = await confirm({
       icon: EyeOff,
-      title: `Remove ${name.split(' ')[0]}?`,
-      message: 'They stop seeing the crew right away. They’d need the code to watch again.',
-      confirmLabel: 'Remove lookout',
+      title: pending ? `Decline ${name.split(' ')[0]}?` : `Remove ${name.split(' ')[0]}?`,
+      message: pending
+        ? 'They won’t see the crew, and they can’t ask again for this party.'
+        : 'They stop seeing the crew right away, and can’t come back to this party.',
+      confirmLabel: pending ? 'Decline' : 'Remove lookout',
       destructive: true,
     });
     if (!ok) return;
     try {
       await parties.removeLookout(party.id, member.userId);
-      notify.success('Lookout removed', name);
+      notify.success(pending ? 'Request declined' : 'Lookout removed', name);
     } catch (e) {
-      notify.error("Couldn't remove them", (e as Error).message);
+      notify.error("Couldn't do that", (e as Error).message);
+    }
+  }
+
+  async function approve() {
+    haptics.success();
+    setBusy(true);
+    try {
+      await parties.approveLookout(party.id, member.userId);
+    } catch (e) {
+      notify.error("Couldn't let them in", (e as Error).message);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -625,13 +659,18 @@ function LookoutRow({
           {isMe ? <Text className="text-muted-foreground font-normal"> (you)</Text> : null}
         </Text>
         <Text className="text-xs text-muted-foreground" numberOfLines={1}>
-          @{member.username} · watching, not sharing
+          @{member.username} · {pending ? 'wants to watch' : 'watching, not sharing'}
         </Text>
       </View>
+      {canRemove && pending ? (
+        <Button size="sm" loading={busy} onPress={approve} className="rounded-full px-4">
+          <Text>Let in</Text>
+        </Button>
+      ) : null}
       {canRemove ? (
         <PressableScale
           onPress={remove}
-          accessibilityLabel={`Remove ${name} as a lookout`}
+          accessibilityLabel={pending ? `Decline ${name}` : `Remove ${name} as a lookout`}
           className="h-8 w-8 items-center justify-center rounded-full bg-muted">
           <Icon as={X} size={14} className="text-muted-foreground" />
         </PressableScale>
@@ -958,7 +997,7 @@ function MemberRow({
   );
 }
 
-function StopWatchingButton({ party }: { party: Party }) {
+function StopWatchingButton({ party, pending }: { party: Party; pending: boolean }) {
   const actions = usePartyActions();
   const [busy, setBusy] = React.useState(false);
 
@@ -972,7 +1011,7 @@ function StopWatchingButton({ party }: { party: Party }) {
   return (
     <Button size="lg" variant="outline" loading={busy} onPress={stop}>
       <Icon as={EyeOff} size={18} className="text-destructive" />
-      <Text className="text-destructive">Stop watching</Text>
+      <Text className="text-destructive">{pending ? 'Cancel request' : 'Stop watching'}</Text>
     </Button>
   );
 }
