@@ -161,7 +161,7 @@ export default function PartyMap() {
             top: insets.top + 110 + (dest ? 44 : 0) + (isLookout ? 40 : 0),
             bottom: insets.bottom + 200,
             left: 56,
-            right: 100,
+            right: 120,
           },
           bearing: 0,
           pitch: 0,
