@@ -10,6 +10,7 @@
     "build:ios": "eas build --profile development --platform ios",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf .expo node_modules",
+    "build:apk": "eas build --profile preview --platform android",
     "build:play": "eas build --profile production --platform android",
     "submit:play": "eas submit --profile production --platform android --latest"
   },

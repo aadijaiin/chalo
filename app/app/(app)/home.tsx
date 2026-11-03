@@ -4,6 +4,7 @@ import { JoinCodeCard } from '@/components/dashboard/join-code-card';
 import { LiveLocationCard } from '@/components/dashboard/live-location-card';
 import { RecentParties } from '@/components/dashboard/recent-parties';
 import { StartPartyCard } from '@/components/dashboard/start-party-card';
+import { UpdateCard } from '@/components/dashboard/update-card';
 import { WatchingCards } from '@/components/dashboard/watching-card';
 import { KeyboardScrollView } from '@/components/keyboard-scroll-view';
 import { PressableScale } from '@/components/pressable-scale';
@@ -75,6 +76,7 @@ export default function Home() {
           <ThemeToggle />
         </Animated.View>
 
+        <UpdateCard />
         <ActivePartyCard />
         {profile ? <WatchingCards userId={profile.id} /> : null}
 
