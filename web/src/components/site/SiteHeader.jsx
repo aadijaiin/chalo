@@ -21,6 +21,12 @@ export function SiteHeader() {
 						Join a party
 					</Link>
 					<Link
+						href="/download"
+						className="hidden rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground sm:block"
+					>
+						Download
+					</Link>
+					<Link
 						href="/privacy"
 						className="hidden rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground sm:block"
 					>

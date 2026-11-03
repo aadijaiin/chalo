@@ -1,6 +1,7 @@
 import {
 	BatteryMedium,
 	Coffee,
+	Download,
 	Eye,
 	EyeOff,
 	Flag,
@@ -113,9 +114,13 @@ function StoreButtons() {
 	if (stores.length === 0) {
 		return (
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-				<span className="inline-flex h-14 items-center rounded-2xl bg-foreground px-6 font-bold text-background">
-					Coming soon to Android and iPhone
-				</span>
+				<Link
+					href="/download"
+					className="inline-flex h-14 items-center gap-2 rounded-2xl bg-foreground px-6 font-bold text-background transition-opacity hover:opacity-90"
+				>
+					<Download className="size-5" />
+					Download for Android
+				</Link>
 				<Link href="#join" className="px-2 font-bold text-primary hover:underline">
 					Have a party code?
 				</Link>
