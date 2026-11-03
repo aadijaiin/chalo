@@ -92,7 +92,7 @@ const LOOKOUT_POINTS = [
 	{
 		icon: EyeOff,
 		title: 'Nothing of theirs is shared',
-		body: 'A lookout never posts a location. The crew always sees who’s watching, and the host can remove a lookout.',
+		body: 'A lookout never posts a location. The crew sees who’s watching, anyone can hide from lookouts, and the host can remove one.',
 	},
 ];
 
@@ -241,7 +241,8 @@ export default function Home() {
 							</ul>
 							<p className="mt-8 text-sm text-muted-foreground">
 								In the party lobby, tap <strong className="text-foreground">Add a lookout</strong> and send
-								the link. On their end it&apos;s one tap.
+								the link. No app on their end? Send a <strong className="text-foreground">web link</strong>{' '}
+								and they can follow along in the browser until the trip ends.
 							</p>
 						</div>
 						<div className="relative flex justify-center lg:justify-end">

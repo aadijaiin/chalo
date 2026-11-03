@@ -56,7 +56,18 @@ export default function PrivacyPage() {
 				</li>
 				<li>
 					Everyone in a party can see who is watching as a lookout, and the host can remove a lookout
-					at any time.
+					at any time. Anyone in the crew can hide themselves from lookouts, and then lookouts don&apos;t
+					get their position, trail or alerts.
+				</li>
+				<li>
+					<strong>Watch links:</strong> someone in the crew can make a private web link so family can
+					follow the trip in a browser. Anyone with the link sees the first names, avatars and live
+					positions of the crew (except anyone hidden from lookouts) until the party ends or the host
+					turns the link off.
+				</li>
+				<li>
+					<strong>Recap cards:</strong> after a trip, a member can share a link to a summary with first
+					names, avatars, distance and time. It has no routes or places.
 				</li>
 				<li>Your name, username and avatar are visible to people in parties with you.</li>
 				<li>We don&apos;t sell your data, show ads, or share your location with anyone else.</li>
