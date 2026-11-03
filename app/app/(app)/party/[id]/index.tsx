@@ -50,7 +50,13 @@ import {
 } from 'lucide-react-native';
 import * as React from 'react';
 import { ScrollView, Share, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  LayoutAnimationConfig,
+  LinearTransition,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const enter = (i: number) => motion.rise(60 * i);
@@ -163,30 +169,34 @@ export default function PartyLobby() {
               </Animated.View>
             ) : null}
           </View>
-          <View className="overflow-hidden rounded-3xl border border-border bg-card">
-            {crew.map((m, i) => {
-              const isMe = m.userId === profile?.id;
-              return (
-                <MemberRow
-                  key={m.userId}
-                  member={m}
-                  isHost={m.userId === party.hostId}
-                  isMe={isMe}
-                  color={isMe ? THEME.light.primary : memberColor(i)}
-                  status={memberStatus(
-                    isMe,
-                    peers[m.userId],
-                    me,
-                    sharingHere,
-                    sharing.background,
-                    ended,
-                    party.destination ? (myTrip?.eta ?? null) : undefined
-                  )}
-                  divider={i > 0}
-                />
-              );
-            })}
-          </View>
+          {/* Rows already here on first render skip their entering animation: nested inside the
+              section's own, it could stall at opacity 0 for rows that mounted below the fold. */}
+          <LayoutAnimationConfig skipEntering>
+            <View className="overflow-hidden rounded-3xl border border-border bg-card">
+              {crew.map((m, i) => {
+                const isMe = m.userId === profile?.id;
+                return (
+                  <MemberRow
+                    key={m.userId}
+                    member={m}
+                    isHost={m.userId === party.hostId}
+                    isMe={isMe}
+                    color={isMe ? THEME.light.primary : memberColor(i)}
+                    status={memberStatus(
+                      isMe,
+                      peers[m.userId],
+                      me,
+                      sharingHere,
+                      sharing.background,
+                      ended,
+                      party.destination ? (myTrip?.eta ?? null) : undefined
+                    )}
+                    divider={i > 0}
+                  />
+                );
+              })}
+            </View>
+          </LayoutAnimationConfig>
           {crew.length === 1 && !isLookout && !ended ? (
             <Animated.View
               entering={FadeInDown.delay(400)}
@@ -208,20 +218,24 @@ export default function PartyLobby() {
               Lookouts · {lookouts.length}
             </Text>
             {lookouts.length > 0 ? (
-              <View className="overflow-hidden rounded-3xl border border-border bg-card">
-                {lookouts.map((m, i) => (
-                  <LookoutRow
-                    key={m.userId}
-                    party={party}
-                    member={m}
-                    isMe={m.userId === profile?.id}
-                    canRemove={isHost && !ended}
-                    divider={i > 0}
-                  />
-                ))}
-              </View>
+              <LayoutAnimationConfig skipEntering>
+                <View className="overflow-hidden rounded-3xl border border-border bg-card">
+                  {lookouts.map((m, i) => (
+                    <LookoutRow
+                      key={m.userId}
+                      party={party}
+                      member={m}
+                      isMe={m.userId === profile?.id}
+                      canRemove={isHost && !ended}
+                      divider={i > 0}
+                    />
+                  ))}
+                </View>
+              </LayoutAnimationConfig>
             ) : null}
-            {!ended && iAmIn && !isLookout ? <AddLookout party={party} first={lookouts.length === 0} /> : null}
+            {!ended && iAmIn && !isLookout ? (
+              <AddLookout party={party} first={lookouts.length === 0} />
+            ) : null}
           </Animated.View>
         ) : null}
       </ScrollView>
@@ -503,7 +517,15 @@ function LookoutRow({
 }
 
 /** Tells you whether your position is reaching the party, and fixes it in one tap when it isn't. */
-function SharingStatus({ party, iAmIn, wasLookout }: { party: Party; iAmIn: boolean; wasLookout: boolean }) {
+function SharingStatus({
+  party,
+  iAmIn,
+  wasLookout,
+}: {
+  party: Party;
+  iAmIn: boolean;
+  wasLookout: boolean;
+}) {
   const sharing = useSharing();
   const actions = usePartyActions();
   const [busy, setBusy] = React.useState(false);
