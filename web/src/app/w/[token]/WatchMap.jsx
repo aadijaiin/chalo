@@ -1,10 +1,10 @@
 'use client';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
-import {BatteryLow, Eye, Flag} from 'lucide-react';
+import {BatteryLow, Bell, BellRing, Eye, Flag, Siren} from 'lucide-react';
 import * as maplibregl from 'maplibre-gl';
 import {useTheme} from 'next-themes';
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef, useState, useSyncExternalStore} from 'react';
 import {Logo} from '@/components/site/Logo';
 import {avatarDataUri, MEMBER_COLORS} from '@/lib/avatar';
 import {formatDuration, formatKm, timeAgo} from '@/lib/format';
@@ -15,6 +15,25 @@ const STYLE = {
 	dark: 'https://tiles.openfreemap.org/styles/dark',
 };
 const POLL_MS = 10_000;
+
+// What each alert says, here and in the browser notification.
+const ALERTS = {
+	sos: {label: 'SOS', says: (m) => `${m.name} needs help`, tone: 'bg-destructive text-white'},
+	behind: {label: 'Fell behind', says: (m) => `${m.name} fell ${m.alert.message ?? 'far'} behind`, tone: 'bg-amber-500 text-white'},
+	arrived: {label: 'Arrived', says: (m) => `${m.name} arrived`, tone: 'bg-sage text-white'},
+};
+
+/** Alerts that are new since the last poll, so each one notifies once. */
+function freshAlerts(prev, next) {
+	const seen = new Set((prev?.crew ?? []).map((m) => m.alert && `${m.avatarSeed}:${m.alert.kind}:${m.alert.at}`));
+	return (next?.crew ?? []).filter((m) => m.alert && ALERTS[m.alert.kind] && !seen.has(`${m.avatarSeed}:${m.alert.kind}:${m.alert.at}`));
+}
+
+const noSubscribe = () => () => {};
+
+function canNotify() {
+	return typeof window !== 'undefined' && 'Notification' in window;
+}
 // Same as the app: a phone that hasn't posted for this long is shown faded at its last spot.
 const STALE_MS = 3 * 60_000;
 
@@ -55,7 +74,18 @@ export default function WatchMap({token, initial}) {
 		async function tick() {
 			if (document.visibilityState !== 'visible') return;
 			const next = await publicRpc('watch_party', {token}).catch(() => undefined);
-			if (!stop && next !== undefined) setTrip(next);
+			if (stop || next === undefined) return;
+			setTrip((prev) => {
+				if (canNotify() && Notification.permission === 'granted') {
+					for (const m of freshAlerts(prev, next)) {
+						new Notification(ALERTS[m.alert.kind].says(m), {
+							body: m.alert.kind === 'sos' ? 'Open the page to see where they are.' : next.name,
+							tag: `${m.avatarSeed}:${m.alert.kind}`,
+						});
+					}
+				}
+				return next;
+			});
 			setNow(Date.now());
 		}
 		const id = setInterval(tick, POLL_MS);
@@ -157,6 +187,18 @@ export default function WatchMap({token, initial}) {
 	}
 
 	const ended = trip === null;
+	const sos = crew.filter((m) => m.alert?.kind === 'sos');
+	// The browser's answer, read without a hydration mismatch ('default' on the server).
+	const browserPermission = useSyncExternalStore(
+		noSubscribe,
+		() => (canNotify() ? Notification.permission : 'unsupported'),
+		() => 'default',
+	);
+	const [answered, setAnswered] = useState(null);
+	const permission = answered ?? browserPermission;
+	async function enableAlerts() {
+		if (canNotify()) setAnswered(await Notification.requestPermission());
+	}
 
 	return (
 		<main className="flex h-dvh flex-col bg-background lg:flex-row-reverse">
@@ -205,6 +247,21 @@ export default function WatchMap({token, initial}) {
 					) : null}
 				</div>
 
+				{sos.map((m) => (
+					<button
+						key={m.avatarSeed}
+						type="button"
+						onClick={() => m.lat != null && focus(m)}
+						className="flex items-center gap-3 rounded-2xl bg-destructive p-3 text-left font-bold text-white shadow-lg"
+					>
+						<Siren className="size-5 shrink-0" />
+						<span className="flex-1">
+							{m.name} needs help
+							<span className="block text-xs font-normal text-white/85">Tap to see where they are</span>
+						</span>
+					</button>
+				))}
+
 				<ul className="flex flex-col gap-2">
 					{crew.map((m, i) => {
 						const stale = !m.updatedAt || now - new Date(m.updatedAt).getTime() > STALE_MS;
@@ -234,9 +291,14 @@ export default function WatchMap({token, initial}) {
 										style={{borderColor: MEMBER_COLORS[i % MEMBER_COLORS.length]}}
 									/>
 									<span className="min-w-0 flex-1">
-										<span className="block truncate font-bold">
+										<span className="flex items-center gap-1.5 truncate font-bold">
 											{m.name}
-											{m.host ? <span className="font-normal text-muted-foreground"> · host</span> : null}
+											{m.host ? <span className="font-normal text-muted-foreground">· host</span> : null}
+											{m.alert && ALERTS[m.alert.kind] ? (
+												<span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${ALERTS[m.alert.kind].tone}`}>
+													{ALERTS[m.alert.kind].label}
+												</span>
+											) : null}
 										</span>
 										<span className="block truncate text-xs text-muted-foreground">
 											{detail}
@@ -255,9 +317,26 @@ export default function WatchMap({token, initial}) {
 					})}
 				</ul>
 
+				{permission !== 'unsupported' && permission !== 'granted' && !ended ? (
+					<button
+						type="button"
+						onClick={enableAlerts}
+						disabled={permission === 'denied'}
+						className="flex items-center justify-center gap-2 rounded-2xl border border-border px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted disabled:opacity-60"
+					>
+						<Bell className="size-4" />
+						{permission === 'denied' ? 'Notifications are blocked in this browser' : 'Notify me about SOS and arrivals'}
+					</button>
+				) : permission === 'granted' && !ended ? (
+					<p className="flex items-center gap-2 text-xs font-semibold text-sage">
+						<BellRing className="size-4" />
+						You&apos;ll get a notification for SOS and arrivals while this page is open.
+					</p>
+				) : null}
+
 				<p className="mt-auto text-xs leading-relaxed text-muted-foreground">
 					You&apos;re following in your browser. Nothing about you is shared with the crew, and this page stops
-					working when the trip ends. Get alerts for SOS and arrivals by watching in the chalo app.
+					working when the trip ends. For alerts even when this page is closed, watch in the chalo app.
 				</p>
 			</aside>
 		</main>

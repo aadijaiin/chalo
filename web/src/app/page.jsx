@@ -92,7 +92,7 @@ const LOOKOUT_POINTS = [
 	{
 		icon: EyeOff,
 		title: 'Nothing of theirs is shared',
-		body: 'A lookout never posts a location. The crew sees who’s watching, anyone can hide from lookouts, and the host can remove one.',
+		body: 'A lookout never posts a location. The host lets each one in, the crew sees who’s watching, and anyone can hide from lookouts.',
 	},
 ];
 
