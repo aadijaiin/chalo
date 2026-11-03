@@ -15,10 +15,14 @@ export default function JoinFromLink() {
   React.useEffect(() => {
     actions
       .join(code, { asLookout: as === 'lookout' })
-      .then((party) =>
-        // Back to the party if its screens are already open underneath, rather than a second copy.
-        party ? router.dismissTo({ pathname: '/party/[id]', params: { id: party.id } }) : router.replace('/home')
-      )
+      .then((party) => {
+        if (!party) return router.replace('/home');
+        const lobby = { pathname: '/party/[id]', params: { id: party.id } } as const;
+        // Back to the party if its screens are already open underneath, rather than a second
+        // copy. Opened cold, this is the only screen, so there's nothing to go back to.
+        if (router.canDismiss()) router.dismissTo(lobby);
+        else router.replace(lobby);
+      })
       .catch((e: Error) => {
         notify.error("Couldn't join", e.message);
         router.replace('/home');
