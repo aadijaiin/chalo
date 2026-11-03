@@ -251,7 +251,7 @@ export default function Home() {
 									<Eye className="size-4 text-primary" />
 								</span>
 								<div className="text-left">
-									<p className="text-sm font-bold leading-tight">Mom is watching Goa trip</p>
+									<p className="text-sm font-bold leading-tight">Mom is watching Lonavala ride</p>
 									<p className="text-xs text-muted-foreground">Her location isn&apos;t shared.</p>
 								</div>
 							</div>
