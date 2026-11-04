@@ -1,38 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# chalo — website
 
-## Getting Started
-
-First, run the development server:
+The site at [chalo.aadijain.dev](https://chalo.aadijain.dev): Next.js (App Router) on Vercel,
+Tailwind CSS 4, Motion for animation, MapLibre GL for the watch map.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # Supabase URL + publishable key, contact email
+bun install
+bun run dev                  # http://localhost:3000
+bun run lint && bun run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Pages
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+| Route | What |
+| --- | --- |
+| `/` | The landing page |
+| `/download` | The Android app (newest GitHub release's `chalo.apk`) and install help |
+| `/download/latest.json` | The newest version; installed apps read it to offer updates |
+| `/j/<code>` | Invite links: open the app straight into the party (`?as=lookout` to watch) |
+| `/w/<token>` | Watch links: the crew live on a map in the browser, read-only, until the trip ends |
+| `/r/<token>` | Recap cards: a stats-only summary of a finished trip, with a preview image for chat apps |
+| `/privacy`, `/terms`, `/delete-account` | Legal pages (Google Play links to the first and last) |
+| `/reset-password` | Where the app's "forgot password" email lands |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Watch links and recap cards read the database signed out, through the `watch_party()` and
+`recap_card()` functions, which only return what's meant to be public (see
+[the backend README](../backend/README.md)).
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-# chalo
+Every branch deploys a Vercel preview; `main` is production. Visits are counted with cookieless
+Vercel Web Analytics.

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "url": "https://chalo.aadijain.dev/download",
-  "notes": "Lookouts, watch links in the browser, trip recap cards, and fixes.",
+  "notes": "The host can remove anyone from a party, and lookouts see stops and statuses as soon as they're let in.",
   "size": "52 MB"
 }

@@ -4,7 +4,7 @@ Expo (React Native) app. This is where all of chalo's features live.
 
 | Concern | Choice | Cost |
 | --- | --- | --- |
-| Framework | Expo SDK 57 + expo-router | free |
+| Framework | Expo SDK 58 + expo-router | free |
 | UI | [React Native Reusables](https://reactnativereusables.com) (shadcn for RN) + NativeWind | free, OSS |
 | Animation | Reanimated 4 + expo-haptics | free, OSS |
 | Auth / DB | [Supabase](https://supabase.com) free tier | free, no card |
