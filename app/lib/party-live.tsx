@@ -58,6 +58,12 @@ export function PartyLiveProvider({ partyId, children }: { partyId: string; chil
   const [now, setNow] = React.useState(Date.now());
   const userId = profile?.id;
 
+  // What the server lets you see changes with your place in the party (a lookout being let in,
+  // switching between crew and lookout, leaving). Reload when it does: a pending lookout's first
+  // load came back empty, and existing stops or statuses never arrive as changes.
+  const mine = state.status === 'ready' ? state.members.find((m) => m.userId === profile?.id) : undefined;
+  const access = mine && !mine.leftAt ? `${mine.role}:${mine.approved}` : 'out';
+
   React.useEffect(() => {
     let cancelled = false;
     // Runs on every (re)subscribe, so anything missed while disconnected is caught up.
@@ -120,7 +126,7 @@ export function PartyLiveProvider({ partyId, children }: { partyId: string; chil
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [partyId]);
+  }, [partyId, access]);
 
   React.useEffect(() => {
     setOpenParty(partyId);
@@ -164,7 +170,7 @@ export function PartyLiveProvider({ partyId, children }: { partyId: string; chil
   }, [locations, activeIds.join(','), userId, now]);
 
   const pings = React.useMemo(() => activeStatuses(pingList, now), [pingList, now]);
-  const loadedPins = usePins(partyId);
+  const loadedPins = usePins(partyId, access);
   const pins = React.useMemo(() => loadedPins ?? [], [loadedPins]);
   usePinAnnouncements(loadedPins, state, userId);
 
@@ -237,6 +243,7 @@ function announceCleared(ping: Ping, state: PartyState, userId: string | undefin
 function useRosterAnnouncements(state: PartyState, userId: string | undefined, sharing: ReturnType<typeof useSharing>) {
   const known = React.useRef<Set<string> | null>(null);
   const wasLive = React.useRef<boolean | null>(null);
+  const wasIn = React.useRef(false);
 
   React.useEffect(() => {
     if (state.status !== 'ready') return;
@@ -280,6 +287,16 @@ function useRosterAnnouncements(state: PartyState, userId: string | undefined, s
       }
     }
     known.current = ids;
+
+    // The host removed you: stop sharing now rather than on the phone's next post.
+    const me = members.find((m) => m.userId === userId);
+    const iAmIn = Boolean(me && !me.leftAt);
+    if (wasIn.current && !iAmIn && me?.removed) {
+      haptics.error();
+      notify.error('The host removed you', `You're no longer in ${party.name}. Location sharing has stopped.`);
+      if (sharing.target?.id === party.id) sharing.stop();
+    }
+    wasIn.current = iAmIn;
 
     const live = !party.endedAt;
     if (wasLive.current && !live && (party.hostId !== userId || party.endedReason !== 'host')) {

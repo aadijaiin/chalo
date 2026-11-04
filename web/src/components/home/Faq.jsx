@@ -13,7 +13,7 @@ const FAQ = [
 	},
 	{
 		q: 'Who can see where I am?',
-		a: 'Only the people in your party right now: the crew, and lookouts the host let in (unless you hide yourself from lookouts). If the host shares a web link, it shows the crew the same way. Leave the party and nobody sees you any more.',
+		a: 'Only the people in your party right now: the crew, and lookouts the host let in (unless you hide yourself from lookouts). If the host shares a web link, it shows the crew the same way. The host can remove anyone, and once you leave, nobody sees you any more.',
 	},
 	{
 		q: 'Does it work with my phone locked?',

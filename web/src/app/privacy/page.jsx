@@ -113,6 +113,11 @@ export default function PrivacyPage() {
 					<strong>OpenFreeMap</strong> serves the map images, and like any website sees your device&apos;s
 					IP address when it loads them.
 				</li>
+				<li>
+					<strong>Vercel</strong> hosts this website and counts visits with Web Analytics. It uses no
+					cookies and doesn&apos;t identify you: it records the page, the site you came from, and your
+					country, browser and device type. The app itself has no analytics.
+				</li>
 			</ul>
 
 			<h2>Your choices</h2>

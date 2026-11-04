@@ -298,6 +298,12 @@ export const parties = {
     return data as string;
   },
 
+  /** Host only: take anyone but yourself off the party. They can't rejoin it. */
+  async removeMember(partyId: string, userId: string) {
+    const { error } = await supabase.rpc('remove_member', { pid: partyId, uid: userId });
+    if (error) throw friendlyError(error);
+  },
+
   /** Host only: let a lookout who asked start watching. */
   async approveLookout(partyId: string, userId: string) {
     const { error } = await supabase.rpc('approve_lookout', { pid: partyId, uid: userId });

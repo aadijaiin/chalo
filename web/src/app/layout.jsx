@@ -1,3 +1,4 @@
+import {Analytics} from '@vercel/analytics/next';
 import {Bricolage_Grotesque, Plus_Jakarta_Sans} from 'next/font/google';
 import {PageLoader} from '@/components/site/PageLoader';
 import {MotionProvider} from '@/components/ui/MotionProvider';
@@ -54,6 +55,8 @@ export default function RootLayout({children}) {
 						{children}
 					</MotionProvider>
 				</ThemeProvider>
+				{/* Cookieless page-view counts (Vercel Web Analytics); see the privacy policy. */}
+				<Analytics />
 			</body>
 		</html>
 	);

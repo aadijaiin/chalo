@@ -335,7 +335,8 @@ export default function PartyMap() {
             me ? { center: me, zoom: FOCUS_ZOOM } : { center: [78.9629, 22.5937], zoom: 3.5 }
           }
         />
-        {myTrip?.ahead && myTrip.ahead.length > 1 ? (
+        {/* Your route, when you're the one travelling; a lookout isn't on this trip. */}
+        {!isLookout && myTrip?.ahead && myTrip.ahead.length > 1 ? (
           <GeoJSONSource
             id="my-route"
             data={{

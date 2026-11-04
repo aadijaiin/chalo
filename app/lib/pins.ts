@@ -103,7 +103,8 @@ export const pins = {
 };
 
 /** A party's pins, kept live over Realtime. Null until the first load. */
-export function usePins(partyId: string) {
+/** `access` is your place in the party; a change reloads the list, since what you may see changed. */
+export function usePins(partyId: string, access?: string) {
   const [list, setList] = React.useState<Pin[] | null>(null);
 
   React.useEffect(() => {
@@ -139,7 +140,7 @@ export function usePins(partyId: string) {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [partyId]);
+  }, [partyId, access]);
 
   return list;
 }

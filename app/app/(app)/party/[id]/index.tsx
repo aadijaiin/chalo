@@ -50,6 +50,7 @@ import {
   Share2,
   ShieldAlert,
   UserPlus,
+  UserX,
   X,
 } from 'lucide-react-native';
 import * as React from 'react';
@@ -189,24 +190,28 @@ export default function PartyLobby() {
                 return (
                   <MemberRow
                     key={m.userId}
+                    party={party}
                     member={m}
                     isHost={m.userId === party.hostId}
                     isMe={isMe}
+                    canRemove={isHost && !isMe && !ended}
                     color={isMe ? THEME.light.primary : memberColor(i)}
                     status={
-                      isLookout && m.hiddenFromLookouts && !ended
-                        ? { live: false, label: 'Hidden from lookouts' }
-                        : !iAmIn && !ended && m.userId !== profile?.id
-                          ? { live: false, label: 'Only visible to people in the party' }
-                          : memberStatus(
-                              isMe,
-                              peers[m.userId],
-                              me,
-                              sharingHere,
-                              sharing.background,
-                              ended,
-                              party.destination ? (myTrip?.eta ?? null) : undefined
-                            )
+                      pending && !ended
+                        ? { live: false, label: 'Visible once the host lets you in' }
+                        : isLookout && m.hiddenFromLookouts && !ended
+                          ? { live: false, label: 'Hidden from lookouts' }
+                          : !iAmIn && !ended && m.userId !== profile?.id
+                            ? { live: false, label: 'Only visible to people in the party' }
+                            : memberStatus(
+                                isMe,
+                                peers[m.userId],
+                                me,
+                                sharingHere,
+                                sharing.background,
+                                ended,
+                                party.destination ? (myTrip?.eta ?? null) : undefined
+                              )
                     }
                     divider={i > 0}
                   />
@@ -710,7 +715,7 @@ function SharingStatus({
         tone="muted"
         icon={EyeOff}
         title="The host removed you"
-        body="You can't see this party any more."
+        body="You can't see this party any more, and your location isn't shared with it."
       />
     );
   }
@@ -950,20 +955,44 @@ function memberStatus(
 }
 
 function MemberRow({
+  party,
   member,
   isHost,
   isMe,
+  canRemove,
   color,
   status,
   divider,
 }: {
+  party: Party;
   member: PartyMember;
   isHost: boolean;
   isMe: boolean;
+  canRemove: boolean;
   color: string;
   status: MemberStatus;
   divider: boolean;
 }) {
+  const name = member.fullName || member.username;
+
+  async function remove() {
+    const ok = await confirm({
+      icon: UserX,
+      title: `Remove ${name.split(' ')[0]}?`,
+      message:
+        'They stop sharing their location and stop seeing the crew right away, and they can’t rejoin this party with the code.',
+      confirmLabel: 'Remove',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await parties.removeMember(party.id, member.userId);
+      notify.success('Removed from the party', name);
+    } catch (e) {
+      notify.error("Couldn't remove them", (e as Error).message);
+    }
+  }
+
   return (
     <Animated.View
       entering={FadeInDown.duration(350)}
@@ -992,6 +1021,14 @@ function MemberRow({
           <Icon as={Crown} size={12} className="text-primary" />
           <Text className="text-xs text-primary font-semibold">Host</Text>
         </View>
+      ) : null}
+      {canRemove ? (
+        <PressableScale
+          onPress={remove}
+          accessibilityLabel={`Remove ${name} from the party`}
+          className="h-8 w-8 items-center justify-center rounded-full bg-muted">
+          <Icon as={X} size={14} className="text-muted-foreground" />
+        </PressableScale>
       ) : null}
     </Animated.View>
   );
