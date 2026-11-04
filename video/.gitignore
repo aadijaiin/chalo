@@ -1,0 +1,6 @@
+node_modules/
+out/
+# Re-downloadable; see README.
+public/music.mp3
+public/music/
+public/footage/raw/

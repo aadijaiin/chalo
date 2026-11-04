@@ -1,0 +1,28 @@
+{
+  "name": "chalo-video",
+  "private": true,
+  "description": "chalo's product video, made with Remotion. See README.md.",
+  "scripts": {
+    "studio": "remotion studio",
+    "prep": "python3 scripts/prep.py",
+    "render": "sh scripts/finish.sh en",
+    "render:hi": "sh scripts/finish.sh hi"
+  },
+  "dependencies": {
+    "@dicebear/collection": "^9.4.2",
+    "@dicebear/core": "^9.4.3",
+    "@remotion/cli": "^4.0.540",
+    "@remotion/google-fonts": "^4.0.540",
+    "@remotion/media-utils": "^4.0.540",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.540"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  }
+}

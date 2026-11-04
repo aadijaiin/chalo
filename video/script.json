@@ -1,0 +1,29 @@
+{
+  "note": "The video's lines. Both versions share the ids, so swapping the voice folder (vo/en or vo/hi) swaps the whole voiceover; scene timing follows the audio.",
+  "lines": [
+    {"id": "L01", "who": "kabir",    "en": "Where are you?!",                                  "hi": "कहाँ हो?!",                                  "caption_hi": "Kahan ho?!"},
+    {"id": "L02", "who": "zoya",     "en": "Bro, send your location!",                         "hi": "भाई, location भेज!",                          "caption_hi": "Bhai, location bhej!"},
+    {"id": "L03", "who": "riya",     "en": "Every trip... the same question.",                 "hi": "हर trip पे... वही सवाल.",                     "caption_hi": "Har trip pe... wahi sawaal."},
+    {"id": "L04", "who": "narrator", "en": "Chalo. The whole crew, on one live map.",          "hi": "चलो. पूरी crew, एक live map पे.",             "caption_hi": "Chalo. Poori crew, ek live map pe."},
+    {"id": "L05", "who": "riya",     "en": "Start a party, send the code...",                  "hi": "Party बनाओ, code भेजो...",                    "caption_hi": "Party banao, code bhejo..."},
+    {"id": "L06", "who": "kabir",    "en": "...and everyone's in!",                            "hi": "...सब अंदर!",                                "caption_hi": "...sab andar!"},
+    {"id": "L07", "who": "narrator", "en": "Everyone's route. Everyone's ETA.",                "hi": "हर किसी का route. हर किसी का ETA.",           "caption_hi": "Har kisi ka route. Har kisi ka ETA."},
+    {"id": "L08", "who": "zoya",     "en": "Even with my phone locked.",                       "hi": "Phone lock हो, तब भी.",                      "caption_hi": "Phone lock ho, tab bhi."},
+    {"id": "L09", "who": "kabir",    "en": "Chai stop?",                                       "hi": "Chai stop?",                                 "caption_hi": "Chai stop?"},
+    {"id": "L10", "who": "riya",     "en": "One tap.",                                         "hi": "एक tap.",                                    "caption_hi": "Ek tap."},
+    {"id": "L11", "who": "narrator", "en": "Emergency? Hold for SOS.",                         "hi": "Emergency? Hold करो, SOS.",                  "caption_hi": "Emergency? Hold karo, SOS."},
+    {"id": "L12", "who": "aadi",     "en": "Zoya's falling behind!",                           "hi": "Zoya पीछे रह गई!",                            "caption_hi": "Zoya peeche reh gayi!"},
+    {"id": "L13", "who": "zoya",     "en": "...and now everyone knows.",                       "hi": "...सबको पता चल जाता है.",                     "caption_hi": "...sabko pata chal jaata hai."},
+    {"id": "L14", "who": "mom",      "en": "And me? I'm watching from home.",                  "hi": "और मैं? घर से देख रही हूँ.",                    "caption_hi": "Aur main? Ghar se dekh rahi hoon."},
+    {"id": "L15", "who": "narrator", "en": "As a lookout, without sharing her own location.",  "hi": "Lookout बनके, बिना अपनी location share किए.", "caption_hi": "Lookout banke, bina apni location share kiye."},
+    {"id": "L16", "who": "riya",     "en": "Trip's over, sharing stops.",                      "hi": "Trip ख़त्म, sharing बंद.",                     "caption_hi": "Trip khatam, sharing band."},
+    {"id": "L17", "who": "zoya",     "en": "Just memories...",                                 "hi": "बस यादें...",                                 "caption_hi": "Bas yaadein..."},
+    {"id": "L18", "who": "kabir",    "en": "...and the recap!",                                "hi": "...और recap!",                               "caption_hi": "...aur recap!"},
+    {"id": "L19", "who": "crew",     "en": "Chalo!",                                           "hi": "चलो!",                                       "caption_hi": "Chalo!"},
+    {"id": "L20", "who": "narrator", "en": "Find your way, together.",                         "hi": "साथ चलो.",                                    "caption_hi": "Saath chalo."}
+  ],
+  "voices": {
+    "en": {"riya": "Jessica", "kabir": "Liam", "zoya": "Laura", "aadi": "Will", "mom": "Bella", "narrator": "George"},
+    "hi": {"riya": "Pooja", "kabir": "Sanchit K", "zoya": "Alisha", "aadi": "Ruhaan", "mom": "Nishi", "narrator": "Viraj"}
+  }
+}
