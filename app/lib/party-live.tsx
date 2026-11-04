@@ -243,6 +243,7 @@ function announceCleared(ping: Ping, state: PartyState, userId: string | undefin
 function useRosterAnnouncements(state: PartyState, userId: string | undefined, sharing: ReturnType<typeof useSharing>) {
   const known = React.useRef<Set<string> | null>(null);
   const wasLive = React.useRef<boolean | null>(null);
+  const wasIn = React.useRef(false);
 
   React.useEffect(() => {
     if (state.status !== 'ready') return;
@@ -286,6 +287,16 @@ function useRosterAnnouncements(state: PartyState, userId: string | undefined, s
       }
     }
     known.current = ids;
+
+    // The host removed you: stop sharing now rather than on the phone's next post.
+    const me = members.find((m) => m.userId === userId);
+    const iAmIn = Boolean(me && !me.leftAt);
+    if (wasIn.current && !iAmIn && me?.removed) {
+      haptics.error();
+      notify.error('The host removed you', `You're no longer in ${party.name}. Location sharing has stopped.`);
+      if (sharing.target?.id === party.id) sharing.stop();
+    }
+    wasIn.current = iAmIn;
 
     const live = !party.endedAt;
     if (wasLive.current && !live && (party.hostId !== userId || party.endedReason !== 'host')) {
