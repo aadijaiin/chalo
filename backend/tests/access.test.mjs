@@ -128,8 +128,11 @@ describe('party privacy', () => {
     await rejects(rpc('create_watch_link', { pid: party.id }, crew), /Only the host/);
     const token = await rpc('create_watch_link', { pid: party.id }, host);
     const watched = await rpc('watch_party', { token });
-    assert.equal(watched.crew.length, 1, 'only the host; the hidden crew member is left out');
-    assert.ok(!('userId' in watched.crew[0]), 'no account ids on a public link');
+    // Avatar seeds are the account names given at sign up ('host', 'crew', ...).
+    const seeds = watched.crew.map((m) => m.avatarSeed);
+    assert.ok(seeds.includes('host'), 'the host is on the watch link');
+    assert.ok(!seeds.includes('crew'), 'the hidden crew member is left out');
+    assert.ok(watched.crew.every((m) => !('userId' in m)), 'no account ids on a public link');
 
     await rpc('set_hidden_from_lookouts', { pid: party.id, hidden: false }, crew);
     assert.ok((await visibleLocations(lookout, party.id)).has(crew.id));
