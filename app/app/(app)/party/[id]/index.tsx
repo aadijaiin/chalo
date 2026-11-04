@@ -194,19 +194,21 @@ export default function PartyLobby() {
                     isMe={isMe}
                     color={isMe ? THEME.light.primary : memberColor(i)}
                     status={
-                      isLookout && m.hiddenFromLookouts && !ended
-                        ? { live: false, label: 'Hidden from lookouts' }
-                        : !iAmIn && !ended && m.userId !== profile?.id
-                          ? { live: false, label: 'Only visible to people in the party' }
-                          : memberStatus(
-                              isMe,
-                              peers[m.userId],
-                              me,
-                              sharingHere,
-                              sharing.background,
-                              ended,
-                              party.destination ? (myTrip?.eta ?? null) : undefined
-                            )
+                      pending && !ended
+                        ? { live: false, label: 'Visible once the host lets you in' }
+                        : isLookout && m.hiddenFromLookouts && !ended
+                          ? { live: false, label: 'Hidden from lookouts' }
+                          : !iAmIn && !ended && m.userId !== profile?.id
+                            ? { live: false, label: 'Only visible to people in the party' }
+                            : memberStatus(
+                                isMe,
+                                peers[m.userId],
+                                me,
+                                sharingHere,
+                                sharing.background,
+                                ended,
+                                party.destination ? (myTrip?.eta ?? null) : undefined
+                              )
                     }
                     divider={i > 0}
                   />
