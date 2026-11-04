@@ -39,7 +39,7 @@ export default async function DownloadPage() {
 					<div className="relative mx-auto grid max-w-6xl items-center gap-16 px-4 sm:px-6 lg:grid-cols-[1.1fr_0.9fr]">
 						<div className="flex flex-col gap-7">
 							<Reveal>
-								<span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground shadow-soft backdrop-blur">
+								<span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground shadow-soft">
 									<Smartphone className="size-3.5 text-sage" />
 									Android · version {latest.version}
 								</span>
@@ -77,7 +77,7 @@ export default async function DownloadPage() {
 									</div>
 								</dl>
 							</Reveal>
-							<Reveal delay={0.24} className="hidden items-center gap-4 rounded-3xl border border-border bg-card/70 p-4 shadow-soft backdrop-blur lg:flex lg:w-fit">
+							<Reveal delay={0.24} className="hidden items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-soft lg:flex lg:w-fit">
 								<div className="rounded-2xl bg-white p-2.5 [&_svg]:size-24" dangerouslySetInnerHTML={{__html: qr}} />
 								<p className="max-w-[14rem] text-sm text-muted-foreground">
 									<strong className="block text-foreground">On a computer?</strong>

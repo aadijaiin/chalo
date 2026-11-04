@@ -5,6 +5,7 @@ import {Download, Menu, X} from 'lucide-react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {useEffect, useState} from 'react';
+import {lockScroll} from '@/components/ui/SmoothScroll';
 import {cn} from '@/lib/utils';
 import {Logo} from './Logo';
 import {ThemeToggle} from './ThemeToggle';
@@ -46,12 +47,10 @@ export function SiteHeader() {
 
 	useMotionValueEvent(scrollY, 'change', (y) => setScrolled(y > 24));
 
-	// Close the menu on navigation and lock the page behind it while it's open.
+	// Lock the page behind the menu while it's open.
 	useEffect(() => {
-		document.documentElement.style.overflow = open ? 'hidden' : '';
-		return () => {
-			document.documentElement.style.overflow = '';
-		};
+		lockScroll(open);
+		return () => lockScroll(false);
 	}, [open]);
 
 	return (

@@ -41,7 +41,7 @@ export function HowItWorks() {
 	const rail = useSpring(scrollYProgress, {stiffness: 160, damping: 30});
 
 	return (
-		<section id="how" className="relative scroll-mt-24 py-24 sm:py-32">
+		<section id="how" className="relative py-24 sm:py-32">
 			<div className="mx-auto max-w-6xl px-4 sm:px-6">
 				<SectionHeading eyebrow="How it works" title="Up and running in a minute" lead="Four steps from “where is everyone?” to a map of the whole trip." />
 
@@ -56,8 +56,9 @@ export function HowItWorks() {
 					</ol>
 
 					<div className="relative hidden lg:block">
-						<div className="sticky top-28">
-							<div className="relative aspect-[1220/2712] w-full overflow-hidden rounded-[2.6rem] border-[7px] border-foreground/90 bg-card shadow-lift dark:border-white/15">
+						{/* Sized by the window's height so the whole phone (and its dots) always fits on screen. */}
+						<div className="sticky top-24 flex flex-col items-center">
+							<div className="clip-layer relative aspect-[1220/2712] h-[min(calc(100svh-11rem),44rem)] max-w-full overflow-hidden rounded-[2.6rem] border-[7px] border-foreground/90 bg-card shadow-lift dark:border-white/15">
 								<AnimatePresence initial={false}>
 									<motion.div
 										key={active}
@@ -108,7 +109,7 @@ function Step({step, index, active, onActive}) {
 					{step.body}
 				</motion.p>
 				{/* On small screens the screenshot sits with its step. */}
-				<div className="relative mt-4 aspect-[1220/2712] w-56 overflow-hidden rounded-[2rem] border-[6px] border-foreground/90 shadow-lift lg:hidden dark:border-white/15">
+				<div className="clip-layer relative mt-4 aspect-[1220/2712] w-56 overflow-hidden rounded-[2rem] border-[6px] border-foreground/90 shadow-lift lg:hidden dark:border-white/15">
 					<Image src={step.shot} alt={step.alt} fill sizes="224px" className="object-cover" />
 				</div>
 			</div>

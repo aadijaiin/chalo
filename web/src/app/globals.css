@@ -154,9 +154,19 @@
 		@apply border-border;
 	}
 	html {
-		scroll-behavior: smooth;
+		/* Smooth scrolling comes from Lenis (components/ui/SmoothScroll); native smoothing would fight it. */
 		scroll-padding-top: 6rem;
 		-webkit-tap-highlight-color: transparent;
+	}
+	html.lenis,
+	html.lenis body {
+		height: auto;
+	}
+	.lenis:not(.lenis-autoToggle).lenis-stopped {
+		overflow: clip;
+	}
+	.lenis [data-lenis-prevent] {
+		overscroll-behavior: contain;
 	}
 	body {
 		@apply bg-background font-sans text-foreground antialiased;
@@ -180,7 +190,10 @@
 }
 
 @layer utilities {
-	/* Film grain, so big flat colour fields don't look digital. */
+	/*
+	 * Film grain, so big flat colour fields don't look digital. The noise is pre-tinted rather
+	 * than blended: mix-blend-mode under animating layers makes Safari paint stray boxes.
+	 */
 	.grain {
 		position: relative;
 		isolation: isolate;
@@ -191,13 +204,22 @@
 		inset: 0;
 		z-index: -1;
 		pointer-events: none;
-		opacity: 0.35;
-		mix-blend-mode: multiply;
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.4 0 0 0 0 0.3 0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+		opacity: 0.22;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.25 0 0 0 0 0.18 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 	}
 	.dark .grain::after {
-		mix-blend-mode: soft-light;
-		opacity: 0.5;
+		opacity: 0.3;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.95 0 0 0 0 0.9 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	}
+	/*
+	 * Rounded, clipped boxes with moving content inside (tilting, sliding) get their own layer and
+	 * a mask. Without it Safari sometimes paints the unclipped square box behind them mid-animation.
+	 */
+	.clip-layer {
+		isolation: isolate;
+		transform: translateZ(0);
+		-webkit-mask-image: -webkit-radial-gradient(white, black);
+		mask-image: radial-gradient(white, black);
 	}
 	/* Hide the scrollbar on horizontal rails while keeping them scrollable. */
 	.no-scrollbar {
@@ -216,9 +238,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	html {
-		scroll-behavior: auto;
-	}
 	*,
 	*::before,
 	*::after {
@@ -229,7 +248,7 @@
 
 /* Long-form pages (privacy, terms). */
 .prose-page h2 {
-	@apply mt-12 mb-3 scroll-mt-28 font-display text-2xl font-bold tracking-tight text-foreground;
+	@apply mt-12 mb-3 font-display text-2xl font-bold tracking-tight text-foreground;
 }
 .prose-page p,
 .prose-page li {

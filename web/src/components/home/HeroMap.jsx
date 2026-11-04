@@ -125,13 +125,14 @@ export function HeroMap({crew}) {
 	return (
 		<div ref={wrap} onPointerMove={onPointerMove} onPointerLeave={onPointerLeave} className="relative [perspective:1400px]">
 			<motion.div
-				style={{rotateX, rotateY, transformStyle: 'preserve-3d'}}
+				// A flat tilt: no preserve-3d or translateZ children, which Safari renders with a stray box.
+				style={{rotateX, rotateY}}
 				initial={{opacity: 0, y: 40, scale: 0.96}}
 				animate={{opacity: 1, y: 0, scale: 1}}
 				transition={{duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.15}}
 				className="relative"
 			>
-				<div className="relative overflow-hidden rounded-[2.25rem] border border-border bg-[var(--map-land)] shadow-lift">
+				<div className="clip-layer relative overflow-hidden rounded-[2.25rem] border border-border bg-[var(--map-land)] shadow-lift">
 					<svg viewBox="0 0 600 500" className="block h-auto w-full" role="img" aria-label="Illustration: a crew of four on a live map, headed to their destination">
 						<defs>
 							{crew.map((p) => (
@@ -238,7 +239,7 @@ export function HeroMap({crew}) {
 								animate={{opacity: 1, y: 0, scale: 1}}
 								exit={{opacity: 0, y: -6, scale: 0.9}}
 								transition={{type: 'spring', stiffness: 420, damping: 26}}
-								className="absolute left-[8%] top-[10%] flex items-center gap-2.5 rounded-2xl border border-border bg-card/95 py-2 pl-2 pr-3.5 shadow-lift backdrop-blur"
+								className="absolute left-[8%] top-[10%] flex items-center gap-2.5 rounded-2xl border border-border bg-card py-2 pl-2 pr-3.5 shadow-lift"
 							>
 								<span className="flex size-8 items-center justify-center rounded-xl bg-amber/15 text-amber">
 									<Coffee className="size-4" />
@@ -254,7 +255,6 @@ export function HeroMap({crew}) {
 
 				{/* Floating crew card, like the app's bottom rail. */}
 				<motion.div
-					style={{transform: 'translateZ(40px)'}}
 					initial={{opacity: 0, y: 24}}
 					animate={{opacity: 1, y: 0}}
 					transition={{duration: 0.8, delay: 1.1, ease: [0.22, 1, 0.36, 1]}}
@@ -265,7 +265,7 @@ export function HeroMap({crew}) {
 						return (
 							<div
 								key={p.id}
-								className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-border bg-card/95 p-2 shadow-lift backdrop-blur sm:p-2.5"
+								className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-lift sm:p-2.5"
 							>
 								{/* eslint-disable-next-line @next/next/no-img-element -- generated data URI */}
 								<img src={p.avatar} alt="" className="size-8 shrink-0 rounded-full border-2 sm:size-9" style={{borderColor: p.color}} />
@@ -280,11 +280,10 @@ export function HeroMap({crew}) {
 
 				{/* Destination chip. */}
 				<motion.div
-					style={{transform: 'translateZ(60px)'}}
 					initial={{opacity: 0, x: 20}}
 					animate={{opacity: 1, x: 0}}
 					transition={{duration: 0.8, delay: 0.9, ease: [0.22, 1, 0.36, 1]}}
-					className="absolute -right-3 top-[18%] hidden items-center gap-2 rounded-full border border-border bg-card/95 py-1.5 pl-1.5 pr-3.5 shadow-lift backdrop-blur sm:flex"
+					className="absolute -right-3 top-[18%] hidden items-center gap-2 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-3.5 shadow-lift sm:flex"
 				>
 					<span className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
 						<Navigation className="size-3.5" />

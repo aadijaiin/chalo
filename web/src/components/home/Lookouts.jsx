@@ -29,7 +29,7 @@ const POINTS = [
 
 export function Lookouts({crew, lookouts}) {
 	return (
-		<section id="lookouts" className="grain relative scroll-mt-24 overflow-hidden bg-background-2 py-24 sm:py-32">
+		<section id="lookouts" className="grain relative overflow-hidden bg-background-2 py-24 sm:py-32">
 			<div aria-hidden className="pointer-events-none absolute left-1/2 top-1/3 size-[40rem] -translate-x-1/2 rounded-full bg-primary/10 blur-[130px]" />
 			<div className="relative mx-auto grid max-w-6xl items-center gap-16 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:gap-20">
 				<div className="flex flex-col gap-10">

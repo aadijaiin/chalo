@@ -167,7 +167,7 @@ export function PingCard({crew}) {
 				</div>
 
 				{/* A lock screen with the notifications landing. */}
-				<div className="relative mx-auto flex h-full min-h-[19rem] w-full max-w-sm flex-col overflow-hidden rounded-[2rem] border border-border bg-gradient-to-b from-[var(--map-water)] via-[var(--map-park)] to-[var(--map-land)] p-4">
+				<div className="clip-layer relative mx-auto flex h-full min-h-[19rem] w-full max-w-sm flex-col overflow-hidden rounded-[2rem] border border-border bg-gradient-to-b from-[var(--map-water)] via-[var(--map-park)] to-[var(--map-land)] p-4">
 					<div className="mb-3 text-center">
 						<div className="font-display text-4xl font-bold tabular-nums tracking-tight text-foreground/80">9:41</div>
 						<div className="text-[11px] font-semibold text-foreground/60">Saturday · on the road</div>
@@ -194,8 +194,8 @@ export function PingCard({crew}) {
 									exit={{opacity: 0, scale: 0.94, transition: {duration: 0.15}}}
 									transition={{type: 'spring', stiffness: 420, damping: 30}}
 									className={cn(
-										'flex items-center gap-3 rounded-2xl p-3 shadow-soft backdrop-blur-md',
-										t.tone === 'sos' ? 'bg-destructive text-white' : 'bg-card/90',
+										'flex items-center gap-3 rounded-2xl p-3 shadow-soft',
+										t.tone === 'sos' ? 'bg-destructive text-white' : 'bg-card',
 									)}
 								>
 									{t.avatar ? (
@@ -379,7 +379,7 @@ export function PinsCard() {
 					type="button"
 					onClick={drop}
 					aria-label="Drop a pin on the map"
-					className="relative block h-36 w-full cursor-crosshair overflow-hidden rounded-2xl border border-border bg-[var(--map-land)]"
+					className="clip-layer relative block h-36 w-full cursor-crosshair overflow-hidden rounded-2xl border border-border bg-[var(--map-land)]"
 				>
 					<svg viewBox="0 0 100 60" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
 						<path d="M -5 50 C 20 45, 30 20, 55 28 S 85 10, 105 14" fill="none" stroke="var(--map-highway)" strokeWidth="4" />
@@ -493,7 +493,7 @@ export function OfflineCard() {
 					</motion.span>
 				</button>
 			</div>
-			<div className="relative z-10 h-36 overflow-hidden rounded-2xl border border-border">
+			<div className="clip-layer relative z-10 h-36 overflow-hidden rounded-2xl border border-border">
 				<svg viewBox="0 0 400 140" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" aria-hidden>
 					<rect width="400" height="140" fill="var(--map-land)" />
 					<path d="M 0 120 Q 80 20 160 70 T 320 50 T 420 30 L 420 140 L 0 140 Z" fill="var(--map-park)" opacity="0.7" />

@@ -55,7 +55,7 @@ export function LookoutDemo({crew, mom, nani}) {
 
 			<div className="relative w-full max-w-[22rem] rounded-[2.75rem] border border-border bg-foreground/90 p-2.5 shadow-lift dark:bg-white/10">
 				<div className="absolute left-1/2 top-4 z-20 h-5 w-24 -translate-x-1/2 rounded-full bg-black/80" />
-				<div className="relative h-[34rem] overflow-hidden rounded-[2.2rem] bg-background">
+				<div className="clip-layer relative h-[34rem] overflow-hidden rounded-[2.2rem] bg-background">
 					<AnimatePresence mode="wait" initial={false}>
 						{view === 'crew' ? (
 							<motion.div

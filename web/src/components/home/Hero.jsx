@@ -17,7 +17,7 @@ export function Hero({crew}) {
 			<div className="relative mx-auto grid max-w-6xl items-center gap-16 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
 				<div className="flex flex-col gap-8">
 					<Reveal>
-						<span className="inline-flex items-center gap-2.5 rounded-full border border-border bg-card/80 py-1.5 pl-1.5 pr-4 text-sm font-semibold shadow-soft backdrop-blur">
+						<span className="inline-flex items-center gap-2.5 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-4 text-sm font-semibold shadow-soft">
 							<span className="relative flex size-6 items-center justify-center rounded-full bg-sage/15">
 								<span className="absolute size-2 animate-ping-ring rounded-full bg-sage" />
 								<span className="size-2 rounded-full bg-sage" />

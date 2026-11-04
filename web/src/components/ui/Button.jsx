@@ -9,7 +9,7 @@ const VARIANTS = {
 	primary:
 		'bg-primary text-primary-foreground shadow-[0_10px_30px_-10px_var(--primary)] hover:bg-primary-strong',
 	ink: 'bg-foreground text-background hover:bg-foreground/90',
-	outline: 'border border-border bg-card/60 text-foreground backdrop-blur hover:border-foreground/25 hover:bg-card',
+	outline: 'border border-border bg-card text-foreground hover:border-foreground/25 hover:bg-muted',
 	ghost: 'text-foreground hover:bg-muted',
 };
 

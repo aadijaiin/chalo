@@ -1,5 +1,6 @@
 import {Bricolage_Grotesque, Plus_Jakarta_Sans} from 'next/font/google';
 import {MotionProvider} from '@/components/ui/MotionProvider';
+import {SmoothScroll} from '@/components/ui/SmoothScroll';
 import {ThemeProvider} from '@/components/ui/themeProvider';
 import {SITE} from '@/lib/site';
 import './globals.css';
@@ -42,7 +43,10 @@ export default function RootLayout({children}) {
 		<html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${bricolage.variable}`}>
 			<body className="min-h-screen">
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-					<MotionProvider>{children}</MotionProvider>
+					<MotionProvider>
+						<SmoothScroll />
+						{children}
+					</MotionProvider>
 				</ThemeProvider>
 			</body>
 		</html>

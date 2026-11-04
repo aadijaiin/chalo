@@ -45,7 +45,7 @@ export function Faq() {
 	const [open, setOpen] = useState(0);
 	const base = useId();
 	return (
-		<section id="faq" className="relative scroll-mt-24 py-24 sm:py-32">
+		<section id="faq" className="relative py-24 sm:py-32">
 			<div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr]">
 				<SectionHeading eyebrow="FAQ" title="Questions people ask" lead="The short answers. The privacy policy has the long ones." />
 				<ul className="flex flex-col gap-3">

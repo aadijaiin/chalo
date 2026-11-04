@@ -6,7 +6,7 @@ export function SectionHeading({eyebrow, title, lead, align = 'left', className}
 	return (
 		<Reveal className={cn('flex max-w-2xl flex-col gap-4', align === 'center' && 'mx-auto items-center text-center', className)}>
 			{eyebrow ? (
-				<span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur">
+				<span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
 					<span className="size-1.5 rounded-full bg-primary" />
 					{eyebrow}
 				</span>

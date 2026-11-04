@@ -43,7 +43,7 @@ export async function GetStarted() {
 					</div>
 				</Reveal>
 
-				<Reveal delay={0.1} id="join" className="scroll-mt-28 rounded-[2.5rem] border border-border bg-card p-8 shadow-soft sm:p-10">
+				<Reveal delay={0.1} id="join" className="rounded-[2.5rem] border border-border bg-card p-8 shadow-soft sm:p-10">
 					<div className="flex flex-col gap-6">
 						<div className="flex flex-col gap-2">
 							<h2 className="text-3xl font-extrabold tracking-tight">Got a party code?</h2>

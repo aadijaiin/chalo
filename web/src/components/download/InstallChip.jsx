@@ -22,7 +22,7 @@ export function InstallChip() {
 			initial={{opacity: 0, x: 24}}
 			animate={{opacity: 1, x: 0}}
 			transition={{delay: 0.6, type: 'spring', stiffness: 200, damping: 24}}
-			className="absolute -left-10 bottom-16 flex w-56 items-center gap-3 rounded-2xl border border-border bg-card/95 p-3 shadow-lift backdrop-blur sm:-left-16"
+			className="absolute -left-10 bottom-16 flex w-56 items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-lift sm:-left-16"
 		>
 			<span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12">
 				<LogoMark size={26} />
