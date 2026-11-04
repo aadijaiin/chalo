@@ -3,7 +3,8 @@
 
 export type Word = {text: string; start: number; end: number};
 export type Line = {id: string; who: string; file: string; duration: number; text: string; words: Word[]};
-export type Placed = Line & {from: number; frames: number};
+/** `until`: frames from this line's start until the next one starts, so captions never overlap. */
+export type Placed = Line & {from: number; frames: number; until?: number};
 export type SceneName = 'hook' | 'reveal' | 'party' | 'map' | 'pings' | 'behind' | 'mom' | 'recap' | 'end';
 export type Scene = {name: SceneName; from: number; frames: number; lines: Placed[]};
 
@@ -37,6 +38,10 @@ export function buildTimeline(lines: Line[], fps: number) {
 			t += f(line.duration);
 		});
 		t += f(s.tail);
+		placed.forEach((p, i) => {
+			const next = placed[i + 1];
+			p.until = (next ? next.from : t) - p.from;
+		});
 		scenes.push({name: s.name, from: start, frames: t - start, lines: placed});
 	}
 	return {scenes, total: t};

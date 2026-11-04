@@ -35,7 +35,9 @@ def speech_bounds(mp3: Path):
         spoken = [i for i, c in enumerate(chars) if re.match(r'\w', c)]
         if spoken:
             return max(0, starts[spoken[0]] - PAD), ends[spoken[-1]] + PAD, a
-    out = run('ffmpeg', '-hide_banner', '-nostats', '-i', str(mp3), '-af', 'silencedetect=n=-40dB:d=0.12', '-f', 'null', '-').stderr
+    # Downloads from the website have a faint tail, so measure against the clip's own peak.
+    peak = float(re.search(r'max_volume: (-?[\d.]+)', run('ffmpeg', '-hide_banner', '-nostats', '-i', str(mp3), '-af', 'volumedetect', '-f', 'null', '-').stderr).group(1))
+    out = run('ffmpeg', '-hide_banner', '-nostats', '-i', str(mp3), '-af', f'silencedetect=n={peak - 32:.1f}dB:d=0.1', '-f', 'null', '-').stderr
     total = duration(mp3)
     starts = [float(x) for x in re.findall(r'silence_start: ([\d.]+)', out)]
     ends = [float(x) for x in re.findall(r'silence_end: ([\d.]+)', out)]
@@ -66,7 +68,11 @@ def words(alignment, offset):
 
 def level(src: Path, dst: Path, start: float, end: float):
     run('ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-i', str(src), '-ss', f'{start:.3f}', '-to', f'{end:.3f}',
-        '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11', '-ar', '48000', '-ac', '1', str(dst))
+        # Level, then trim leftover room tone at both ends (keeping a short breath).
+        '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11,'
+        'silenceremove=start_periods=1:start_threshold=-38dB:start_silence=0.05,'
+        'areverse,silenceremove=start_periods=1:start_threshold=-38dB:start_silence=0.08,areverse',
+        '-ar', '48000', '-ac', '1', str(dst))
 
 
 def main(lang):

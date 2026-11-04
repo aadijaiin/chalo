@@ -14,7 +14,8 @@ export const Caption: React.FC<{line: Placed; dark?: boolean; offsetY?: number}>
 	const frame = useCurrentFrame() - line.from;
 	const {fps} = useVideoConfig();
 	const L = useLayout();
-	const holdFrames = line.frames + Math.round(0.35 * fps);
+	// Stay a beat after the line, but be gone before the next line's caption arrives.
+	const holdFrames = Math.min(line.frames + Math.round(0.35 * fps), (line.until ?? Infinity) - 8);
 	if (frame < -4 || frame > holdFrames + 8) return null;
 
 	const enter = spring({frame: frame + 4, fps, config: {damping: 18, stiffness: 180}});

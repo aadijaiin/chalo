@@ -1,0 +1,162 @@
+[
+ {
+  "id": "L01",
+  "who": "kabir",
+  "file": "vo/hi/prepped/L01.wav",
+  "duration": 0.546,
+  "text": "Kahan ho?!",
+  "words": []
+ },
+ {
+  "id": "L02",
+  "who": "zoya",
+  "file": "vo/hi/prepped/L02.wav",
+  "duration": 1.023,
+  "text": "Bhai, location bhej!",
+  "words": []
+ },
+ {
+  "id": "L03",
+  "who": "riya",
+  "file": "vo/hi/prepped/L03.wav",
+  "duration": 2.614,
+  "text": "Har trip pe... wahi sawaal.",
+  "words": []
+ },
+ {
+  "id": "L04",
+  "who": "narrator",
+  "file": "vo/hi/prepped/L04.wav",
+  "duration": 2.69,
+  "text": "Chalo. Poori crew, ek live map pe.",
+  "words": []
+ },
+ {
+  "id": "L05",
+  "who": "riya",
+  "file": "vo/hi/prepped/L05.wav",
+  "duration": 1.915,
+  "text": "Party banao, code bhejo...",
+  "words": []
+ },
+ {
+  "id": "L06",
+  "who": "kabir",
+  "file": "vo/hi/prepped/L06.wav",
+  "duration": 0.451,
+  "text": "...sab andar!",
+  "words": []
+ },
+ {
+  "id": "L07",
+  "who": "narrator",
+  "file": "vo/hi/prepped/L07.wav",
+  "duration": 3.24,
+  "text": "Har kisi ka route. Har kisi ka ETA.",
+  "words": []
+ },
+ {
+  "id": "L08",
+  "who": "zoya",
+  "file": "vo/hi/prepped/L08.wav",
+  "duration": 1.859,
+  "text": "Phone lock ho, tab bhi.",
+  "words": []
+ },
+ {
+  "id": "L09",
+  "who": "kabir",
+  "file": "vo/hi/prepped/L09.wav",
+  "duration": 0.647,
+  "text": "Chai stop?",
+  "words": []
+ },
+ {
+  "id": "L10",
+  "who": "riya",
+  "file": "vo/hi/prepped/L10.wav",
+  "duration": 0.958,
+  "text": "Ek tap.",
+  "words": []
+ },
+ {
+  "id": "L11",
+  "who": "narrator",
+  "file": "vo/hi/prepped/L11.wav",
+  "duration": 3.267,
+  "text": "Emergency? Hold karo, SOS.",
+  "words": []
+ },
+ {
+  "id": "L12",
+  "who": "aadi",
+  "file": "vo/hi/prepped/L12.wav",
+  "duration": 1.548,
+  "text": "Zoya peeche reh gayi!",
+  "words": []
+ },
+ {
+  "id": "L13",
+  "who": "zoya",
+  "file": "vo/hi/prepped/L13.wav",
+  "duration": 1.661,
+  "text": "...sabko pata chal jaata hai.",
+  "words": []
+ },
+ {
+  "id": "L14",
+  "who": "mom",
+  "file": "vo/hi/prepped/L14.wav",
+  "duration": 2.242,
+  "text": "Aur main? Ghar se dekh rahi hoon.",
+  "words": []
+ },
+ {
+  "id": "L15",
+  "who": "narrator",
+  "file": "vo/hi/prepped/L15.wav",
+  "duration": 3.054,
+  "text": "Lookout banke, bina apni location share kiye.",
+  "words": []
+ },
+ {
+  "id": "L16",
+  "who": "riya",
+  "file": "vo/hi/prepped/L16.wav",
+  "duration": 2.078,
+  "text": "Trip khatam, sharing band.",
+  "words": []
+ },
+ {
+  "id": "L17",
+  "who": "zoya",
+  "file": "vo/hi/prepped/L17.wav",
+  "duration": 1.503,
+  "text": "Bas yaadein...",
+  "words": []
+ },
+ {
+  "id": "L18",
+  "who": "kabir",
+  "file": "vo/hi/prepped/L18.wav",
+  "duration": 0.726,
+  "text": "...aur recap!",
+  "words": []
+ },
+ {
+  "id": "L19",
+  "who": "crew",
+  "file": "vo/hi/prepped/L19.wav",
+  "duration": 0.623,
+  "text": "Chalo!",
+  "words": []
+ },
+ {
+  "id": "L20",
+  "who": "narrator",
+  "file": "vo/hi/prepped/L20.wav",
+  "duration": 0.786,
+  "text": "Saath chalo.",
+  "words": []
+ }
+]
