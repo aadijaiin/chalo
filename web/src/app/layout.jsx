@@ -1,3 +1,4 @@
+import {Analytics} from '@vercel/analytics/next';
 import {Plus_Jakarta_Sans} from 'next/font/google';
 import {ThemeProvider} from '@/components/ui/themeProvider';
 import {SITE} from '@/lib/site';
@@ -36,6 +37,8 @@ export default function RootLayout({children}) {
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
 					{children}
 				</ThemeProvider>
+				{/* Cookieless page-view counts (Vercel Web Analytics); see the privacy policy. */}
+				<Analytics />
 			</body>
 		</html>
 	);
