@@ -3,48 +3,150 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* The app's palette (app/lib/theme.ts): warm sand, terracotta, sage. */
+/*
+ * The app's palette (app/lib/theme.ts): warm sand, terracotta, sage, plus the crew colours and
+ * the map's own colours for the illustrations, so every drawing follows light and dark mode.
+ */
 :root {
 	--background: hsl(40 33% 97%);
+	--background-2: hsl(38 30% 93%);
 	--foreground: hsl(25 12% 14%);
 	--card: hsl(0 0% 100%);
 	--muted: hsl(36 22% 93%);
-	--muted-foreground: hsl(25 6% 46%);
+	--muted-foreground: hsl(25 6% 44%);
 	--border: hsl(30 16% 87%);
 	--primary: hsl(10 70% 62%);
+	--primary-strong: hsl(10 62% 52%);
 	--primary-foreground: hsl(0 0% 100%);
-	--sage: hsl(152 16% 48%);
+	--sage: hsl(152 16% 46%);
 	--destructive: hsl(0 72% 55%);
+	--amber: hsl(38 78% 50%);
+
+	--crew-1: hsl(200 62% 48%);
+	--crew-2: hsl(262 48% 60%);
+	--crew-3: hsl(38 78% 50%);
+	--crew-4: hsl(152 40% 42%);
+
+	--map-land: hsl(40 30% 94%);
+	--map-park: hsl(110 28% 86%);
+	--map-water: hsl(205 55% 84%);
+	--map-road: hsl(0 0% 100%);
+	--map-road-edge: hsl(34 22% 82%);
+	--map-highway: hsl(42 90% 76%);
+	--map-contour: hsl(30 20% 70% / 0.35);
+
 	--radius: 1.25rem;
+	--shadow-soft: 0 1px 2px hsl(25 30% 20% / 0.05), 0 8px 24px -8px hsl(25 30% 20% / 0.12);
+	--shadow-lift: 0 2px 4px hsl(25 30% 20% / 0.06), 0 24px 48px -16px hsl(25 40% 25% / 0.22);
 }
 
 .dark {
 	--background: hsl(120 6% 7%);
+	--background-2: hsl(120 5% 9%);
 	--foreground: hsl(40 20% 96%);
-	--card: hsl(120 5% 10%);
+	--card: hsl(120 5% 10.5%);
 	--muted: hsl(120 4% 14%);
-	--muted-foreground: hsl(40 5% 62%);
+	--muted-foreground: hsl(40 6% 64%);
 	--border: hsl(120 4% 18%);
 	--primary: hsl(11 76% 65%);
+	--primary-strong: hsl(11 70% 58%);
 	--primary-foreground: hsl(0 0% 100%);
 	--sage: hsl(152 18% 58%);
 	--destructive: hsl(0 68% 58%);
+	--amber: hsl(38 80% 58%);
+
+	--map-land: hsl(120 5% 12%);
+	--map-park: hsl(140 14% 16%);
+	--map-water: hsl(205 26% 20%);
+	--map-road: hsl(120 3% 24%);
+	--map-road-edge: hsl(120 4% 16%);
+	--map-highway: hsl(38 40% 34%);
+	--map-contour: hsl(40 10% 60% / 0.12);
+
+	--shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.3), 0 8px 24px -8px hsl(0 0% 0% / 0.5);
+	--shadow-lift: 0 2px 4px hsl(0 0% 0% / 0.3), 0 24px 48px -16px hsl(0 0% 0% / 0.65);
 }
 
 @theme inline {
+	--font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+	--font-display: var(--font-bricolage), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
 	--color-background: var(--background);
+	--color-background-2: var(--background-2);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
 	--color-muted: var(--muted);
 	--color-muted-foreground: var(--muted-foreground);
 	--color-border: var(--border);
 	--color-primary: var(--primary);
+	--color-primary-strong: var(--primary-strong);
 	--color-primary-foreground: var(--primary-foreground);
 	--color-sage: var(--sage);
 	--color-destructive: var(--destructive);
+	--color-amber: var(--amber);
+	--color-crew-1: var(--crew-1);
+	--color-crew-2: var(--crew-2);
+	--color-crew-3: var(--crew-3);
+	--color-crew-4: var(--crew-4);
+
 	--radius-xl: calc(var(--radius) - 0.5rem);
 	--radius-2xl: calc(var(--radius) - 0.25rem);
 	--radius-3xl: var(--radius);
+	--radius-4xl: calc(var(--radius) + 0.75rem);
+
+	--shadow-soft: var(--shadow-soft);
+	--shadow-lift: var(--shadow-lift);
+
+	--animate-marquee: marquee 40s linear infinite;
+	--animate-float: float 6s ease-in-out infinite;
+	--animate-ping-ring: ping-ring 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+	--animate-dash: dash 1.2s linear infinite;
+	--animate-shake: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+
+	@keyframes marquee {
+		to {
+			transform: translateX(-50%);
+		}
+	}
+	@keyframes float {
+		50% {
+			transform: translateY(-8px);
+		}
+	}
+	@keyframes ping-ring {
+		0% {
+			transform: scale(1);
+			opacity: 0.55;
+		}
+		100% {
+			transform: scale(2.6);
+			opacity: 0;
+		}
+	}
+	@keyframes dash {
+		to {
+			stroke-dashoffset: -24;
+		}
+	}
+	@keyframes shake {
+		10%,
+		90% {
+			transform: translateX(-2px);
+		}
+		20%,
+		80% {
+			transform: translateX(4px);
+		}
+		30%,
+		50%,
+		70% {
+			transform: translateX(-7px);
+		}
+		40%,
+		60% {
+			transform: translateX(7px);
+		}
+	}
 }
 
 @layer base {
@@ -53,29 +155,99 @@
 	}
 	html {
 		scroll-behavior: smooth;
+		scroll-padding-top: 6rem;
+		-webkit-tap-highlight-color: transparent;
 	}
 	body {
-		@apply bg-background text-foreground antialiased;
+		@apply bg-background font-sans text-foreground antialiased;
+		font-feature-settings: 'ss01', 'cv11';
 	}
 	::selection {
 		@apply bg-primary text-primary-foreground;
+	}
+	:focus-visible {
+		@apply outline-2 outline-offset-2 outline-primary;
+	}
+	h1,
+	h2,
+	h3 {
+		@apply font-display;
+		text-wrap: balance;
+	}
+	p {
+		text-wrap: pretty;
+	}
+}
+
+@layer utilities {
+	/* Film grain, so big flat colour fields don't look digital. */
+	.grain {
+		position: relative;
+		isolation: isolate;
+	}
+	.grain::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+		opacity: 0.35;
+		mix-blend-mode: multiply;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.4 0 0 0 0 0.3 0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	}
+	.dark .grain::after {
+		mix-blend-mode: soft-light;
+		opacity: 0.5;
+	}
+	/* Hide the scrollbar on horizontal rails while keeping them scrollable. */
+	.no-scrollbar {
+		scrollbar-width: none;
+	}
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+	/* Fades the edges of a marquee into the background. */
+	.mask-fade-x {
+		mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+	}
+	.text-shadow-soft {
+		text-shadow: 0 1px 12px hsl(25 40% 20% / 0.08);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
 	}
 }
 
 /* Long-form pages (privacy, terms). */
 .prose-page h2 {
-	@apply mt-10 mb-3 text-xl font-bold text-foreground;
+	@apply mt-12 mb-3 scroll-mt-28 font-display text-2xl font-bold tracking-tight text-foreground;
 }
 .prose-page p,
 .prose-page li {
-	@apply text-[15px] leading-7 text-muted-foreground;
+	@apply text-[15.5px] leading-7 text-muted-foreground;
 }
 .prose-page ul {
-	@apply my-3 list-disc space-y-1.5 pl-5;
+	@apply my-3 space-y-2 pl-0;
+}
+.prose-page ul > li {
+	@apply relative pl-6;
+}
+.prose-page ul > li::before {
+	content: '';
+	@apply absolute top-[0.7em] left-1 size-1.5 rounded-full bg-primary;
 }
 .prose-page strong {
 	@apply font-semibold text-foreground;
 }
 .prose-page a {
-	@apply font-semibold text-primary underline-offset-4 hover:underline;
+	@apply font-semibold text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary;
 }

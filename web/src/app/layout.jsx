@@ -1,12 +1,20 @@
-import {Plus_Jakarta_Sans} from 'next/font/google';
+import {Bricolage_Grotesque, Plus_Jakarta_Sans} from 'next/font/google';
+import {MotionProvider} from '@/components/ui/MotionProvider';
 import {ThemeProvider} from '@/components/ui/themeProvider';
 import {SITE} from '@/lib/site';
 import './globals.css';
 
+// Body text matches the app; headlines get something with a bit more character.
 const jakarta = Plus_Jakarta_Sans({
 	subsets: ['latin'],
 	display: 'swap',
-	variable: '--font-plus-jakarta-sans',
+	variable: '--font-jakarta',
+});
+
+const bricolage = Bricolage_Grotesque({
+	subsets: ['latin'],
+	display: 'swap',
+	variable: '--font-bricolage',
 });
 
 export const metadata = {
@@ -31,10 +39,10 @@ export const viewport = {
 
 export default function RootLayout({children}) {
 	return (
-		<html lang="en" suppressHydrationWarning className={jakarta.className}>
+		<html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${bricolage.variable}`}>
 			<body className="min-h-screen">
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-					{children}
+					<MotionProvider>{children}</MotionProvider>
 				</ThemeProvider>
 			</body>
 		</html>
