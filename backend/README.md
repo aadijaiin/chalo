@@ -75,6 +75,8 @@ This folder holds its config and SQL migrations.
 - `supabase/migrations/…_remove_crew.sql`: `remove_member()` lets the host remove anyone (crew or
   lookout) from a party. It takes their position off the map, clears their statuses, blocks them
   from rejoining, and pushes them a note.
+- `supabase/migrations/…_recap_ignores_gps_jumps.sql`: recap cards skip trail jumps faster than
+  70 m/s (GPS glitches), like the app's own recap.
 
 ## Tests
 

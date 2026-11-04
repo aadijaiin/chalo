@@ -44,8 +44,11 @@ function summarize(userId: string, rows: PointRow[], stops: number): MemberRecap
       { latitude: b.lat, longitude: b.lng }
     );
     const dt = (new Date(b.at).getTime() - new Date(a.at).getTime()) / 1000;
+    // A jump faster than anything on the road is a GPS glitch (a fix after a tunnel, a bad
+    // network position): it would inflate distance and average speed, so it doesn't count.
+    if (dt <= 0 || d / dt > MAX_PLAUSIBLE_MS) continue;
     dist += d;
-    if (dt > 0 && d / dt >= MOVING_MIN_MS) moving += dt;
+    if (d / dt >= MOVING_MIN_MS) moving += dt;
   }
   for (const r of rows)
     if (r.speed != null && r.speed < MAX_PLAUSIBLE_MS) top = Math.max(top, r.speed);
