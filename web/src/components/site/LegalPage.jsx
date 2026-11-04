@@ -1,4 +1,5 @@
 import {SITE} from '@/lib/site';
+import {LegalToc} from './LegalToc';
 import {SiteFooter} from './SiteFooter';
 import {SiteHeader} from './SiteHeader';
 
@@ -6,10 +7,15 @@ export function LegalPage({title, updated, children}) {
 	return (
 		<>
 			<SiteHeader />
-			<main className="mx-auto max-w-2xl px-4 py-14 sm:px-6">
-				<h1 className="text-4xl font-extrabold tracking-tight">{title}</h1>
-				<p className="mt-2 text-sm text-muted-foreground">Last updated {updated}</p>
-				<div className="prose-page mt-6">{children}</div>
+			<main className="mx-auto max-w-6xl px-4 pb-24 pt-32 sm:px-6 sm:pt-40">
+				<div className="max-w-2xl">
+					<span className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Last updated {updated}</span>
+					<h1 className="mt-3 text-5xl font-extrabold tracking-tight sm:text-6xl">{title}</h1>
+				</div>
+				<div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_14rem]">
+					<article className="prose-page max-w-2xl">{children}</article>
+					<LegalToc />
+				</div>
 			</main>
 			<SiteFooter />
 		</>

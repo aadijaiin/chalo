@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
 	return (
-		<LegalPage title="Privacy policy" updated="28 October 2026">
+		<LegalPage title="Privacy policy" updated="4 November 2026">
 			<p>
 				chalo shares your live location with the people in a party you join. That&apos;s the whole point
 				of the app, so this page explains exactly what we collect, who can see it, and how long we keep

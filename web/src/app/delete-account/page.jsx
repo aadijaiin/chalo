@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function DeleteAccountPage() {
 	return (
-		<LegalPage title="Delete your account" updated="28 October 2026">
+		<LegalPage title="Delete your account" updated="4 November 2026">
 			<h2>From the app</h2>
 			<ul>
 				<li>Open chalo and tap your avatar at the top of the home screen.</li>
@@ -27,14 +27,15 @@ export default function DeleteAccountPage() {
 			<ul>
 				<li>Your account, email address, name, username and avatar.</li>
 				<li>Your live location, route trails, battery readings and push notification tokens.</li>
-				<li>Your party memberships, pings and statuses.</li>
+				<li>Your party memberships (as crew or lookout), pings and statuses.</li>
+				<li>Error reports the app sent from your account.</li>
 			</ul>
 
 			<h2>What stays</h2>
 			<ul>
 				<li>
-					Parties you host are handed to the person who&apos;s been in them longest, so the rest of the group
-					keeps their trip history. Parties with nobody else in them are deleted.
+					Parties you host are handed to whoever in the crew has been in them longest, so the rest of the
+					group keeps their trip history. Parties with nobody else in the crew are deleted.
 				</li>
 				<li>Pins you dropped on a party map stay for the others, without your name on them.</li>
 			</ul>

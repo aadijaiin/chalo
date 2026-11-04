@@ -1,4 +1,6 @@
+import {Eye, Users} from 'lucide-react';
 import {Logo} from '@/components/site/Logo';
+import {CodeBoxes} from './CodeBoxes';
 import OpenInApp from './OpenInApp';
 
 const CODE_LENGTH = 6;
@@ -33,8 +35,8 @@ export async function generateMetadata({params, searchParams}) {
 }
 
 /**
- * Where invite links land: opens the app straight into the party, or shows the code to type in.
- * Lookout links (?as=lookout) invite someone to follow along without sharing their location.
+ * Where invite links land, styled as a boarding pass: opens the app straight into the party, or
+ * shows the code to type in. Lookout links (?as=lookout) invite someone to follow along.
  */
 export default async function InvitePage({params, searchParams}) {
 	const code = clean((await params).code);
@@ -42,42 +44,53 @@ export default async function InvitePage({params, searchParams}) {
 	const lookout = (await searchParams).as === 'lookout';
 
 	return (
-		<main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-16">
-			<Logo />
-			<div className="flex w-full max-w-sm flex-col gap-6 rounded-3xl border border-border bg-card p-8 text-center shadow-xl shadow-black/5">
-				<div className="flex flex-col gap-2">
-					<p className="text-xs font-semibold uppercase tracking-widest text-primary">
-						{lookout ? 'Be a lookout' : 'You’re invited'}
-					</p>
-					<h1 className="text-2xl font-extrabold text-foreground">
-						{lookout ? 'Follow the trip on chalo' : 'Join the party on chalo'}
-					</h1>
-					<p className="text-sm text-muted-foreground">
-						{lookout
-							? 'See the whole crew live on one map, and hear about arrivals and SOS. Your own location isn’t shared with anyone.'
-							: 'Everyone in the party shows up on one live map, so nobody gets lost on the way.'}
-					</p>
-				</div>
+		<main className="grain relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden bg-background px-4 py-16">
+			<div aria-hidden className="pointer-events-none absolute left-1/2 top-1/3 size-[36rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[120px]" />
+			<Logo className="relative" />
 
-				{valid ? (
-					<>
-						<div className="flex justify-between gap-1.5" aria-label={`Party code ${code}`}>
-							{code.split('').map((c, i) => (
-								<span
-									key={i}
-									className="flex h-14 w-full items-center justify-center rounded-2xl bg-primary text-2xl font-extrabold text-primary-foreground"
-								>
-									{c}
-								</span>
-							))}
+			<div className="relative w-full max-w-md">
+				<div className="overflow-hidden rounded-[2.25rem] border border-border bg-card shadow-lift">
+					<div className="relative flex flex-col gap-6 p-7 sm:p-8">
+						<div className="flex items-center justify-between">
+							<span className="inline-flex items-center gap-2 rounded-full bg-primary/12 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
+								{lookout ? <Eye className="size-3.5" /> : <Users className="size-3.5" />}
+								{lookout ? 'Be a lookout' : 'You’re invited'}
+							</span>
+							<span className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">chalo pass</span>
 						</div>
-						<OpenInApp code={code} lookout={lookout} />
-					</>
-				) : (
-					<p className="text-sm text-muted-foreground">
-						This invite link looks broken. Ask whoever sent it for the 6-character party code.
-					</p>
-				)}
+						<div className="flex flex-col gap-2">
+							<h1 className="text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">
+								{lookout ? 'Follow the trip on chalo' : 'Join the party on chalo'}
+							</h1>
+							<p className="text-[15px] leading-relaxed text-muted-foreground">
+								{lookout
+									? 'See the whole crew live on one map, and hear about arrivals and SOS. Your own location isn’t shared with anyone. The host lets you in.'
+									: 'Everyone in the party shows up on one live map, so nobody gets lost on the way.'}
+							</p>
+						</div>
+						{valid ? (
+							<div>
+								<div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Party code</div>
+								<CodeBoxes code={code} />
+							</div>
+						) : null}
+					</div>
+
+					{/* The tear line between the pass and its stub. */}
+					<div aria-hidden className="relative h-6">
+						<span className="absolute -left-3 top-0 size-6 rounded-full border border-border bg-background" />
+						<span className="absolute -right-3 top-0 size-6 rounded-full border border-border bg-background" />
+						<span className="absolute inset-x-6 top-1/2 border-t-2 border-dashed border-border" />
+					</div>
+
+					<div className="p-7 pt-4 sm:p-8 sm:pt-4">
+						{valid ? (
+							<OpenInApp code={code} lookout={lookout} />
+						) : (
+							<p className="text-sm text-muted-foreground">This invite link looks broken. Ask whoever sent it for the 6-character party code.</p>
+						)}
+					</div>
+				</div>
 			</div>
 		</main>
 	);
