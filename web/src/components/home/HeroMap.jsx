@@ -132,7 +132,9 @@ export function HeroMap({crew}) {
 				transition={{duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.15}}
 				className="relative"
 			>
-				<div className="clip-layer relative overflow-hidden rounded-[2.25rem] border border-border bg-[var(--map-land)] shadow-lift">
+				{/* The shadow lives on the wrapper: the clip layer's mask would cut it off square at the corners. */}
+				<div className="rounded-[2.25rem] shadow-lift">
+				<div className="clip-layer relative overflow-hidden rounded-[2.25rem] border border-border bg-[var(--map-land)]">
 					<svg viewBox="0 0 600 500" className="block h-auto w-full" role="img" aria-label="Illustration: a crew of four on a live map, headed to their destination">
 						<defs>
 							{crew.map((p) => (
@@ -252,6 +254,7 @@ export function HeroMap({crew}) {
 							</motion.div>
 						) : null}
 					</AnimatePresence>
+				</div>
 				</div>
 
 				{/* Floating crew card, like the app's bottom rail. */}
