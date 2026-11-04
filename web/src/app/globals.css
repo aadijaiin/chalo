@@ -237,6 +237,50 @@
 	}
 }
 
+/* First-load loader (components/site/PageLoader). */
+@keyframes loader-bob {
+	50% {
+		transform: translateY(-10px);
+	}
+}
+@keyframes loader-shadow {
+	50% {
+		transform: scaleX(0.7);
+		opacity: 0.5;
+	}
+}
+@keyframes loader-line {
+	0% {
+		transform: translateX(-110%);
+	}
+	100% {
+		transform: translateX(320%);
+	}
+}
+
+/*
+ * Skeletons: a soft highlight sweeping across the muted shape of what's loading. On ::before so
+ * it paints under the content: an image that finishes loading covers it.
+ */
+.skeleton {
+	position: relative;
+	overflow: hidden;
+	background-color: var(--muted);
+}
+.skeleton::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	transform: translateX(-100%);
+	background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--card) 70%, transparent), transparent);
+	animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+	to {
+		transform: translateX(100%);
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	*,
 	*::before,

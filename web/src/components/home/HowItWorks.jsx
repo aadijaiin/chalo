@@ -1,7 +1,7 @@
 'use client';
 
 import {AnimatePresence, motion, useInView, useScroll, useSpring} from 'motion/react';
-import Image from 'next/image';
+import {FadeImage} from '@/components/ui/FadeImage';
 import {useEffect, useRef, useState} from 'react';
 import {SectionHeading} from '@/components/ui/SectionHeading';
 import {cn} from '@/lib/utils';
@@ -58,7 +58,7 @@ export function HowItWorks() {
 					<div className="relative hidden lg:block">
 						{/* Sized by the window's height so the whole phone (and its dots) always fits on screen. */}
 						<div className="sticky top-24 flex flex-col items-center">
-							<div className="clip-layer relative aspect-[1220/2712] h-[min(calc(100svh-11rem),44rem)] max-w-full overflow-hidden rounded-[2.6rem] border-[7px] border-foreground/90 bg-card shadow-lift dark:border-white/15">
+							<div className="skeleton clip-layer relative aspect-[1220/2712] h-[min(calc(100svh-11rem),44rem)] max-w-full overflow-hidden rounded-[2.6rem] border-[7px] border-foreground/90 shadow-lift dark:border-white/15">
 								<AnimatePresence initial={false}>
 									<motion.div
 										key={active}
@@ -68,7 +68,7 @@ export function HowItWorks() {
 										transition={{duration: 0.5, ease: [0.22, 1, 0.36, 1]}}
 										className="absolute inset-0"
 									>
-										<Image src={STEPS[active].shot} alt={STEPS[active].alt} fill sizes="352px" className="object-cover" />
+										<FadeImage src={STEPS[active].shot} alt={STEPS[active].alt} fill sizes="352px" className="object-cover" />
 									</motion.div>
 								</AnimatePresence>
 							</div>
@@ -109,8 +109,8 @@ function Step({step, index, active, onActive}) {
 					{step.body}
 				</motion.p>
 				{/* On small screens the screenshot sits with its step. */}
-				<div className="clip-layer relative mt-4 aspect-[1220/2712] w-56 overflow-hidden rounded-[2rem] border-[6px] border-foreground/90 shadow-lift lg:hidden dark:border-white/15">
-					<Image src={step.shot} alt={step.alt} fill sizes="224px" className="object-cover" />
+				<div className="skeleton clip-layer relative mt-4 aspect-[1220/2712] w-56 overflow-hidden rounded-[2rem] border-[6px] border-foreground/90 shadow-lift lg:hidden dark:border-white/15">
+					<FadeImage src={step.shot} alt={step.alt} fill sizes="224px" className="object-cover" />
 				</div>
 			</div>
 		</li>

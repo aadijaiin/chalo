@@ -206,7 +206,8 @@ export function HeroMap({crew}) {
 
 						{/* The crew. */}
 						{crew.map((p, i) => (
-							<g key={p.id} ref={(el) => (markerRefs.current[i] = el)}>
+							// Hidden until placed on the road, so nobody flashes in the top-left corner first.
+							<g key={p.id} ref={(el) => (markerRefs.current[i] = el)} style={{opacity: 0}}>
 								{p.id === 'aadi' ? (
 									<circle
 										r="15"

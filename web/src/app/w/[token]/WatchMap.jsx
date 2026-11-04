@@ -1,6 +1,7 @@
 'use client';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
+import {AnimatePresence, motion} from 'motion/react';
 import {BatteryLow, Bell, BellRing, Eye, Flag, Siren} from 'lucide-react';
 import * as maplibregl from 'maplibre-gl';
 import {useTheme} from 'next-themes';
@@ -67,6 +68,8 @@ export default function WatchMap({token, initial}) {
 	const framed = useRef(false);
 	// Old phones and locked-down browsers have no WebGL; the crew list still works without the map.
 	const [mapFailed, setMapFailed] = useState(false);
+	// A shimmer covers the map until its first tiles are drawn.
+	const [mapReady, setMapReady] = useState(false);
 
 	// Poll while the tab is visible; null back means the trip is over or the link was turned off.
 	useEffect(() => {
@@ -115,6 +118,7 @@ export default function WatchMap({token, initial}) {
 			return;
 		}
 		map.addControl(new maplibregl.NavigationControl({showCompass: false}), 'top-right');
+		map.on('load', () => setMapReady(true));
 		// On a patchy connection the style request can fail, which leaves a blank map; try again.
 		let retry;
 		map.on('error', () => {
@@ -207,6 +211,11 @@ export default function WatchMap({token, initial}) {
 				<div className="absolute inset-0">
 					<div ref={containerRef} className="h-full w-full" />
 				</div>
+				<AnimatePresence>
+					{!mapReady && !mapFailed ? (
+						<motion.div key="map-skeleton" exit={{opacity: 0, transition: {duration: 0.5}}} className="skeleton absolute inset-0 rounded-none" aria-hidden />
+					) : null}
+				</AnimatePresence>
 				{mapFailed ? (
 					<div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">
 						This browser can&apos;t show the map, but the crew&apos;s progress is listed below.
