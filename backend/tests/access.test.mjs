@@ -69,14 +69,15 @@ async function visibleLocations(user, partyId) {
 const rejects = (promise, pattern) => assert.rejects(promise, (e) => pattern.test(e.message));
 
 describe('party privacy', () => {
-  let host, crew, lookout, outsider, party;
+  let host, crew, lookout, outsider, rider, party;
 
   before(async () => {
-    [host, crew, lookout, outsider] = await Promise.all(['host', 'crew', 'lookout', 'outsider'].map(signUp));
+    [host, crew, lookout, outsider, rider] = await Promise.all(['host', 'crew', 'lookout', 'outsider', 'rider'].map(signUp));
     party = await rpc('create_party', { party_name: `Access test ${RUN}`, replace_current: true }, host);
     await rpc('set_destination', { pid: party.id, dest_name: 'Test point', dest_lat: 18.75, dest_lng: 73.4 }, host);
     await rpc('join_party', { party_code: party.code, replace_current: true }, crew);
     await rpc('join_party', { party_code: party.code, as_lookout: true }, lookout);
+    await rpc('join_party', { party_code: party.code, replace_current: true }, rider);
     await share(host, party.id, 18.9, 73.1);
     await share(crew, party.id, 18.95, 73.05);
     await rpc('send_ping', { pid: party.id, kind: 'chai' }, crew);
@@ -84,7 +85,7 @@ describe('party privacy', () => {
   });
 
   after(async () => {
-    for (const user of [host, crew, lookout, outsider]) {
+    for (const user of [host, crew, lookout, outsider, rider]) {
       if (user) await rpc('delete_my_account', {}, user).catch(() => {});
     }
   });
@@ -147,6 +148,21 @@ describe('party privacy', () => {
     assert.equal((await visibleLocations(lookout, party.id)).size, 0);
     await rejects(rpc('join_party', { party_code: party.code, as_lookout: true }, lookout), /removed_from_party/);
     await rejects(rpc('join_party', { party_code: party.code, replace_current: true }, lookout), /removed_from_party/);
+  });
+
+  test('the host can remove someone from the crew, and they stay out', async () => {
+    await share(rider, party.id, 18.97, 73.02);
+    assert.ok((await visibleLocations(host, party.id)).has(rider.id));
+
+    await rejects(rpc('remove_member', { pid: party.id, uid: rider.id }, crew), /Only the host/);
+    await rejects(rpc('remove_member', { pid: party.id, uid: host.id }, host), /cannot_remove_host/);
+    await rpc('remove_member', { pid: party.id, uid: rider.id }, host);
+
+    assert.ok(!(await visibleLocations(host, party.id)).has(rider.id), 'their position is off the map');
+    assert.equal(await share(rider, party.id, 18.97, 73.02), null, 'their phone is told to stop sharing');
+    assert.equal((await visibleLocations(rider, party.id)).size, 0, 'they no longer see anyone');
+    await rejects(rpc('join_party', { party_code: party.code, replace_current: true }, rider), /removed_from_party/);
+    await rejects(rpc('join_party', { party_code: party.code, as_lookout: true }, rider), /removed_from_party/);
   });
 
   test('leaving cuts off live positions', async () => {

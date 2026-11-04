@@ -72,6 +72,9 @@ This folder holds its config and SQL migrations.
   fell-behind alert. Recap cards leave out anyone hidden from lookouts. `app_errors` collects crash
   and error reports from the app through `report_error()` (no read access through the API; look
   in *Table Editor*), kept for 30 days.
+- `supabase/migrations/…_remove_crew.sql`: `remove_member()` lets the host remove anyone (crew or
+  lookout) from a party. It takes their position off the map, clears their statuses, blocks them
+  from rejoining, and pushes them a note.
 
 ## Tests
 
